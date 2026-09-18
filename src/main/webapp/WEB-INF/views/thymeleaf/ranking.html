@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ranking</title>
+    <link rel="stylesheet" th:href="@{/resouces/core/ranking.css}">
+</head>
+<body>
+<header>
+    <div class="wrap nav">
+        <a href="index.html" class="logo"><span class="logo-mark">⚡</span>Rayo Trivia</a>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="index.html#como-funciona">Cómo funciona</a></li>
+            <li><a href="categorias.html">Categorías</a></li>
+            <li><a href="ranking.html" class="active">Ranking</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a href="login.html" class="btn btn-text">Iniciar sesión</a>
+            <a href="crear-cuenta.html" class="btn btn-primary">Crear cuenta</a>
+            <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="page-head">
+        <div class="wrap">
+            <a href="index.html" class="eyebrow-link">← Volver al inicio</a>
+            <h1>Ranking</h1>
+            <p>Los jugadores con más puntos acumulados respondiendo rápido y bien.</p>
+        </div>
+    </div>
+
+    <section>
+        <div class="wrap">
+            <div class="filter-tabs" id="rankTabs">
+                <button class="active" data-range="semana">Esta semana</button>
+                <button data-range="mes">Este mes</button>
+                <button data-range="historico">Histórico</button>
+            </div>
+
+            <div class="podium">
+                <div class="podium-card second">
+                    <div class="podium-rank">2°</div>
+                    <div class="avatar">CV</div>
+                    <div class="podium-name">Camila V.</div>
+                    <div class="podium-pts">8.140 pts</div>
+                </div>
+                <div class="podium-card first">
+                    <div class="podium-rank">1°</div>
+                    <div class="avatar">FR</div>
+                    <div class="podium-name">Facundo R.</div>
+                    <div class="podium-pts">9.360 pts</div>
+                </div>
+                <div class="podium-card third">
+                    <div class="podium-rank">3°</div>
+                    <div class="avatar">MS</div>
+                    <div class="podium-name">Marina S.</div>
+                    <div class="podium-pts">7.820 pts</div>
+                </div>
+            </div>
+
+            <table class="rank-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Jugador</th>
+                    <th>Categoría favorita</th>
+                    <th>Partidas</th>
+                    <th>Puntos</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="rank-num">4</td>
+                    <td><div class="player-cell"><div class="avatar">JP</div>Joaquín P.</div></td>
+                    <td>Deportes</td>
+                    <td>58</td>
+                    <td class="pts-cell">7.310</td>
+                </tr>
+                <tr>
+                    <td class="rank-num">5</td>
+                    <td><div class="player-cell"><div class="avatar">LN</div>Lucía N.</div></td>
+                    <td>Cine y TV</td>
+                    <td>51</td>
+                    <td class="pts-cell">6.980</td>
+                </tr>
+                <tr>
+                    <td class="rank-num">6</td>
+                    <td><div class="player-cell"><div class="avatar">TG</div>Tomás G.</div></td>
+                    <td>Ciencia</td>
+                    <td>47</td>
+                    <td class="pts-cell">6.640</td>
+                </tr>
+                <tr>
+                    <td class="rank-num">7</td>
+                    <td><div class="player-cell"><div class="avatar">AB</div>Agustina B.</div></td>
+                    <td>Historia</td>
+                    <td>44</td>
+                    <td class="pts-cell">6.120</td>
+                </tr>
+                <tr>
+                    <td class="rank-num">8</td>
+                    <td><div class="player-cell"><div class="avatar">NM</div>Nicolás M.</div></td>
+                    <td>Música</td>
+                    <td>39</td>
+                    <td class="pts-cell">5.870</td>
+                </tr>
+                <tr>
+                    <td class="rank-num">9</td>
+                    <td><div class="player-cell"><div class="avatar">SD</div>Sofía D.</div></td>
+                    <td>Geografía</td>
+                    <td>36</td>
+                    <td class="pts-cell">5.540</td>
+                </tr>
+                <tr>
+                    <td class="rank-num">10</td>
+                    <td><div class="player-cell"><div class="avatar">RC</div>Rodrigo C.</div></td>
+                    <td>Mixta</td>
+                    <td>33</td>
+                    <td class="pts-cell">5.210</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="wrap">
+        <div class="foot-row">
+            <a href="index.html" class="logo"><span class="logo-mark">⚡</span>Rayo Trivia</a>
+            <ul class="foot-links">
+                <li><a href="index.html#como-funciona">Cómo funciona</a></li>
+                <li><a href="categorias.html">Categorías</a></li>
+                <li><a href="ranking.html">Ranking</a></li>
+            </ul>
+        </div>
+        <p class="foot-fine">© 2026 Rayo Trivia. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+
+<script th:src="@{/resources/core/js/ranking.js}"></script>
+
+</body>
+</html>
