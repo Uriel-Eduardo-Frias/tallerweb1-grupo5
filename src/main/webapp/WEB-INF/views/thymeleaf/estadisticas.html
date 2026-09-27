@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{header :: head('Estadísticas y Métricas')}"></head>
+<body>
+    <header th:replace="~{header :: navbar}"></header>
+
+    <main class="main-content">
+        <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">Mis Estadísticas y Desempeño</h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Monitorea tu porcentaje de precisión, historial de rachas y balance de partidas ganadas.</p>
+
+        <!-- Tarjetas de Metricas Superiores -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+            <div class="card" style="border-left: 5px solid var(--success);">
+                <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">PROMEDIO DE ACIERTOS</span>
+                <h2 style="font-size: 2.2rem; font-weight: 900; color: var(--success); margin-top: 0.5rem;" th:text="${estadistica?.promedioAciertos} + '%'">75.0%</h2>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Efectividad acumulada</span>
+            </div>
+
+            <div class="card" style="border-left: 5px solid var(--primary);">
+                <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">PARTIDAS GANADAS</span>
+                <h2 style="font-size: 2.2rem; font-weight: 900; color: var(--primary); margin-top: 0.5rem;" th:text="${estadistica.partidasGanadas}">0</h2>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" th:text="'De ' + ${estadistica.partidasJugadas} + ' jugadas'">De 0 jugadas</span>
+            </div>
+
+            <div class="card" style="border-left: 5px solid var(--warning);">
+                <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">RACHA ACTUAL RESPUESTAS</span>
+                <h2 style="font-size: 2.2rem; font-weight: 900; color: var(--warning); margin-top: 0.5rem;" th:text="${estadistica.rachaActualRespuestas} + ' 🔥'">0 🔥</h2>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Aciertos consecutivos vigentes</span>
+            </div>
+
+            <div class="card" style="border-left: 5px solid var(--secondary);">
+                <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">RÉCORD HISTÓRICO DE RACHA</span>
+                <h2 style="font-size: 2.2rem; font-weight: 900; color: var(--secondary); margin-top: 0.5rem;" th:text="${estadistica.mejorRachaRespuestas} + ' ⚡'">0 ⚡</h2>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Tu mejor racha de siempre</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Balance Aciertos vs Fallos -->
+            <div class="card">
+                <h2 class="card-title"><i class="fa-solid fa-scale-balanced" style="color: var(--primary);"></i> Balance de Respuestas</h2>
+                <div style="display: flex; gap: 2rem; align-items: center; justify-content: center; padding: 2rem 0;">
+                    <div style="text-align: center;">
+                        <span style="font-size: 3rem; font-weight: 900; color: var(--success); display: block;" th:text="${estadistica.preguntasAcertadas}">0</span>
+                        <span class="badge badge-success">Preguntas Acertadas</span>
+                    </div>
+                    <div style="font-size: 2rem; color: var(--border-color);">/</div>
+                    <div style="text-align: center;">
+                        <span style="font-size: 3rem; font-weight: 900; color: var(--danger); display: block;" th:text="${estadistica.preguntasErradas}">0</span>
+                        <span class="badge badge-danger">Preguntas Erradas</span>
+                    </div>
+                </div>
+
+                <!-- Barra Proporcional -->
+                <div style="width: 100%; height: 16px; background: var(--danger); border-radius: 8px; overflow: hidden; display: flex;">
+                    <div th:style="'width:' + ${estadistica.promedioAciertos} + '%; background: var(--success); height: 100%;'"></div>
+                </div>
+            </div>
+
+            <!-- Tabla de Lideres Global -->
+            <div class="card">
+                <h2 class="card-title"><i class="fa-solid fa-trophy" style="color: var(--warning);"></i> Clasificación Global</h2>
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Jugador</th>
+                            <th>Victorias</th>
+                            <th>Precisión</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="r, iter : ${leaderboard}">
+                            <td th:text="${iter.count}">1</td>
+                            <td><strong th:text="${r.username}">Jugador</strong></td>
+                            <td><span class="badge badge-purple" th:text="${r.partidasGanadas} + ' 🏆'">5 🏆</span></td>
+                            <td th:text="${r.promedioAciertos} + '%'">80%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

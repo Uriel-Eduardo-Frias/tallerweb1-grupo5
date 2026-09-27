@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{header :: head('Crear Cuenta')}"></head>
+<body>
+<header th:replace="~{header :: navbar}"></header>
+
+<main class="main-content" style="max-width: 500px; margin-top: 3rem;">
+    <div class="card">
+        <h2 class="card-title" style="justify-content: center; font-size: 1.6rem;">
+            <i class="fa-solid fa-user-plus" style="color: var(--primary);"></i> Registro de Jugador
+        </h2>
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            Crea tu perfil, desbloquea logros y compite en el ranking global.
+        </p>
+
+        <div th:if="${error != null}" class="badge badge-danger" style="display: block; padding: 0.8rem; margin-bottom: 1.2rem; text-align: center;" th:text="${error}">
+            Error al registrar
+        </div>
+
+        <form th:action="@{/registro}" method="POST" th:object="${datosLogin}" style="display: flex; flex-direction: column; gap: 1.1rem;">
+
+            <div>
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">Nombre de Usuario</label>
+                <input type="text" th:field="*{username}" style="width: 100%; border: 1px solid var(--border-color); padding: 0.8rem; border-radius: 8px;" placeholder="Tu apodo de jugador" required>
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">Nombre Completo</label>
+                <input type="text" th:field="*{nombreCompleto}" style="width: 100%; border: 1px solid var(--border-color); padding: 0.8rem; border-radius: 8px;" placeholder="Tu nombre y apellido" required>
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">Correo Electrónico</label>
+                <input type="email" th:field="*{email}" style="width: 100%; border: 1px solid var(--border-color); padding: 0.8rem; border-radius: 8px;" placeholder="ejemplo@correo.com" required>
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">Contraseña</label>
+                <input type="password" th:field="*{password}" style="width: 100%; border: 1px solid var(--border-color); padding: 0.8rem; border-radius: 8px;" placeholder="Crea una contraseña segura" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                Crear Perfil y Empezar
+            </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+            ¿Ya tienes una cuenta? <a th:href="@{/login}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Inicia sesión</a>
+        </p>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' - Trivia Master'">Trivia Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/trivia.css}">
+</head>
+<body>
+<header th:fragment="navbar" class="main-header">
+    <div class="header-container">
+        <a th:href="@{/}" class="brand-logo">
+            <i class="fa-solid fa-brain brand-icon"></i>
+            <span class="brand-title">Trivia<span class="brand-accent">Master</span></span>
+        </a>
+
+        <nav class="nav-links">
+            <a th:href="@{/}"><i class="fa-solid fa-house"></i> Inicio</a>
+            <a th:href="@{/salas}"><i class="fa-solid fa-gamepad"></i> Salas</a>
+            <a th:href="@{/buscar-jugador}"><i class="fa-solid fa-users-viewfinder"></i> Jugadores</a>
+            <a th:href="@{/estadisticas}"><i class="fa-solid fa-chart-simple"></i> Estadísticas</a>
+            <a th:href="@{/logros}"><i class="fa-solid fa-trophy"></i> Logros</a>
+        </nav>
+
+        <div class="user-actions">
+            <div th:if="${session.ID_USUARIO != null}" class="user-profile-badge">
+                <a th:href="@{/perfil}" class="user-link">
+                    <i class="fa-solid fa-circle-user avatar-icon"></i>
+                    <span class="user-name" th:text="${session.USERNAME}">Mi Perfil</span>
+                </a>
+                <a th:href="@{/logout}" class="btn-logout" title="Cerrar Sesión">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </a>
+            </div>
+
+            <div th:unless="${session.ID_USUARIO != null}" class="auth-buttons">
+                <a th:href="@{/login}" class="btn btn-outline-sm">Ingresar</a>
+                <a th:href="@{/registro}" class="btn btn-primary-sm">Registrarse</a>
+            </div>
+        </div>
+    </div>
+</header>
+</body>
+</html>

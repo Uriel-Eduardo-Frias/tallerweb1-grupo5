@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{header :: head('Perfil de jugador')}"></head>
+<body>
+<header th:replace="~{header :: navbar}"></header>
+<main class="main-content">
+    <a th:href="@{/buscar-jugador}" class="btn btn-outline-sm" style="margin-bottom: 1.2rem;"><i class="fa-solid fa-arrow-left"></i> Volver al buscador</a>
+    <div class="dashboard-grid">
+        <section class="card">
+            <div class="public-profile-hero" style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1rem;">
+
+                <img th:if="${perfil.avatarUrl != null}" th:src="${perfil.avatarUrl}" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+                <div th:unless="${perfil.avatarUrl != null}" style="width: 90px; height: 90px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 3px solid var(--primary);">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+
+                <div>
+                    <span class="badge badge-info">Perfil de jugador</span>
+                    <h1 th:text="${usuario.username}">Jugador</h1>
+                    <span class="badge badge-purple" th:text="'Nivel ' + ${perfil.nivel}">Nivel 1</span>
+                    <p th:text="${perfil.biografia != null} ? ${perfil.biografia} : 'Sin biografía'"></p>
+                </div>
+            </div>
+            <div class="xp-summary" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <span>Experiencia: </span><strong th:text="${perfil.experiencia} + ' XP'">0 XP</strong>
+            </div>
+        </section>
+        <section class="card">
+            <h2 class="card-title"><i class="fa-solid fa-chart-simple" style="color: var(--primary);"></i> Estadísticas</h2>
+            <div th:if="${estadistica != null}" class="stats-list">
+            </div>
+            <div th:unless="${estadistica != null}" style="color: var(--text-muted); font-size: 0.9rem;">
+                Las estadísticas aún no están disponibles.
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>
