@@ -15,6 +15,8 @@ public class SalaController {
   public ModelAndView listarSalas() {
     Map<String, Object> modelo = new ModelMap();
 
+    modelo.put("mensaje","la lista de salas estará disponible proximamente");
+
     return new ModelAndView("salas-lista", modelo);
   }
 }
