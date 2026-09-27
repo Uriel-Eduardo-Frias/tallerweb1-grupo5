@@ -1,9 +1,6 @@
 package com.tallerwebi.dominio;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Usuario {
@@ -16,6 +13,9 @@ public class Usuario {
   private String password;
   private String rol;
   private Boolean activo = false;
+
+  private String username;
+  private String nombreCompleto;
 
   public Long getId() {
     return id;
@@ -59,5 +59,33 @@ public class Usuario {
 
   public void activar() {
     activo = true;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  public String getNombreCompleto() {
+    return nombreCompleto;
+  }
+
+  public void setNombreCompleto(String nombreCompleto) {
+    this.nombreCompleto = nombreCompleto;
+  }
+
+  // Relacion con la clase PerfilUsuario:
+  @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private PerfilUsuario perfil;
+
+  public PerfilUsuario getPerfil() {
+    return perfil;
+  }
+
+  public void setPerfil(PerfilUsuario perfil) {
+    this.perfil = perfil;
   }
 }
