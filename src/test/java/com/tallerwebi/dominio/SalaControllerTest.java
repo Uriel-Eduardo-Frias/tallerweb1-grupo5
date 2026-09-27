@@ -1,8 +1,7 @@
 package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
 
 import com.tallerwebi.presentacion.SalaController;
 import java.util.List;
@@ -55,6 +54,22 @@ public class SalaControllerTest {
     //estos son datos hardcodeados que hacen que el test corra
     assertThat(salas.get(0).getCodigo(), equalTo("TRV-1234"));
     assertThat(salas.get(0).getNombre(), equalTo("Trivia del viernes"));
-    assertThat(salas.get(0).getUsuario().getUsername(), equalTo("Juan"));
+    assertThat(salas.get(0).getHost().getUsername(), equalTo("Juan"));
+  }
+
+  @Test
+  public void deberiaAgregarAlInvitadoALaSalaCuandoElCodigoEsValido() {
+    // Given
+    String codigoValido = "TRV-1234";
+    String invitado = "Ana";
+
+    // When
+    ModelAndView resultado = salaController.unirse(codigoValido, invitado);
+
+    // Then
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+
+    Sala sala = (Sala) resultado.getModel().get("sala");
+    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo(invitado))));
   }
 }

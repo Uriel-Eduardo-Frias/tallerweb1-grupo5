@@ -1,21 +1,28 @@
 package com.tallerwebi.dominio;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Sala {
 
   private String codigo;
-
   private String nombre;
+  private Usuario host;
+  private List<Usuario> jugadores;
 
-  private Usuario usuario;
-
-  public Sala(String codigo, String nombre, Usuario usuario) {
+  public Sala(String codigo, String nombre, Usuario host) {
     this.codigo = codigo;
     this.nombre = nombre;
-    this.usuario = usuario;
+    this.host = host;
+    this.jugadores = new ArrayList<>();
+  }
+
+  public boolean agregarJugador(Usuario usuario) {
+    if (usuario == null) {
+      throw new JugadorInexistenteExeption("No se encontro el jugador");
+    }
+
+    return this.jugadores.add(usuario);
   }
 
   public String getCodigo() {
@@ -23,14 +30,18 @@ public class Sala {
   }
 
   public String getNombre() {
-    return nombre;
+    return this.nombre;
   }
 
-  public Usuario getUsuario() {
-    return usuario;
+  public Usuario getHost() {
+    return this.host;
   }
 
-  public void setId(String codigo) {
+  public List<Usuario> getJugadores() {
+    return this.jugadores;
+  }
+
+  public void setCodigo(String codigo) {
     this.codigo = codigo;
   }
 
@@ -38,7 +49,11 @@ public class Sala {
     this.nombre = nombre;
   }
 
-  public void setUsuario(Usuario usuario) {
-    this.usuario = usuario;
+  public void setHost(Usuario host) {
+    this.host = host;
+  }
+
+  public void setJugadores(List<Usuario> jugadores) {
+    this.jugadores = jugadores;
   }
 }

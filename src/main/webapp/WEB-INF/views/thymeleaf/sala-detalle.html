@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de la sala</title>
+</head>
+
+<body>
+
+<main>
+
+    <h1 th:text="${sala.nombre}">
+        Nombre de la sala
+    </h1>
+
+    <p>
+        Código:
+        <span th:text="${sala.codigo}">
+            TRV-XXXX
+        </span>
+    </p>
+
+    <p>
+        Host:
+        <span th:text="${sala.host.username}">
+            Host
+        </span>
+    </p>
+
+    <h2>Jugadores</h2>
+
+    <ul>
+
+        <li th:each="jugador : ${sala.jugadores}"
+            th:text="${jugador.username}">
+            Nombre del jugador
+        </li>
+
+    </ul>
+
+</main>
+
+</body>
+</html>

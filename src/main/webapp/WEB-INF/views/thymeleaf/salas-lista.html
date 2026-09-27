@@ -6,17 +6,42 @@
 </head>
 <body>
 <main>
+    <h1>Salas de Trivia</h1>
+
     <!--
     <h1>Salas de Trivia</h1>
     <p th:text="${mensaje}">Mensaje de ejemplo.</p>
     -->
 
     <ul>
-        <li th:each="sala : ${salas}"
-            th:text="${sala.nombre + ' — host: ' + sala.usuario.username}">
-            Nombre de sala — host: usuario
+
+        <li th:each="sala : ${salas}">
+
+            <p th:text="${sala.nombre + ' — host: ' + sala.host.username}">
+                Nombre de sala — host: usuario
+            </p>
+
+            <form th:action="@{/salas/unirse}" method="post">
+
+                <input type="hidden"
+                       name="codigo"
+                       th:value="${sala.codigo}">
+
+                <label>
+                    Nombre del invitado
+                    <input type="text" name="invitado">
+                </label>
+
+                <button type="submit">
+                    Unirse
+                </button>
+
+            </form>
+
         </li>
+
     </ul>
+
 </main>
 </body>
 </html>
