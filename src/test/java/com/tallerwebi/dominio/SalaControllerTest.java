@@ -1,23 +1,23 @@
 package com.tallerwebi.dominio;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.web.servlet.ModelAndView;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+
+import com.tallerwebi.presentacion.SalaController;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.servlet.ModelAndView;
 
 public class SalaControllerTest {
 
   @Test
   public void deberiaCrearUnaSala() {}
 
-
   @Test
   public void deberiaMostrarLaVistaDeSala() {
-    SalaControllerTest controlador = new SalaControllerTest();
+    SalaController controlador = new SalaController();
 
-    ModelAndView resultado = controlador.crearSala();
+    ModelAndView salasListas = controlador.listarSalas();
 
-    assertThat(resultado.getViewName(), equalTo("sala"));
+    assertThat(salasListas.getViewName(), equalTo("salas-lista"));
   }
 }
