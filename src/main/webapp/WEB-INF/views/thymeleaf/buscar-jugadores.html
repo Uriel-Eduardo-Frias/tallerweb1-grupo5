@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{header :: head('Buscador de Jugadores')}"></head>
+<body>
+<header th:replace="~{header :: navbar}"></header>
+
+<main class="main-content">
+    <div class="card" style="margin-bottom: 2rem;">
+        <h1 class="card-title"><i class="fa-solid fa-users-viewfinder" style="color: var(--primary);"></i> Buscador de Jugadores y Rivales</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+            Encuentra rivales de tu nivel, busca amigos de la comunidad o examina perfiles para medir coincidencias y desafíos.
+        </p>
+
+        <form th:action="@{/buscar-jugador}" method="GET" style="display: flex; gap: 0.8rem; max-width: 600px;">
+            <input type="text" name="q" class="join-form" style="flex: 1; border: 1px solid var(--border-color); padding: 0.8rem 1rem; border-radius: 10px;" placeholder="Escribe el nombre de usuario..." th:value="${terminoBusqueda}">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
+        </form>
+    </div>
+
+    <div th:if="${#lists.isEmpty(jugadores)}" class="card" style="text-align: center; padding: 3rem;">
+        <i class="fa-solid fa-user-slash" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+        <p style="color: var(--text-muted);">No se encontraron jugadores que coincidan con la búsqueda.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(jugadores)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+
+        <a th:each="j : ${jugadores}" th:href="@{'/perfil/' + ${j.id}}" class="player-profile-card">
+
+            <!-- Si el usuario guardó una URL de foto válida en su perfil, mostramos la imagen -->
+            <img th:if="${j.perfil != null and j.perfil.avatarUrl != null and !j.perfil.avatarUrl.isEmpty()}"
+                 th:src="${j.perfil.avatarUrl}"
+                 alt="Avatar"
+                 style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; margin: 0 auto 1rem; display: block;">
+
+            <!-- Si no configuró nada o lo dejó en blanco, se muestra el astronauta por defecto -->
+            <div th:unless="${j.perfil != null and j.perfil.avatarUrl != null and !j.perfil.avatarUrl.isEmpty()}"
+                 style="width: 70px; height: 70px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 2px solid var(--primary); margin: 0 auto 1rem;">
+                <i class="fa-solid fa-user-astronaut"></i>
+            </div>
+
+            <h3 style="font-size: 1.2rem; margin-bottom: 0.2rem;" th:text="${j.username}">Jugador</h3>
+
+            <span class="badge badge-purple" th:text="${j.perfil != null} ? 'Nivel ' + ${j.perfil.nivel} : 'Nivel 1'">Nivel 1</span>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; min-height: 40px; margin-top: 0.5rem;" th:text="${j.perfil != null} ? ${j.perfil.biografia} : 'Sin biografía'">Biografía</p>
+
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+                <i class="fa-solid fa-bolt" style="color: var(--warning);"></i> Experiencia: <span th:text="${j.perfil != null} ? ${j.perfil.experiencia} + ' XP' : '0 XP'">100 XP</span>
+            </div>
+
+            <span class="btn btn-outline-sm">Ver perfil <i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+    </div>
+</main>
+</body>
+</html>
