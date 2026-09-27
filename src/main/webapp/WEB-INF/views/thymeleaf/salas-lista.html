@@ -6,8 +6,17 @@
 </head>
 <body>
 <main>
+    <!--
     <h1>Salas de Trivia</h1>
     <p th:text="${mensaje}">Mensaje de ejemplo.</p>
+    -->
+
+    <ul>
+        <li th:each="sala : ${salas}"
+            th:text="${sala.nombre + ' — host: ' + sala.usuario.username}">
+            Nombre de sala — host: usuario
+        </li>
+    </ul>
 </main>
 </body>
 </html>

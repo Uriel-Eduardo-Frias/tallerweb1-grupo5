@@ -5,41 +5,40 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 public class Sala {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    private String nombre;
+  private String codigo;
 
-    private Usuario usuario;
+  private String nombre;
 
-    public Sala(Long id, String nombre, Usuario usuario) {
-        this.id = id;
-        this.nombre = nombre;
-        this.usuario = usuario;
-    }
+  private Usuario usuario;
 
-    public Long getId() {
-        return id;
-    }
+  public Sala(String codigo, String nombre, Usuario usuario) {
+    this.codigo = codigo;
+    this.nombre = nombre;
+    this.usuario = usuario;
+  }
 
-    public String getNombre() {
-        return nombre;
-    }
+  public String getCodigo() {
+    return this.codigo;
+  }
 
-    public Usuario getUsuario() {
-        return usuario;
-    }
+  public String getNombre() {
+    return nombre;
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public Usuario getUsuario() {
+    return usuario;
+  }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
+  public void setId(String codigo) {
+    this.codigo = codigo;
+  }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
+  public void setNombre(String nombre) {
+    this.nombre = nombre;
+  }
+
+  public void setUsuario(Usuario usuario) {
+    this.usuario = usuario;
+  }
 }
