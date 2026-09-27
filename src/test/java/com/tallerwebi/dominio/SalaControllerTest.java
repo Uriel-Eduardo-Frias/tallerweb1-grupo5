@@ -9,6 +9,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 public class SalaControllerTest {
 
+  private SalaController salaController = new SalaController();
+
   @Test
   public void deberiaCrearUnaSala() {}
 
@@ -19,5 +21,17 @@ public class SalaControllerTest {
     ModelAndView salasListas = controlador.listarSalas();
 
     assertThat(salasListas.getViewName(), equalTo("salas-lista"));
+  }
+
+  @Test
+  public void deberiaMostrarLaVistaDeSalasConUnMensaje() {
+    ModelAndView resultado = salaController.listarSalas();
+
+    assertThat(resultado.getViewName(), equalTo("salas-lista"));
+
+    assertThat(
+      resultado.getModel().get("mensaje"),
+      equalTo("la lista de salas estará disponible proximamente")
+    );
   }
 }
