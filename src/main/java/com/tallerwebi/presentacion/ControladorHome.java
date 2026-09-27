@@ -12,14 +12,14 @@ public class ControladorHome {
   // Pagina principal
   @RequestMapping(path = "/", method = RequestMethod.GET)
   public ModelAndView inicio() {
-    Map<String, Object> modelo = new ModelMap();
-    return new ModelAndView("home", modelo);
+    return new ModelAndView("redirect:/login");
   }
 
   // Ir al home
   @RequestMapping(path = "/home", method = RequestMethod.GET)
   public ModelAndView irAlHome() {
-    return new ModelAndView("redirect:/");
+    Map<String, Object> modelo = new ModelMap();
+    return new ModelAndView("home", modelo);
   }
 
   // Ir a la pagina de buscar jugadores

@@ -24,7 +24,7 @@ public class ControladorHomeTest {
     whenElUsuarioVaAlHome();
 
     // validacion
-    thenSeMuestraLaVista("redirect:/");
+    thenSeMuestraLaVista("home");
   }
 
   @Test

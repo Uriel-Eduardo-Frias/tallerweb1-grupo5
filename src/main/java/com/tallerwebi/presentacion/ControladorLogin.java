@@ -68,9 +68,10 @@ public class ControladorLogin {
       );
       return new ModelAndView("redirect:/login");
     } catch (UsuarioExistente e) {
-      model.put("error", "El usuario ya existe");
+      model.put("error", "El nombre de usuario ya está en uso. Elegí otro.");
       return new ModelAndView("registro", model);
     } catch (Exception e) {
+      model.put("error", "Error interno: " + e.toString());
       return new ModelAndView("registro", model);
     }
   }
