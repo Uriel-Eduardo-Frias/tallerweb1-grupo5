@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
-public class ControladorBuscardorJugadores {
+public class ControladorBuscadorJugadores {
 
   private ServicioUsuario servicioUsuario;
 
   @Autowired
-  public ControladorBuscardorJugadores(ServicioUsuario servicioUsuario) {
+  public ControladorBuscadorJugadores(ServicioUsuario servicioUsuario) {
     this.servicioUsuario = servicioUsuario;
   }
 
