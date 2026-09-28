@@ -41,11 +41,7 @@ public class SalaController {
     Usuario host = new Usuario();
     host.setUsername("Juan");
 
-    Sala sala = servicioSala.crearSala(
-            "TRV-1234",
-            "Trivia del viernes",
-            host
-    );
+    Sala sala = servicioSala.crearSala("TRV-1234", "Trivia del viernes", host);
 
     List<Sala> salas = new ArrayList<>();
     salas.add(sala);
@@ -64,11 +60,7 @@ public class SalaController {
     Usuario host = new Usuario();
     host.setUsername("Juan");
 
-    Sala sala = servicioSala.crearSala(
-            codigo,
-            "Trivia del viernes",
-            host
-    );
+    Sala sala = servicioSala.crearSala(codigo, "Trivia del viernes", host);
 
     Usuario usuarioInvitado = new Usuario();
     usuarioInvitado.setUsername(invitado);
