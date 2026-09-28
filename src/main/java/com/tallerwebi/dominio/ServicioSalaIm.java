@@ -43,4 +43,19 @@ public class ServicioSalaIm implements ServicioSala {
       }
     }
   }
+
+  @Override
+  public void cambiarHost(Sala sala, Usuario solicitante, Usuario nuevoHost) {
+    //validamos que si el host no es igual al soliciante se lanza la excepción para esta prueba
+    if (!sala.getHost().equals(solicitante)) {
+      throw new UsuarioNoEsHostException("Solo el host puede transferir el rol");
+    }
+
+    //si en la sala de los jugadores, no contiene un host se lanza la excepción
+    if (!sala.getJugadores().contains(nuevoHost)) {
+      throw new UsuarioNoPerteneceASalaException("El nuevo host no pertenece a la sala");
+    }
+
+    sala.setHost(nuevoHost);
+  }
 }

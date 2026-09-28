@@ -155,4 +155,69 @@ public class ServicioSalaTest {
     assertThat(sala.getHost(), equalTo(host));
     assertThat(sala.getJugadores(), hasItem(host));
   }
+
+  @Test
+  public void deberiaCambiarElHostCuandoElHostActualLoSolicita() {
+    // Given
+    Usuario hostActual = new Usuario();
+
+    hostActual.setUsername("Juan");
+
+    Usuario nuevoHost = new Usuario();
+    nuevoHost.setUsername("Ana");
+
+    Sala sala = new Sala("TRV-1234", "Trivia del viernes", hostActual);
+    sala.agregarJugador(hostActual);
+    sala.agregarJugador(nuevoHost);
+
+    // When
+    servicioSala.cambiarHost(sala, hostActual, nuevoHost);
+
+    // Then
+    assertThat(sala.getHost(), equalTo(nuevoHost));
+    assertThat(sala.getJugadores(), hasItem(hostActual));
+    assertThat(sala.getJugadores(), hasItem(nuevoHost));
+  }
+
+  @Test
+  public void deberiaRechazarElCambioSiElSolicitanteNoEsElHost() {
+    // Given
+    Usuario hostActual = new Usuario();
+    Usuario integrante = new Usuario();
+    Usuario nuevoHost = new Usuario();
+
+    hostActual.setUsername("Juan");
+    integrante.setUsername("Ana");
+    nuevoHost.setUsername("Pedro");
+
+    Sala sala = new Sala("TRV-1234", "Trivia del viernes", hostActual);
+    sala.agregarJugador(hostActual);
+    sala.agregarJugador(integrante);
+    sala.agregarJugador(nuevoHost);
+
+    assertThrows(
+      UsuarioNoEsHostException.class,
+      () -> servicioSala.cambiarHost(sala, integrante, nuevoHost)
+    );
+  }
+
+  @Test
+  public void deberiaRechazarElCambioSiElNuevoHostNoPerteneceALaSala() {
+    // Given
+    Usuario hostActual = new Usuario();
+    hostActual.setUsername("Juan");
+
+    Usuario usuarioAjeno = new Usuario();
+    usuarioAjeno.setUsername("Pedro");
+
+    Sala sala = new Sala("TRV-1234", "Trivia del viernes", hostActual);
+    sala.agregarJugador(hostActual);
+
+    assertThrows(
+      UsuarioNoPerteneceASalaException.class,
+      () -> servicioSala.cambiarHost(sala, hostActual, usuarioAjeno)
+    );
+
+    assertThat(sala.getHost(), equalTo(hostActual));
+  }
 }
