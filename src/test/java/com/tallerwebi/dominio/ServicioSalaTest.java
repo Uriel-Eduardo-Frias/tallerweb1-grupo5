@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 public class ServicioSalaTest {
 
   private ServicioSala servicioSala = new ServicioSalaIm();
+  private ServicioPartida servicioPartida = new ServicioPartidaImp();
 
   @Test
   public void deberiaLanzarExcepcionCuandoLaSalaEstaLlena() {
@@ -219,5 +220,27 @@ public class ServicioSalaTest {
     );
 
     assertThat(sala.getHost(), equalTo(hostActual));
+  }
+
+  @Test
+  public void deberiaCrearUnaPartidaAsociadaALaSalaConEstadoInicial() {
+    // Given
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+
+    Usuario integrante = new Usuario();
+    integrante.setUsername("Ana");
+
+    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
+    sala.agregarJugador(host);
+    sala.agregarJugador(integrante);
+
+    // When
+    Partida partida = servicioPartida.iniciarPartida(sala, host);
+
+    // Then
+    assertThat(partida, notNullValue());
+    assertThat(partida.getSala(), equalTo(sala));
+    assertThat(partida.getEstado(), equalTo(EstadoPartida.INICIADA));
   }
 }
