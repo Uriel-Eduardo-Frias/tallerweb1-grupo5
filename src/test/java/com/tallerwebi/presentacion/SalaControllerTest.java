@@ -2,16 +2,20 @@ package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.Sala;
+import com.tallerwebi.dominio.*;
 import java.util.List;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
 
 public class SalaControllerTest {
 
-  private SalaController salaController = new SalaController();
+  private ServicioSala servicioSala = mock(ServicioSala.class);
+  private SalaController salaController = new SalaController(servicioSala);
 
+  @Disabled("Test de prueba vacío para validar al crear una sala")
   @Test
   public void deberiaCrearUnaSala() {}
 
@@ -59,17 +63,21 @@ public class SalaControllerTest {
 
   @Test
   public void deberiaAgregarAlInvitadoALaSalaCuandoElCodigoEsValido() {
-    // Given
-    String codigoValido = "TRV-1234";
-    String invitado = "Ana";
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
 
-    // When
-    ModelAndView resultado = salaController.unirse(codigoValido, invitado);
+    Usuario invitado = new Usuario();
+    invitado.setUsername("Ana");
+
+    when(servicioSala.crearSala("TRV-1234", "Trivia del viernes", host)).thenReturn(sala);
 
     // Then
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+    ModelAndView resultado = salaController.unirse("TRV-1234", "Ana");
 
-    Sala sala = (Sala) resultado.getModel().get("sala");
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo(invitado))));
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+    assertThat(resultado.getModel().get("sala"), equalTo(sala));
+    assertThat(resultado.getModel().get("error"), nullValue());
+    verify(servicioSala).unirse(sala, invitado);
   }
 }
