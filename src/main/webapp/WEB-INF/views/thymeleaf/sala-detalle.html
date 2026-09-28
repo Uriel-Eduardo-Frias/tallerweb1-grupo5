@@ -30,14 +30,22 @@
 
     <h2>Jugadores</h2>
 
-    <ul>
+    <p th:if="${#lists.isEmpty(sala.jugadores)}">
+        Todavía no hay jugadores en la sala.
+    </p>
 
+    <ul th:unless="${#lists.isEmpty(sala.jugadores)}">
         <li th:each="jugador : ${sala.jugadores}"
             th:text="${jugador.username}">
             Nombre del jugador
         </li>
-
     </ul>
+
+
+    <p>
+        Cantidad de jugadores:
+        <span th:text="${#lists.size(sala.jugadores)}">0</span>
+    </p>
 
 </main>
 

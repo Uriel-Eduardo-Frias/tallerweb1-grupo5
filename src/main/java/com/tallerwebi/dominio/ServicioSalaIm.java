@@ -17,7 +17,11 @@ public class ServicioSalaIm implements ServicioSala {
 
   @Override
   public Sala crearSala(String codigo, String nombre, Usuario host) {
-    return new Sala(codigo, nombre, host);
+    Sala sala = new Sala(codigo, nombre, host);
+
+    sala.agregarJugador(host);
+
+    return sala;
   }
 
   @Override

@@ -78,7 +78,7 @@ public class SalaControllerTest {
     assertThat(sala, notNullValue());
     assertThat(sala.getCodigo(), equalTo(codigo));
     assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo(nombreInvitado))));
-    assertThat(sala.getJugadores(), hasSize(1));
+    assertThat(sala.getJugadores(), hasSize(2));
     assertThat(resultado.getModel().get("error"), nullValue());
   }
 
@@ -92,5 +92,22 @@ public class SalaControllerTest {
 
     // Then
     assertThat(resultado.getViewName(), equalTo("sala-formulario"));
+  }
+
+  @Test
+  public void deberiaPasarElHostEnLaSalaMostradaAlCrear() {
+    // Given
+    ServicioSala servicioReal = new ServicioSalaIm();
+    SalaController controlador = new SalaController(servicioReal);
+
+    // When
+    ModelAndView resultado = controlador.crearSala("TRV-1234", "Trivia del viernes", "Juan");
+
+    // Then
+    Sala sala = (Sala) resultado.getModel().get("sala");
+
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+    assertThat(sala.getJugadores(), hasSize(1));
+    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Juan"))));
   }
 }

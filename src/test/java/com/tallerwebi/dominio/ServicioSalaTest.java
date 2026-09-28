@@ -144,16 +144,15 @@ public class ServicioSalaTest {
     Usuario host = new Usuario();
     host.setUsername("Juan");
 
-    //when
+    // When
     Sala sala = servicioSala.crearSala("TRV-1234", "Trivia del viernes", host);
-
-    sala.agregarJugador(host);
 
     // Then
     assertThat(sala, notNullValue());
     assertThat(sala.getCodigo(), equalTo("TRV-1234"));
     assertThat(sala.getNombre(), equalTo("Trivia del viernes"));
     assertThat(sala.getHost(), equalTo(host));
+    assertThat(sala.getJugadores(), hasSize(1));
     assertThat(sala.getJugadores(), hasItem(host));
   }
 
