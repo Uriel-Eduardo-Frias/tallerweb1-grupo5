@@ -12,7 +12,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 public class SalaControllerTest {
 
-  private ServicioSala servicioSala = mock(ServicioSala.class);
+  private ServicioSala servicioSala = new ServicioSalaIm();
   private SalaController salaController = new SalaController(servicioSala);
 
   @Disabled("Test de prueba vacío para validar al crear una sala")
@@ -63,21 +63,34 @@ public class SalaControllerTest {
 
   @Test
   public void deberiaAgregarAlInvitadoALaSalaCuandoElCodigoEsValido() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
+    // Given
+    String codigo = "TRV-1234";
+    String nombreInvitado = "Ana";
 
-    Usuario invitado = new Usuario();
-    invitado.setUsername("Ana");
-
-    when(servicioSala.crearSala("TRV-1234", "Trivia del viernes", host)).thenReturn(sala);
+    // When
+    ModelAndView resultado = salaController.unirse(codigo, nombreInvitado);
 
     // Then
-    ModelAndView resultado = salaController.unirse("TRV-1234", "Ana");
-
     assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-    assertThat(resultado.getModel().get("sala"), equalTo(sala));
+
+    Sala sala = (Sala) resultado.getModel().get("sala");
+
+    assertThat(sala, notNullValue());
+    assertThat(sala.getCodigo(), equalTo(codigo));
+    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo(nombreInvitado))));
+    assertThat(sala.getJugadores(), hasSize(1));
     assertThat(resultado.getModel().get("error"), nullValue());
-    verify(servicioSala).unirse(sala, invitado);
+  }
+
+  @Test
+  public void deberiaMostrarElFormularioParaCrearUnaSala() {
+    // Given
+    // El controlador ya está preparado con ServicioSala.
+
+    // When
+    ModelAndView resultado = salaController.mostrarFormularioCrearSala();
+
+    // Then
+    assertThat(resultado.getViewName(), equalTo("sala-formulario"));
   }
 }

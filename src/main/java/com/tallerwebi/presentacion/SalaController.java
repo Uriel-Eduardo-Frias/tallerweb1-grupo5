@@ -77,4 +77,9 @@ public class SalaController {
 
     return new ModelAndView("sala-detalle", modelo);
   }
+
+  @RequestMapping(path = "/salas/crear", method = RequestMethod.GET)
+  public ModelAndView mostrarFormularioCrearSala() {
+    return new ModelAndView("sala-formulario");
+  }
 }
