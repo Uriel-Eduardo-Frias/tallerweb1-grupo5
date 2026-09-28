@@ -1,12 +1,13 @@
-package com.tallerwebi.dominio;
+package com.tallerwebi.presentacion;
+
+import com.tallerwebi.dominio.Sala;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-
-import com.tallerwebi.presentacion.SalaController;
-import java.util.List;
-import org.junit.jupiter.api.Test;
-import org.springframework.web.servlet.ModelAndView;
 
 public class SalaControllerTest {
 
