@@ -9,12 +9,14 @@ public class Sala {
   private String nombre;
   private Usuario host;
   private List<Usuario> jugadores;
+  private Integer maxJugadores;
 
   public Sala(String codigo, String nombre, Usuario host) {
     this.codigo = codigo;
     this.nombre = nombre;
     this.host = host;
     this.jugadores = new ArrayList<>();
+    this.maxJugadores = 4;
   }
 
   public boolean agregarJugador(Usuario usuario) {
@@ -55,5 +57,13 @@ public class Sala {
 
   public void setJugadores(List<Usuario> jugadores) {
     this.jugadores = jugadores;
+  }
+
+  public Integer getMaxJugadores() {
+    return maxJugadores;
+  }
+
+  public void setMaxJugadores(Integer maxJugadores) {
+    this.maxJugadores = maxJugadores;
   }
 }
