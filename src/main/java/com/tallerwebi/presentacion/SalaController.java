@@ -38,16 +38,19 @@ public class SalaController {
 
   @RequestMapping(path = "/salas", method = RequestMethod.GET)
   public ModelAndView listarSalas() {
-    Map<String, Object> modelo = new ModelMap();
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+
+    Sala sala = servicioSala.crearSala(
+            "TRV-1234",
+            "Trivia del viernes",
+            host
+    );
 
     List<Sala> salas = new ArrayList<>();
+    salas.add(sala);
 
-    Usuario usuario = new Usuario();
-
-    usuario.setUsername("Juan");
-
-    salas.add(new Sala("TRV-1234", "Trivia del viernes", usuario));
-
+    Map<String, Object> modelo = new ModelMap();
     modelo.put("salas", salas);
 
     return new ModelAndView("salas-lista", modelo);
@@ -61,7 +64,11 @@ public class SalaController {
     Usuario host = new Usuario();
     host.setUsername("Juan");
 
-    Sala sala = servicioSala.crearSala(codigo, "Trivia del viernes", host);
+    Sala sala = servicioSala.crearSala(
+            codigo,
+            "Trivia del viernes",
+            host
+    );
 
     Usuario usuarioInvitado = new Usuario();
     usuarioInvitado.setUsername(invitado);
