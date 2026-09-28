@@ -1,9 +1,8 @@
 package com.tallerwebi.dominio;
 
-import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
 @Service("servicioPartidaImp")
 public class ServicioPartidaImp implements ServicioPartida {
@@ -15,9 +14,9 @@ public class ServicioPartidaImp implements ServicioPartida {
     this.servicioSala = servicioSala;
   }
 
-    @Override
-  public Partida iniciarPartida(String codigoSala,Usuario solicitante) {
-      Sala sala = servicioSala.buscarPorCodigo(codigoSala);
+  @Override
+  public Partida iniciarPartida(String codigoSala, Usuario solicitante) {
+    Sala sala = servicioSala.buscarPorCodigo(codigoSala);
 
     //se valida que si la sala , el usuario no es el host se lanza una excepción
     if (!sala.getHost().equals(solicitante)) {

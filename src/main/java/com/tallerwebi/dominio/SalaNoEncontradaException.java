@@ -1,7 +1,10 @@
 package com.tallerwebi.dominio;
 
 public class SalaNoEncontradaException extends RuntimeException {
-    public SalaNoEncontradaException(String mensaje){
-        super(mensaje);
-    }
+
+  private static final long serialVersionUID = 1L;
+
+  public SalaNoEncontradaException(String mensaje) {
+    super(mensaje);
+  }
 }
