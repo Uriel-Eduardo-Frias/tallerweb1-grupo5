@@ -27,6 +27,10 @@ public class Sala {
     return this.jugadores.add(usuario);
   }
 
+  public void quitarJugador(Usuario usuario) {
+    jugadores.remove(usuario);
+  }
+
   public String getCodigo() {
     return this.codigo;
   }
