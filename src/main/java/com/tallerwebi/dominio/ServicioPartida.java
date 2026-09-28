@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 public interface ServicioPartida {
-  Partida iniciarPartida(Sala sala, Usuario solicitante);
+  Partida iniciarPartida(String codigoSala, Usuario solicitante);
   Partida finalizarPartida();
+  Partida buscarPartidaPorCodigoSala(String codigoSala);
 }

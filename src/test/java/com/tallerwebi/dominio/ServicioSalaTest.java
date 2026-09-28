@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 public class ServicioSalaTest {
 
   private ServicioSala servicioSala = new ServicioSalaIm();
-  private ServicioPartida servicioPartida = new ServicioPartidaImp();
+  private ServicioPartida servicioPartida = new ServicioPartidaImp(servicioSala);
 
   @Test
   public void deberiaLanzarExcepcionCuandoLaSalaEstaLlena() {
@@ -235,7 +235,7 @@ public class ServicioSalaTest {
     sala.agregarJugador(integrante);
 
     // When
-    Partida partida = servicioPartida.iniciarPartida(sala, host);
+    Partida partida = servicioPartida.iniciarPartida("TRV-1234", host);
 
     // Then
     assertThat(partida, notNullValue());
