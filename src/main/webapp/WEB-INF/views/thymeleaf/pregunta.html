@@ -9,39 +9,44 @@
 <div class="container" style="max-width: 600px;">
 
     <div class="card p-4 shadow-sm">
-        <div class="d-flex justify-content-between mb-3">
-            <span class="badge bg-info text-dark" th:text="${pregunta.categoriaNombre}">Historia</span>
-            <span class="badge bg-secondary" th:text="'Puntos: ' + ${puntaje}">0</span>
+
+        <!-- Categoría de la pregunta actual -->
+        <div class="mb-3 text-end" th:if="${pregunta != null and pregunta.categoria != null}">
+            <span class="badge bg-info text-dark fs-6" th:text="${pregunta.categoria.nombre}">Categoría</span>
         </div>
 
-        <!-- Si AÚN NO respondió, muestra los botones para jugar -->
-        <div th:if="${yaRespondio == null}">
-            <h4 class="mb-4" th:text="${pregunta.texto}">¿Pregunta?</h4>
+        <!-- 1. Estado: Aún no respondió (Muestra la pregunta y las opciones) -->
+        <div th:if="${!yaRespondio}">
+            <h4 class="mb-4 text-center" th:text="${pregunta.descripcion}">¿Pregunta?</h4>
 
-            <form th:action="@{/partida/responder}" method="POST" class="d-grid gap-2">
+            <form th:action="@{/responder}" method="POST" class="d-grid gap-3">
+                <!-- Se envía el ID de la opción seleccionada -->
                 <button th:each="op : ${pregunta.opciones}"
                         type="submit"
                         name="opcionId"
                         th:value="${op.id}"
-                        class="btn btn-outline-primary text-start p-3"
+                        class="btn btn-outline-primary text-start p-3 fs-5"
                         th:text="${op.texto}">
                     Opción
                 </button>
             </form>
         </div>
 
-        <!-- Si YA respondió, muestra el veredicto -->
-        <div th:if="${yaRespondio != null}" class="text-center">
+        <!-- 2. Estado: Ya respondió (Muestra el resultado y feedback) -->
+        <div th:if="${yaRespondio}" class="text-center">
 
-            <!-- Si esCorrecta es true muestra "Correcto", si es false muestra "Incorrecto" -->
-            <h3 th:class="${esCorrecta ? 'text-success' : 'text-danger'}"
-                th:text="${esCorrecta ? '¡Respuesta Correcta!' : '¡Respuesta Incorrecta!'}"></h3>
+            <h3 th:if="${esCorrecta != null}"
+                th:class="${esCorrecta ? 'text-success fw-bold' : 'text-danger fw-bold'}"
+                th:text="${esCorrecta ? '¡Respuesta Correcta!' : '¡Respuesta Incorrecta!'}">
+            </h3>
 
-            <p class="mt-2 text-muted" th:text="'La opción correcta era: ' + ${textoCorrecto}"></p>
+            <p class="mt-3 text-muted" th:if="${textoCorrecto != null}"
+               th:text="'La respuesta correcta era: ' + ${textoCorrecto}">
+            </p>
 
-            <form th:action="@{/partida/proxima-fase}" method="POST" class="mt-4">
-                <button type="submit" class="btn btn-success">Siguiente Ronda</button>
-            </form>
+            <a th:href="@{/votacion}" class="btn btn-success btn-lg mt-3">
+                Volver a Categorías
+            </a>
         </div>
 
     </div>
