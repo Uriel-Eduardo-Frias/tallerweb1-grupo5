@@ -78,6 +78,23 @@ public class SalaController {
     return new ModelAndView("sala-detalle", modelo);
   }
 
+  @RequestMapping(path = "/salas/crear", method = RequestMethod.POST)
+  public ModelAndView crearSala(
+    @RequestParam("nombre") String nombre,
+    @RequestParam("codigo") String codigo,
+    @RequestParam("host") String nombreHost
+  ) {
+    Usuario host = new Usuario();
+    host.setUsername(nombreHost);
+
+    Sala sala = servicioSala.crearSala(codigo, nombre, host);
+
+    Map<String, Object> modelo = new ModelMap();
+    modelo.put("sala", sala);
+
+    return new ModelAndView("sala-detalle", modelo);
+  }
+
   @RequestMapping(path = "/salas/crear", method = RequestMethod.GET)
   public ModelAndView mostrarFormularioCrearSala() {
     return new ModelAndView("sala-formulario");
