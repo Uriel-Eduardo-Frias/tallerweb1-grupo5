@@ -3,9 +3,18 @@ package com.tallerwebi.dominio;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service("servicioSalaImpl")
 @Transactional
 public class ServicioSalaIm implements ServicioSala {
+
+
+  private final Map<String, Sala> salas = new HashMap<>();
+
 
   @Override
   public void unirse(Sala sala, Usuario usuario) {
@@ -20,7 +29,7 @@ public class ServicioSalaIm implements ServicioSala {
     Sala sala = new Sala(codigo, nombre, host);
 
     sala.agregarJugador(host);
-
+    salas.put(codigo,sala);
     return sala;
   }
 
@@ -61,5 +70,24 @@ public class ServicioSalaIm implements ServicioSala {
     }
 
     sala.setHost(nuevoHost);
+  }
+
+  @Override
+  public Sala buscarPorCodigo(String codigo) {
+    //se busca la sala por su código, sino la encuentra se devuelve una excepción que no encontrolo la sala
+    Sala sala = salas.get(codigo);
+
+    if(sala == null){
+      throw new SalaNoEncontradaException("No se pudo encontrar la sala");
+    }
+
+    return sala;
+  }
+
+
+
+  @Override
+  public List<Sala> listarSalas() {
+    return new ArrayList<>(this.salas.values());
   }
 }
