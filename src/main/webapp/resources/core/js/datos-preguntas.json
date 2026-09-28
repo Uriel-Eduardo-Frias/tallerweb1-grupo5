@@ -1,0 +1,66 @@
+{
+  "categorias": {
+    "1": { "id": 1, "nombre": "Arte", "descripcion": "Pintura, escultura, arquitectura y grandes obras de la literatura" },
+    "2": { "id": 2, "nombre": "Ciencia", "descripcion": "Fisica, quimica, biologia, astronomia y tecnologia" },
+    "3": { "id": 3, "nombre": "Deportes", "descripcion": "Futbol, baloncesto, tenis, juegos olimpicos y atletismo" },
+    "4": { "id": 4, "nombre": "Entretenimiento", "descripcion": "Cine, series, musica, videojuegos y cultura pop" },
+    "5": { "id": 5, "nombre": "Geografia", "descripcion": "Paises, capitales, cordilleras, oceanos y mapas" },
+    "6": { "id": 6, "nombre": "Historia", "descripcion": "Eventos historicos, civilizaciones antiguas y personajes celebres" }
+  },
+  "preguntas": {
+    "1": {
+      "id": 101, "texto": "¿Quién pintó la Mona Lisa?", "categoriaNombre": "Arte", "categoriaId": 1,
+      "opciones": {
+        "1": { "id": 1, "texto": "Vincent van Gogh", "esCorrecta": false },
+        "2": { "id": 2, "texto": "Leonardo da Vinci", "esCorrecta": true },
+        "3": { "id": 3, "texto": "Pablo Picasso", "esCorrecta": false },
+        "4": { "id": 4, "texto": "Claude Monet", "esCorrecta": false }
+      }
+    },
+    "2": {
+      "id": 102, "texto": "¿Cuál es el planeta más cercano al Sol?", "categoriaNombre": "Ciencia", "categoriaId": 2,
+      "opciones": {
+        "5": { "id": 5, "texto": "Venus", "esCorrecta": false },
+        "6": { "id": 6, "texto": "Marte", "esCorrecta": false },
+        "7": { "id": 7, "texto": "Mercurio", "esCorrecta": true },
+        "8": { "id": 8, "texto": "Júpiter", "esCorrecta": false }
+      }
+    },
+    "3": {
+      "id": 103, "texto": "¿Cada cuántos años se celebran los Juegos Olímpicos?", "categoriaNombre": "Deportes", "categoriaId": 3,
+      "opciones": {
+        "9": { "id": 9, "texto": "2 años", "esCorrecta": false },
+        "10": { "id": 10, "texto": "4 años", "esCorrecta": true },
+        "11": { "id": 11, "texto": "5 años", "esCorrecta": false },
+        "12": { "id": 12, "texto": "8 años", "esCorrecta": false }
+      }
+    },
+    "4": {
+      "id": 104, "texto": "¿A qué saga de películas pertenece Darth Vader?", "categoriaNombre": "Entretenimiento", "categoriaId": 4,
+      "opciones": {
+        "13": { "id": 13, "texto": "Star Trek", "esCorrecta": false },
+        "14": { "id": 14, "texto": "Star Wars", "esCorrecta": true },
+        "15": { "id": 15, "texto": "El Señor de los Anillos", "esCorrecta": false },
+        "16": { "id": 16, "texto": "Matrix", "esCorrecta": false }
+      }
+    },
+    "5": {
+      "id": 105, "texto": "¿Cuál es el océano más grande del mundo?", "categoriaNombre": "Geografia", "categoriaId": 5,
+      "opciones": {
+        "17": { "id": 17, "texto": "Atlántico", "esCorrecta": false },
+        "18": { "id": 18, "texto": "Índico", "esCorrecta": false },
+        "19": { "id": 19, "texto": "Pacífico", "esCorrecta": true },
+        "20": { "id": 20, "texto": "Ártico", "esCorrecta": false }
+      }
+    },
+    "6": {
+      "id": 106, "texto": "¿En qué año se descubrió América?", "categoriaNombre": "Historia", "categoriaId": 6,
+      "opciones": {
+        "21": { "id": 21, "texto": "1492", "esCorrecta": true },
+        "22": { "id": 22, "texto": "1810", "esCorrecta": false },
+        "23": { "id": 23, "texto": "1776", "esCorrecta": false },
+        "24": { "id": 24, "texto": "1914", "esCorrecta": false }
+      }
+    }
+  }
+}

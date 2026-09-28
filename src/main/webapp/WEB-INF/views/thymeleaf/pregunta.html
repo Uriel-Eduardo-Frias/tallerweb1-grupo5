@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pregunta</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light p-4">
+<div class="container" style="max-width: 600px;">
+
+    <div class="card p-4 shadow-sm">
+        <div class="d-flex justify-content-between mb-3">
+            <span class="badge bg-info text-dark" th:text="${pregunta.categoriaNombre}">Historia</span>
+            <span class="badge bg-secondary" th:text="'Puntos: ' + ${puntaje}">0</span>
+        </div>
+
+        <!-- Si AÚN NO respondió, muestra los botones para jugar -->
+        <div th:if="${yaRespondio == null}">
+            <h4 class="mb-4" th:text="${pregunta.texto}">¿Pregunta?</h4>
+
+            <form th:action="@{/partida/responder}" method="POST" class="d-grid gap-2">
+                <button th:each="op : ${pregunta.opciones}"
+                        type="submit"
+                        name="opcionId"
+                        th:value="${op.id}"
+                        class="btn btn-outline-primary text-start p-3"
+                        th:text="${op.texto}">
+                    Opción
+                </button>
+            </form>
+        </div>
+
+        <!-- Si YA respondió, muestra el veredicto -->
+        <div th:if="${yaRespondio != null}" class="text-center">
+
+            <!-- Si esCorrecta es true muestra "Correcto", si es false muestra "Incorrecto" -->
+            <h3 th:class="${esCorrecta ? 'text-success' : 'text-danger'}"
+                th:text="${esCorrecta ? '¡Respuesta Correcta!' : '¡Respuesta Incorrecta!'}"></h3>
+
+            <p class="mt-2 text-muted" th:text="'La opción correcta era: ' + ${textoCorrecto}"></p>
+
+            <form th:action="@{/partida/proxima-fase}" method="POST" class="mt-4">
+                <button type="submit" class="btn btn-success">Siguiente Ronda</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
