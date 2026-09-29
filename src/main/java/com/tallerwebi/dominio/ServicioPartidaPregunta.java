@@ -6,4 +6,8 @@ public interface ServicioPartidaPregunta {
   Map<Long, Categoria> obtenerCategorias();
 
   Pregunta obtenerPreguntaPorCategoria(Long identificadorCategoria);
+
+  Boolean verificarRespuesta(Long opcionId);
+
+  String obtenerTextoRespuestaCorrecta(Long opcionId);
 }

@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Categoria;
+import com.tallerwebi.dominio.Pregunta;
 import com.tallerwebi.dominio.ServicioPartidaPregunta;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,23 +27,40 @@ public class ControladorPartidaPregunta {
     this.servicioPartidaPregunta = servicioPartidaPregunta;
   }
 
+  // 1. Muestra la lista de categorías
   @RequestMapping(value = "/votacion", method = RequestMethod.GET)
   public ModelAndView mostrarPantalla() {
     Map<String, Object> modelo = new ModelMap();
-
-    // Obtenemos las categorías del servicio
     Map<Long, Categoria> mapaDeCategorias = this.servicioPartidaPregunta.obtenerCategorias();
-
-    // Las cargamos al modelo para que Thymeleaf las pueda iterar
     modelo.put(ATTR_MAPA_CATEGORIAS, mapaDeCategorias);
-
     return new ModelAndView(VISTA_VOTACION, modelo);
   }
 
+  // 2. Recibe la categoría elegida y muestra la pregunta
+  @RequestMapping(value = "/iniciar-pregunta", method = RequestMethod.POST)
+  public ModelAndView iniciarPregunta(@RequestParam("categoriaId") Long categoriaId) {
+    Map<String, Object> modelo = new ModelMap();
+
+    Pregunta pregunta = this.servicioPartidaPregunta.obtenerPreguntaPorCategoria(categoriaId);
+
+    modelo.put("pregunta", pregunta);
+    modelo.put("yaRespondio", false);
+
+    return new ModelAndView(VISTA_PREGUNTA, modelo);
+  }
+
+  // 3. Recibe la opción elegida y muestra si acertó o falló
   @RequestMapping(value = "/responder", method = RequestMethod.POST)
   public ModelAndView procesarRespuesta(@RequestParam("opcionId") Long opcionId) {
     Map<String, Object> modelo = new ModelMap();
-    modelo.put("opcionElegida", opcionId);
+
+    boolean esCorrecta = this.servicioPartidaPregunta.verificarRespuesta(opcionId);
+    String textoCorrecto = this.servicioPartidaPregunta.obtenerTextoRespuestaCorrecta(opcionId);
+
+    modelo.put("yaRespondio", true);
+    modelo.put("esCorrecta", esCorrecta);
+    modelo.put("textoCorrecto", textoCorrecto);
+
     return new ModelAndView(VISTA_PREGUNTA, modelo);
   }
 }

@@ -11,19 +11,34 @@ public class Pregunta {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long identificador;
 
-  private String textoDeLaPregunta;
+  private String descripcion;
 
-  @ManyToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "categoria_id")
   private Categoria categoria;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Opcion> opciones = new ArrayList<>();
 
   public Pregunta() {}
 
   public Pregunta(String textoDeLaPregunta, Categoria categoria) {
-    this.textoDeLaPregunta = textoDeLaPregunta;
+    this.descripcion = textoDeLaPregunta;
     this.categoria = categoria;
+  }
+
+  public void agregarOpcion(Opcion opcion) {
+    if (opcion != null) {
+      this.opciones.add(opcion);
+      opcion.setPregunta(this);
+    }
+  }
+
+  public void removerOpcion(Opcion opcion) {
+    if (opcion != null) {
+      this.opciones.remove(opcion);
+      opcion.setPregunta(null);
+    }
   }
 
   public Long getIdentificador() {
@@ -34,12 +49,12 @@ public class Pregunta {
     this.identificador = identificador;
   }
 
-  public String getTextoDeLaPregunta() {
-    return textoDeLaPregunta;
+  public String getDescripcion() {
+    return descripcion;
   }
 
-  public void setTextoDeLaPregunta(String textoDeLaPregunta) {
-    this.textoDeLaPregunta = textoDeLaPregunta;
+  public void setDescripcion(String textoDeLaPregunta) {
+    this.descripcion = textoDeLaPregunta;
   }
 
   public Categoria getCategoria() {
@@ -56,10 +71,5 @@ public class Pregunta {
 
   public void setOpciones(List<Opcion> opciones) {
     this.opciones = opciones;
-  }
-
-  public void agregarOpcion(Opcion opcion) {
-    this.opciones.add(opcion);
-    opcion.setPregunta(this);
   }
 }
