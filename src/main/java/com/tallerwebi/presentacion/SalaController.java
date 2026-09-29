@@ -150,19 +150,21 @@ public class SalaController {
     @RequestParam("invitado") String invitado
   ) {
     Sala sala = servicioSala.buscarPorCodigo(codigo);
-    Usuario usuarioInvitado = new Usuario();
-    usuarioInvitado.setUsername(invitado);
-
-    Map<String, Object> modelo = new ModelMap();
 
     try {
-      servicioSala.unirse(sala, usuarioInvitado);
-    } catch (SalaLlenaException e) {
-      modelo.put("error", e.getMessage());
-    }
+      Usuario usuarioInvitado = new Usuario();
+      usuarioInvitado.setUsername(invitado.trim());
 
-    modelo.put("sala", sala);
-    return new ModelAndView("sala-detalle", modelo);
+      servicioSala.unirse(sala, usuarioInvitado);
+
+      return new ModelAndView("redirect:/salas/" + codigo);
+    } catch (SalaLlenaException | IllegalStateException e) {
+      Map<String, Object> modelo = new ModelMap();
+      modelo.put("sala", sala);
+      modelo.put("error", e.getMessage());
+
+      return new ModelAndView("sala-detalle", modelo);
+    }
   }
 
   /* Mostrar el formulario para crear una sala  */

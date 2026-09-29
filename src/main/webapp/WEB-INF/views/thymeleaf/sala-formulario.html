@@ -7,6 +7,179 @@
 
     <link rel="stylesheet"
           th:href="@{/resources/core/css/salas.css}">
+
+    <style>
+        :root {
+            --bg: #10101a;
+            --surface: #1a1a29;
+            --text: #f4f2ff;
+            --text-muted: #aaa7bf;
+            --border: #34334a;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background:
+                    radial-gradient(ellipse at top, #292044 0, transparent 45%),
+                    var(--bg);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        .main-header {
+            border-bottom: 1px solid var(--border);
+            background: rgb(16 16 26 / 85%);
+        }
+
+        .header-container,
+        .main-content {
+            width: min(1120px, calc(100% - 2rem));
+            margin: 0 auto;
+        }
+
+        .header-container {
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-logo {
+            color: var(--text);
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .brand-accent {
+            color: #a78bfa;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 160ms ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .main-content {
+            display: grid;
+            min-height: calc(100vh - 71px);
+            place-items: center;
+            padding: 3rem 0;
+        }
+
+        .card {
+            width: min(100%, 520px);
+            padding: clamp(1.5rem, 5vw, 2.5rem);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--surface);
+            box-shadow: 0 20px 50px rgb(0 0 0 / 25%);
+        }
+
+        .card h1 {
+            margin: 0 0 0.6rem;
+            font-size: clamp(1.8rem, 5vw, 2.3rem);
+            letter-spacing: -0.04em;
+        }
+
+        .card > p {
+            margin: 0 0 2rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .form-field {
+            display: grid;
+            gap: 0.55rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-field label {
+            font-size: 0.95rem;
+            font-weight: 650;
+        }
+
+        .form-field input {
+            width: 100%;
+            padding: 0.85rem 0.95rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            background: #12121e;
+            color: var(--text);
+            font: inherit;
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .form-field input::placeholder {
+            color: #77748e;
+        }
+
+        .form-field input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgb(139 92 246 / 18%);
+        }
+
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.9rem 1.1rem;
+            border: 0;
+            border-radius: 10px;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:focus-visible,
+        .nav-links a:focus-visible,
+        .brand-logo:focus-visible {
+            outline: 3px solid #c4b5fd;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 600px) {
+            .main-content {
+                align-items: start;
+                padding: 2rem 0;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
 </head>
 <body>
 <header class="main-header">
