@@ -1,53 +1,119 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Detalle de la sala</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title th:text="${sala.nombre + ' | TriviaWeb'}">
+        Detalle de la sala
+    </title>
+
+    <link rel="stylesheet"
+          th:href="@{/resources/core/css/salas.css}">
 </head>
-
 <body>
+<header class="main-header">
+    <div class="header-container">
+        <a class="brand-logo" th:href="@{/salas}">
+            Trivia<span class="brand-accent">Web</span>
+        </a>
 
-<main>
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a th:href="@{/salas}">Salas</a>
+        </nav>
+    </div>
+</header>
 
-    <h1 th:text="${sala.nombre}">
-        Nombre de la sala
-    </h1>
+<main class="main-content">
+    <section class="card" aria-labelledby="room-title">
+        <h1 id="room-title" th:text="${sala.nombre}">
+            Nombre de la sala
+        </h1>
 
-    <p>
-        Código:
-        <span th:text="${sala.codigo}">
-            TRV-XXXX
-        </span>
+        <p>
+            Estado:
+            <strong th:if="${sala.estado.name() == 'EN_ESPERA'}">
+                En espera
+            </strong>
+            <strong th:if="${sala.estado.name() == 'EN_CURSO'}">
+                En curso
+            </strong>
+            <strong th:if="${sala.estado.name() == 'FINALIZADA'}">
+                Finalizada
+            </strong>
+        </p>
+
+        <p>
+            Código para invitar:
+            <strong th:text="${sala.codigo}">TRV-XXXX</strong>
+        </p>
+
+        <p>
+            Host:
+            <span th:text="${sala.host.username}">Nombre del host</span>
+        </p>
+
+        <p>
+            Jugadores:
+            <strong th:text="${#lists.size(sala.jugadores)}">1</strong>
+            /
+            <span th:text="${sala.maxJugadores}">4</span>
+        </p>
+
+        <h2>Participantes</h2>
+
+        <p th:if="${#lists.isEmpty(sala.jugadores)}">
+            Todavía no hay jugadores en la sala.
+        </p>
+
+        <ul th:unless="${#lists.isEmpty(sala.jugadores)}">
+            <li th:each="jugador : ${sala.jugadores}"
+                th:text="${jugador.username}">
+                Nombre del jugador
+            </li>
+        </ul>
+    </section>
+
+    <section class="card"
+             aria-labelledby="join-title"
+             th:if="${sala.estado.name() == 'EN_ESPERA'
+                     and #lists.size(sala.jugadores) < sala.maxJugadores}">
+        <h2 id="join-title">Unirse a esta sala</h2>
+
+        <form th:action="@{/salas/{codigo}/unirse(codigo=${sala.codigo})}"
+              method="post">
+            <div class="form-field">
+                <label for="invitado">Tu nombre</label>
+                <input id="invitado"
+                       name="invitado"
+                       type="text"
+                       maxlength="30"
+                       autocomplete="nickname"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Unirme
+            </button>
+        </form>
+    </section>
+
+    <p class="notice"
+       th:if="${sala.estado.name() == 'EN_ESPERA'
+               and #lists.size(sala.jugadores) >= sala.maxJugadores}">
+        La sala está completa.
     </p>
 
-    <p>
-        Host:
-        <span th:text="${sala.host.username}">
-            Host
-        </span>
+    <p class="notice"
+       th:if="${sala.estado.name() != 'EN_ESPERA'}">
+        Esta sala ya no acepta jugadores.
     </p>
 
-    <h2>Jugadores</h2>
-
-    <p th:if="${#lists.isEmpty(sala.jugadores)}">
-        Todavía no hay jugadores en la sala.
+    <p class="error-message"
+       th:if="${error != null}"
+       th:text="${error}">
+        No se pudo completar la acción.
     </p>
-
-    <ul th:unless="${#lists.isEmpty(sala.jugadores)}">
-        <li th:each="jugador : ${sala.jugadores}"
-            th:text="${jugador.username}">
-            Nombre del jugador
-        </li>
-    </ul>
-
-
-    <p>
-        Cantidad de jugadores:
-        <span th:text="${#lists.size(sala.jugadores)}">0</span>
-    </p>
-
 </main>
-
 </body>
 </html>

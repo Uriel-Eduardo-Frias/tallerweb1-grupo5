@@ -13,8 +13,22 @@ public class ServicioSalaIm implements ServicioSala {
 
   private final Map<String, Sala> salas = new HashMap<>();
 
+  private String generarCodigoUnico() {
+    String codigo;
+
+    do {
+      codigo = GeneradorCodigo.generarCodigoSala();
+    } while (salas.containsKey(codigo));
+
+    return codigo;
+  }
+
   @Override
   public void unirse(Sala sala, Usuario usuario) {
+    if (sala.getEstado() != EstadoSala.EN_ESPERA) {
+      throw new IllegalStateException("La sala ya no está aceptando jugadores");
+    }
+
     if (sala.getJugadores().size() >= sala.getMaxJugadores()) {
       throw new SalaLlenaException("Sala llena");
     }
@@ -22,7 +36,9 @@ public class ServicioSalaIm implements ServicioSala {
   }
 
   @Override
-  public Sala crearSala(String codigo, String nombre, Usuario host) {
+  public Sala crearSala(String nombre, Usuario host) {
+    String codigo = generarCodigoUnico();
+
     Sala sala = new Sala(codigo, nombre, host);
 
     sala.agregarJugador(host);

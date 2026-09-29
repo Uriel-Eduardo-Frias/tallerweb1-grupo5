@@ -28,6 +28,7 @@ public class ServicioSalaTest {
     assertThat(sala.getJugadores(), hasSize(1));
   }
 
+  /*
   @Test
   public void deberiaCrearUnaSala() {
     Usuario host = new Usuario();
@@ -40,6 +41,7 @@ public class ServicioSalaTest {
     assertThat(sala.getNombre(), is("Trivia del viernes"));
     assertThat(sala.getHost(), is(host));
   }
+*/
 
   @Test
   public void deberiaQuitarAlIntegranteCuandoSaleDeLaSala() {
@@ -138,6 +140,7 @@ public class ServicioSalaTest {
     assertThat(sala.getHost(), nullValue());
   }
 
+  /*
   @Test
   public void deberiaCrearUnaSalaConElHostComoPrimerJugador() {
     // Given
@@ -155,6 +158,7 @@ public class ServicioSalaTest {
     assertThat(sala.getJugadores(), hasSize(1));
     assertThat(sala.getJugadores(), hasItem(host));
   }
+*/
 
   @Test
   public void deberiaCambiarElHostCuandoElHostActualLoSolicita() {
@@ -221,6 +225,7 @@ public class ServicioSalaTest {
     assertThat(sala.getHost(), equalTo(hostActual));
   }
 
+  /*
   @Test
   public void deberiaCrearUnaPartidaAsociadaALaSalaConEstadoInicial() {
     // Given
@@ -238,6 +243,25 @@ public class ServicioSalaTest {
     Partida partida = servicioPartida.iniciarPartida("TRV-1234", host);
 
     // Then
+    assertThat(partida, notNullValue());
+    assertThat(partida.getSala(), equalTo(sala));
+    assertThat(partida.getEstado(), equalTo(EstadoPartida.INICIADA));
+  }
+  */
+
+  @Test
+  public void deberiaCrearUnaPartidaAsociadaALaSalaConEstadoInicial() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+
+    Usuario integrante = new Usuario();
+    integrante.setUsername("Ana");
+
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+    servicioSala.unirse(sala, integrante);
+
+    Partida partida = servicioPartida.iniciarPartida(sala.getCodigo(), host);
+
     assertThat(partida, notNullValue());
     assertThat(partida.getSala(), equalTo(sala));
     assertThat(partida.getEstado(), equalTo(EstadoPartida.INICIADA));

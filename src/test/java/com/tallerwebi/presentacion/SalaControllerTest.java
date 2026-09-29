@@ -42,6 +42,7 @@ public class SalaControllerTest {
   }
 */
 
+  /*
   @Test
   public void deberiaMostrarLaSalaEnLaLista() {
     // When
@@ -60,7 +61,28 @@ public class SalaControllerTest {
     assertThat(salas.get(0).getNombre(), equalTo("Trivia del viernes"));
     assertThat(salas.get(0).getHost().getUsername(), equalTo("Juan"));
   }
+*/
 
+  @Test
+  public void deberiaMostrarLaSalaEnLaLista() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+
+    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
+
+    ModelAndView resultado = salaController.listarSalas();
+
+    assertThat(resultado.getViewName(), equalTo("salas-lista"));
+
+    List<Sala> salas = (List<Sala>) resultado.getModel().get("salas");
+
+    assertThat(salas, hasSize(1));
+    assertThat(salas.get(0).getCodigo(), equalTo(creada.getCodigo()));
+    assertThat(salas.get(0).getNombre(), equalTo("Trivia del viernes"));
+    assertThat(salas.get(0).getHost().getUsername(), equalTo("Juan"));
+  }
+
+  /*
   @Test
   public void deberiaAgregarAlInvitadoALaSalaCuandoElCodigoEsValido() {
     // Given
@@ -78,6 +100,28 @@ public class SalaControllerTest {
     assertThat(sala, notNullValue());
     assertThat(sala.getCodigo(), equalTo(codigo));
     assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo(nombreInvitado))));
+    assertThat(sala.getJugadores(), hasSize(2));
+    assertThat(resultado.getModel().get("error"), nullValue());
+  }
+*/
+
+  @Test
+  public void deberiaAgregarAlInvitadoALaSalaExistente() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+
+    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
+    String codigo = creada.getCodigo();
+
+    ModelAndView resultado = salaController.unirse(codigo, "Ana");
+
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+
+    Sala sala = (Sala) resultado.getModel().get("sala");
+
+    assertThat(sala, notNullValue());
+    assertThat(sala.getCodigo(), equalTo(codigo));
+    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Ana"))));
     assertThat(sala.getJugadores(), hasSize(2));
     assertThat(resultado.getModel().get("error"), nullValue());
   }
@@ -101,7 +145,7 @@ public class SalaControllerTest {
     SalaController controlador = new SalaController(servicioReal);
 
     // When
-    ModelAndView resultado = controlador.crearSala("TRV-1234", "Trivia del viernes", "Juan");
+    ModelAndView resultado = controlador.crearSala("TRV-1234", "Juan");
 
     // Then
     Sala sala = (Sala) resultado.getModel().get("sala");
@@ -109,5 +153,36 @@ public class SalaControllerTest {
     assertThat(resultado.getViewName(), equalTo("sala-detalle"));
     assertThat(sala.getJugadores(), hasSize(1));
     assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Juan"))));
+  }
+
+  @Test
+  public void deberiaCrearUnaSalaConCodigoGeneradoYAgregarAlHost() {
+    ModelAndView resultado = salaController.crearSala("Trivia del viernes", "Juan");
+
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+
+    Sala sala = (Sala) resultado.getModel().get("sala");
+
+    assertThat(sala, notNullValue());
+    assertThat(sala.getCodigo(), matchesPattern("TRV-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}"));
+    assertThat(sala.getNombre(), equalTo("Trivia del viernes"));
+    assertThat(sala.getHost().getUsername(), equalTo("Juan"));
+    assertThat(sala.getJugadores(), hasSize(1));
+    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Juan"))));
+  }
+
+  @Test
+  public void deberiaMostrarElDetalleDeLaSalaBuscadaPorCodigo() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+
+    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
+
+    ModelAndView resultado = salaController.verSala(creada.getCodigo());
+
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+
+    Sala mostrada = (Sala) resultado.getModel().get("sala");
+    assertThat(mostrada.getCodigo(), equalTo(creada.getCodigo()));
   }
 }

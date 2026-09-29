@@ -3,97 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Crear sala</title>
+    <title>Crear sala | TriviaWeb</title>
 
     <link rel="stylesheet"
-          th:href="@{/resources/core/css/salas-lista.css}">
-
-    <style>
-        .salas-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .salas-header h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 0.4rem;
-        }
-
-        .salas-header p,
-        .empty-state p {
-            color: var(--text-muted);
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        .empty-state {
-            padding: 3rem 1rem;
-            text-align: center;
-        }
-
-        .empty-state h2 {
-            margin-bottom: 0.5rem;
-        }
-
-        .join-form {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .join-form input {
-            min-width: 120px;
-            padding: 0.5rem 0.65rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-        }
-
-        .join-form button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        @media (max-width: 700px) {
-            .salas-header {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-        }
-    </style>
-
+          th:href="@{/resources/core/css/salas.css}">
 </head>
 <body>
 <header class="main-header">
     <div class="header-container">
         <a class="brand-logo" th:href="@{/salas}">
-            <span>Trivia<span class="brand-accent">Web</span></span>
+            Trivia<span class="brand-accent">Web</span>
         </a>
-        <nav class="nav-links">
+
+        <nav class="nav-links" aria-label="Navegación principal">
             <a th:href="@{/salas}">Salas</a>
         </nav>
     </div>
 </header>
 
 <main class="main-content">
-    <section class="card">
-        <h1>Crear una sala</h1>
+    <section class="card" aria-labelledby="page-title">
+        <h1 id="page-title">Crear una sala</h1>
         <p>Completá los datos para preparar la partida.</p>
 
         <form th:action="@{/salas/crear}" method="post">
-            <label for="nombre">Nombre de la sala</label>
-            <input id="nombre" name="nombre" type="text" required>
+            <div class="form-field">
+                <label for="nombre">Nombre de la sala</label>
+                <input id="nombre"
+                       name="nombre"
+                       type="text"
+                       maxlength="60"
+                       autocomplete="off"
+                       required>
+            </div>
 
-            <label for="codigo">Código de invitación</label>
-            <input id="codigo" name="codigo" type="text" required>
-
-            <label for="host">Nombre del host</label>
-            <input id="host" name="host" type="text" required>
+            <div class="form-field">
+                <label for="host">Tu nombre</label>
+                <input id="host"
+                       name="host"
+                       type="text"
+                       maxlength="30"
+                       autocomplete="nickname"
+                       required>
+            </div>
 
             <button type="submit" class="btn btn-primary">
                 Crear sala

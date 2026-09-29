@@ -10,6 +10,7 @@ public class Sala {
   private Usuario host;
   private List<Usuario> jugadores;
   private Integer maxJugadores;
+  private EstadoSala estado;
 
   public Sala(String codigo, String nombre, Usuario host) {
     this.codigo = codigo;
@@ -17,6 +18,7 @@ public class Sala {
     this.host = host;
     this.jugadores = new ArrayList<>();
     this.maxJugadores = 4;
+    this.estado = EstadoSala.EN_ESPERA;
   }
 
   public boolean agregarJugador(Usuario usuario) {
@@ -69,5 +71,17 @@ public class Sala {
 
   public void setMaxJugadores(Integer maxJugadores) {
     this.maxJugadores = maxJugadores;
+  }
+
+  public EstadoSala getEstado() {
+    return estado;
+  }
+
+  public void iniciar() {
+    if (estado != EstadoSala.EN_ESPERA) {
+      throw new IllegalStateException("La sala no está en espera");
+    }
+
+    estado = EstadoSala.EN_CURSO;
   }
 }
