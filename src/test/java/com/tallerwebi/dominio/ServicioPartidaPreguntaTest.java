@@ -17,16 +17,11 @@ public class ServicioPartidaPreguntaTest {
   private Boolean resultadoVerificacion;
   private String textoCorrectoObtenido;
 
-  // Comprueba que el servicio sabe recuperar el listado completo de categorías disponibles para el juego
   @Test
-  public void deberiaObtenerTodasLasCategorias() {
-    // preparacion
-    givenExisteUnServicioPartidaPregunta();
+  public void deberiaObtenerTodasLasgivenExisteUnServicioPartidaPregunta();
 
-    // ejecucion
     whenObtengoLasCategorias();
 
-    // validacion
     thenLasCategoriasNoSonNulasYContienenElementos();
   }
 
@@ -43,17 +38,13 @@ public class ServicioPartidaPreguntaTest {
     assertThat(this.categoriasObtenidas.size(), is(greaterThan(0)));
   }
 
-  // Comprueba que el servicio sabe buscar y devolver la pregunta asociada al identificador de una categoría
   @Test
   public void deberiaObtenerPreguntaPorCategoriaExistente() {
-    // preparacion
     givenExisteUnServicioPartidaPregunta();
     givenTengoElIdentificadorDeCategoria(1L);
 
-    // ejecucion
     whenObtengoLaPreguntaPorCategoria();
 
-    // validacion
     thenLaPreguntaPerteneceALaCategoria(1L);
   }
 
@@ -72,31 +63,23 @@ public class ServicioPartidaPreguntaTest {
     assertThat(this.preguntaObtenida.getCategoria().getId(), equalTo(idEsperado));
   }
 
-  // Comprueba que el servicio sabe validar como correcta una opción elegida que tiene la respuesta acertada
   @Test
   public void deberiaVerificarQueLaRespuestaSeleccionadaEsCorrecta() {
-    // preparacion
     givenExisteUnServicioPartidaPregunta();
     givenTengoElIdentificadorDeOpcion(1L); // 1L es la opción correcta '1492'
 
-    // ejecucion
     whenVerificoLaRespuesta();
 
-    // validacion
     thenElResultadoDeLaRespuestaEs(true);
   }
 
-  // Comprueba que el servicio sabe identificar y rechazar una opción elegida cuando esta es errónea
   @Test
   public void deberiaVerificarQueLaRespuestaSeleccionadaEsIncorrecta() {
-    // preparacion
     givenExisteUnServicioPartidaPregunta();
     givenTengoElIdentificadorDeOpcion(2L); // 2L es la opción incorrecta '1810'
 
-    // ejecucion
     whenVerificoLaRespuesta();
 
-    // validacion
     thenElResultadoDeLaRespuestaEs(false);
   }
 
@@ -113,17 +96,13 @@ public class ServicioPartidaPreguntaTest {
     assertThat(this.resultadoVerificacion, equalTo(esperado));
   }
 
-  // Comprueba que el servicio sabe encontrar la pregunta de origen y extraer el texto de la respuesta verdadera para dar feedback
   @Test
   public void deberiaDevolverElTextoDeLaRespuestaCorrectaDadaCualquierOpcion() {
-    // preparacion
     givenExisteUnServicioPartidaPregunta();
     givenTengoElIdentificadorDeOpcion(2L); // 2L es opción de la pregunta de Colón
 
-    // ejecucion
     whenObtengoElTextoDeLaRespuestaCorrecta();
 
-    // validacion
     thenElTextoCorrectoEs("1492");
   }
 
@@ -136,14 +115,3 @@ public class ServicioPartidaPreguntaTest {
     assertThat(this.textoCorrectoObtenido, equalTo(textoEsperado));
   }
 }
-//  @Test
-//  public void deberiaLanzarExcepcionSiLaCategoriaNoExiste() {
-//    // given
-//    givenExisteUnServicioPartidaPregunta();
-//    Long idInexistente = 999L;
-//
-//    // when - then
-//    assertThrows(CategoriaNoEncontradaException.class, () -> {
-//      this.servicioPartidaPregunta.obtenerPreguntaPorCategoria(idInexistente);
-//    });
-//  }

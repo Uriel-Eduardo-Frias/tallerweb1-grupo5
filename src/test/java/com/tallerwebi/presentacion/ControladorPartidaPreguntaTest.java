@@ -24,16 +24,13 @@ public class ControladorPartidaPreguntaTest {
     this.controlador = new ControladorPartidaPregunta(this.servicioMock);
   }
 
-  // Comprueba que el controlador sabe preparar la pantalla de inicio cargando el listado de categorías en el modelo
   @Test
   public void deberiaRetornarVistaVotacionConElMapaDeCategorias() {
-    // given
+
     Map<Long, Categoria> categoriasSimuladas = givenExistenCategorias();
 
-    // when
     ModelAndView mav = this.controlador.mostrarPantalla();
 
-    // then
     thenLaVistaEsVotacionConSusCategorias(mav, categoriasSimuladas);
   }
 
@@ -53,17 +50,13 @@ public class ControladorPartidaPreguntaTest {
     verify(this.servicioMock, times(1)).obtenerCategorias();
   }
 
-  // Comprueba que el controlador sabe iniciar una partida buscando la pregunta de la categoría elegida y configurando el estado inicial
   @Test
   public void deberiaRetornarVistaPreguntaConPreguntaYEstadoInicial() {
-    // given
     Long categoriaId = 1L;
     Pregunta preguntaSimulada = givenExistePreguntaParaCategoria(categoriaId);
 
-    // when
     ModelAndView mav = this.controlador.iniciarPregunta(categoriaId);
 
-    // then
     thenLaVistaEsPreguntaSinResponder(mav, preguntaSimulada, categoriaId);
   }
 
@@ -84,33 +77,26 @@ public class ControladorPartidaPreguntaTest {
     verify(this.servicioMock, times(1)).obtenerPreguntaPorCategoria(categoriaId);
   }
 
-  // Comprueba que el controlador sabe procesar un acierto actualizando la pantalla con el veredicto positivo y la solución
   @Test
   public void deberiaMostrarResultadoPositivoCuandoLaOpcionEsCorrecta() {
-    // given
     Long opcionId = 10L;
     String textoRespuesta = "1492";
     givenElServicioVerificaRespuesta(opcionId, true, textoRespuesta);
 
-    // when
     ModelAndView mav = this.controlador.procesarRespuesta(opcionId);
 
-    // then
     thenLaVistaMuestraResultadoDeRespuesta(mav, opcionId, true, textoRespuesta);
   }
 
-  // Comprueba que el controlador sabe procesar un fallo mostrando el veredicto negativo junto con la respuesta que era correcta
   @Test
   public void deberiaMostrarResultadoNegativoCuandoLaOpcionEsIncorrecta() {
-    // given
+
     Long opcionId = 11L;
     String textoRespuesta = "1492";
     givenElServicioVerificaRespuesta(opcionId, false, textoRespuesta);
 
-    // when
     ModelAndView mav = this.controlador.procesarRespuesta(opcionId);
 
-    // then
     thenLaVistaMuestraResultadoDeRespuesta(mav, opcionId, false, textoRespuesta);
   }
 
