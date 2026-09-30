@@ -15,9 +15,6 @@ public class SalaControllerTest {
   private ServicioSala servicioSala = new ServicioSalaIm();
   private SalaController salaController = new SalaController(servicioSala);
 
-  @Disabled("Test de prueba vacío para validar al crear una sala")
-  @Test
-  public void deberiaCrearUnaSala() {}
 
   /*
   @Test
