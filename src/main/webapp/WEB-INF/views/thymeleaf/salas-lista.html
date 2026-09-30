@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Salas de Trivia</title>
+    <link rel="stylesheet" th:href="@{/resources/core/css/salas-lista.css}">
+    <style>
+        <style>
+        :root {
+            --bg: #10101a;
+            --surface: #1a1a29;
+            --surface-hover: #222238;
+            --text: #f4f2ff;
+            --text-muted: #aaa7bf;
+            --border: #34334a;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --success: #34d399;
+            --warning: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background:
+                    radial-gradient(ellipse at top, #292044 0, transparent 45%),
+                    var(--bg);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        .main-header {
+            border-bottom: 1px solid var(--border);
+            background: rgb(16 16 26 / 85%);
+        }
+
+        .header-container,
+        .main-content {
+            width: min(1120px, calc(100% - 2rem));
+            margin: 0 auto;
+        }
+
+        .header-container {
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-logo {
+            color: var(--text);
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .brand-accent {
+            color: #a78bfa;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .main-content {
+            padding: 3rem 0;
+        }
+
+        .salas-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .salas-header h1 {
+            margin: 0 0 0.5rem;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            letter-spacing: -0.04em;
+        }
+
+        .salas-header p,
+        .empty-state p {
+            margin: 0;
+            color: var(--text-muted);
+        }
+
+        .btn,
+        .btn-primary-sm {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border: 0;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+
+        .btn {
+            padding: 0.8rem 1.1rem;
+        }
+
+        .btn-primary-sm {
+            padding: 0.65rem 0.85rem;
+            white-space: nowrap;
+        }
+
+        .btn:hover,
+        .btn-primary-sm:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .card {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+            box-shadow: 0 16px 40px rgb(0 0 0 / 20%);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .styled-table th {
+            padding: 1rem;
+            background: rgb(255 255 255 / 3%);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .styled-table td {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .styled-table tbody tr {
+            transition: background 160ms ease;
+        }
+
+        .styled-table tbody tr:hover {
+            background: var(--surface-hover);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-purple {
+            background: rgb(139 92 246 / 16%);
+            color: #c4b5fd;
+        }
+
+        .badge-success {
+            background: rgb(52 211 153 / 14%);
+            color: #6ee7b7;
+        }
+
+        .badge-warning {
+            background: rgb(251 191 36 / 14%);
+            color: #fcd34d;
+        }
+
+        .join-form {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .join-form input {
+            width: 150px;
+            min-width: 110px;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            background: #12121e;
+            color: var(--text);
+        }
+
+        .join-form input::placeholder {
+            color: #77748e;
+        }
+
+        .join-form input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgb(139 92 246 / 18%);
+        }
+
+        .join-form button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            padding: 4rem 1rem;
+            text-align: center;
+        }
+
+        .empty-state h2 {
+            margin: 0 0 0.5rem;
+        }
+
+        @media (max-width: 760px) {
+            .main-content {
+                padding: 2rem 0;
+            }
+
+            .salas-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .styled-table {
+                min-width: 760px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+    </style>
+</head>
+<body>
+<!--
+<main>
+   <h1>Salas de Trivia</h1>
+-->
+   <!--
+   <h1>Salas de Trivia</h1>
+   <p th:text="${mensaje}">Mensaje de ejemplo.</p>
+   -->
+    <!--
+        <ul>
+
+            <li th:each="sala : ${salas}">
+
+                <p th:text="${sala.nombre + ' — host: ' + sala.host.username}">
+                    Nombre de sala — host: usuario
+                </p>
+
+                <form th:action="@{/salas/unirse}" method="post">
+
+                    <input type="hidden"
+                           name="codigo"
+                           th:value="${sala.codigo}">
+
+                    <label>
+                        Nombre del invitado
+                        <input type="text" name="invitado">
+                    </label>
+
+                    <button type="submit">
+                        Unirse
+                    </button>
+
+                </form>
+
+            </li>
+
+        </ul>
+
+    </main>
+    -->
+
+    <header class="main-header">
+        <div class="header-container">
+            <a class="brand-logo" th:href="@{/salas}">
+                <span>Trivia<span class="brand-accent">Web</span></span>
+            </a>
+
+            <nav class="nav-links">
+                <a th:href="@{/salas}">Salas</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="salas-header">
+            <div>
+                <h1>Salas de Trivia</h1>
+                <p>Elegí una sala disponible y sumate a la partida.</p>
+            </div>
+
+            <a th:href="@{/salas/crear}" class="btn btn-primary">
+                Crear sala
+            </a>
+        </section>
+
+        <section class="card">
+            <div th:if="${#lists.isEmpty(salas)}" class="empty-state">
+                <h2>Todavía no hay salas</h2>
+                <p>Cuando haya salas disponibles, aparecerán acá.</p>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(salas)}" class="table-container">
+                <table class="styled-table">
+                    <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Sala</th>
+                        <th>Host</th>
+                        <th>Jugadores</th>
+                        <th>Estado</th>
+                        <th>Unirse</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="s : ${salas}">
+                        <td>
+                            <span class="badge badge-purple"
+                                  th:text="${s.codigo}">
+                                TRV-1234
+                            </span>
+                        </td>
+
+                        <td th:text="${s.nombre}">Trivia del viernes</td>
+
+                        <td th:text="${s.host.username}">Juan</td>
+
+                        <td>
+                            <span th:text="${#lists.size(s.jugadores)}">1</span>
+                            /
+                            <span th:text="${s.maxJugadores}">4</span>
+                        </td>
+
+                        <td>
+                            <span th:if="${#lists.size(s.jugadores) < s.maxJugadores}"
+                                  class="badge badge-success">
+                                Disponible
+                            </span>
+
+                            <span th:if="${#lists.size(s.jugadores) >= s.maxJugadores}"
+                                  class="badge badge-warning">
+                                Completa
+                            </span>
+                        </td>
+
+                        <td>
+                            <form class="join-form"
+                                  th:action="@{/salas/{codigo}/unirse(codigo=${s.codigo})}"
+                                  method="post">
+
+
+                                <input type="text"
+                                       name="invitado"
+                                       placeholder="Tu nombre"
+                                       required>
+
+                                <button type="submit"
+                                        class="btn-primary-sm"
+                                        th:disabled="${#lists.size(s.jugadores) >= s.maxJugadores}">
+                                    Unirse
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    </body>
+    </html>

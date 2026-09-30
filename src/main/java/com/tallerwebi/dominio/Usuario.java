@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 import jakarta.persistence.*;
+import java.util.Objects;
 
 @Entity
 public class Usuario {
@@ -87,5 +88,22 @@ public class Usuario {
 
   public void setPerfil(PerfilUsuario perfil) {
     this.perfil = perfil;
+  }
+
+  @Override
+  public boolean equals(Object otroObjeto) {
+    if (this == otroObjeto) {
+      return true;
+    }
+    if (!(otroObjeto instanceof Usuario)) {
+      return false;
+    }
+    Usuario otro = (Usuario) otroObjeto;
+    return Objects.equals(username, otro.username);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(username);
   }
 }
