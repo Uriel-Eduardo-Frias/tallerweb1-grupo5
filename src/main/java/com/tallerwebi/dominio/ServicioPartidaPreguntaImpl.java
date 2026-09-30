@@ -15,12 +15,10 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
 
   private Long secuenciaOpciones = 1L;
 
-  // Se encarga de inicializar y precargar en memoria las categorías, preguntas y opciones disponibles al instanciar el servicio
   public ServicioPartidaPreguntaImpl() {
     inicializarDatos();
   }
 
-  // Define la carga inicial estructurada vinculando cada categoría temática con su respectiva pregunta y alternativas
   private void inicializarDatos() {
     registrarCategoriaConPregunta(
       1L,
@@ -101,7 +99,6 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
     );
   }
 
-  // Centraliza la creación de entidades e indexa las opciones y preguntas en mapas clave-valor para permitir búsquedas directas
   private void registrarCategoriaConPregunta(
     Long categoriaId,
     String nombreCategoria,
@@ -125,7 +122,6 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
     this.tablaPreguntasPorCategoria.put(categoriaId, pregunta);
   }
 
-  // Fabrica una nueva opción asignándole un identificador autoincremental único antes de registrarla
   private Opcion crearOpcion(String texto, boolean esCorrecta) {
     Opcion opcion = new Opcion(texto, esCorrecta);
     opcion.setId(this.secuenciaOpciones);
@@ -133,7 +129,6 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
     return opcion;
   }
 
-  // Devuelve el mapa completo con todas las categorías existentes para que la vista pueda listarlas
   @Override
   public Map<Long, Categoria> obtenerCategorias() {
     return this.tablaCategorias;
@@ -145,7 +140,6 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
     return this.tablaPreguntasPorCategoria.get(identificadorCategoria);
   }
 
-  // Determina si el identificador de opción enviado por el usuario corresponde a la respuesta verdadera
   @Override
   public Boolean verificarRespuesta(Long opcionId) {
     if (opcionId == null) {
@@ -158,7 +152,6 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
     return false;
   }
 
-  // Localiza la pregunta asociada a la opción seleccionada y rescata el texto de su alternativa correcta para retroalimentar la vista
   @Override
   public String obtenerTextoRespuestaCorrecta(Long opcionId) {
     if (opcionId == null) {

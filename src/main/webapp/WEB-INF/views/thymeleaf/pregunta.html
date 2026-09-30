@@ -10,12 +10,10 @@
 
     <div class="card p-4 shadow-sm">
 
-        <!-- Categoría de la pregunta actual -->
         <div class="mb-3 text-end" th:if="${pregunta != null and pregunta.categoria != null}">
             <span class="badge bg-info text-dark fs-6" th:text="${pregunta.categoria.nombre}">Categoría</span>
         </div>
 
-        <!-- 1. Estado: Aún no respondió (Muestra la pregunta y las opciones) -->
         <div th:if="${!yaRespondio}">
             <h4 class="mb-4 text-center" th:text="${pregunta.descripcion}">¿Pregunta?</h4>
 
@@ -32,7 +30,6 @@
             </form>
         </div>
 
-        <!-- 2. Estado: Ya respondió (Muestra el resultado y feedback) -->
         <div th:if="${yaRespondio}" class="text-center">
 
             <h3 th:if="${esCorrecta != null}"

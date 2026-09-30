@@ -27,7 +27,6 @@ public class ControladorPartidaPregunta {
     this.servicioPartidaPregunta = servicioPartidaPregunta;
   }
 
-  // 1. Muestra la lista de categorías
   @RequestMapping(value = "/votacion", method = RequestMethod.GET)
   public ModelAndView mostrarPantalla() {
     Map<String, Object> modelo = new ModelMap();
@@ -36,7 +35,6 @@ public class ControladorPartidaPregunta {
     return new ModelAndView(VISTA_VOTACION, modelo);
   }
 
-  // 2. Recibe la categoría elegida y muestra la pregunta
   @RequestMapping(value = "/iniciar-pregunta", method = RequestMethod.POST)
   public ModelAndView iniciarPregunta(@RequestParam("categoriaId") Long categoriaId) {
     Map<String, Object> modelo = new ModelMap();
@@ -49,7 +47,6 @@ public class ControladorPartidaPregunta {
     return new ModelAndView(VISTA_PREGUNTA, modelo);
   }
 
-  // 3. Recibe la opción elegida y muestra si acertó o falló
   @RequestMapping(value = "/responder", method = RequestMethod.POST)
   public ModelAndView procesarRespuesta(@RequestParam("opcionId") Long opcionId) {
     Map<String, Object> modelo = new ModelMap();
