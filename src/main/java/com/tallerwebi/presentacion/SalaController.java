@@ -1,7 +1,6 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +169,4 @@ public class SalaController {
   public ModelAndView mostrarFormularioCrearSala() {
     return new ModelAndView("sala-formulario");
   }
-
-
-
 }

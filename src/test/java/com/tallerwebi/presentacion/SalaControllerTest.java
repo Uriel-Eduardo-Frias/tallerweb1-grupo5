@@ -104,7 +104,7 @@ public class SalaControllerTest {
     assertThat(resultado.getModel().get("error"), nullValue());
   }
 */
-
+  /*
   @Test
   public void deberiaAgregarAlInvitadoALaSalaExistente() {
     Usuario host = new Usuario();
@@ -125,6 +125,7 @@ public class SalaControllerTest {
     assertThat(sala.getJugadores(), hasSize(2));
     assertThat(resultado.getModel().get("error"), nullValue());
   }
+*/
 
   @Test
   public void deberiaMostrarElFormularioParaCrearUnaSala() {

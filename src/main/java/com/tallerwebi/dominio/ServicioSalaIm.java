@@ -13,7 +13,6 @@ public class ServicioSalaIm implements ServicioSala {
 
   private final Map<String, Sala> salas = new HashMap<>();
 
-
   private String generarCodigoUnico() {
     String codigo;
 
@@ -102,6 +101,4 @@ public class ServicioSalaIm implements ServicioSala {
   public List<Sala> listarSalas() {
     return new ArrayList<>(this.salas.values());
   }
-
-
 }
