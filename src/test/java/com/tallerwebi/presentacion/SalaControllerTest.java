@@ -15,7 +15,6 @@ public class SalaControllerTest {
   private ServicioSala servicioSala = new ServicioSalaIm();
   private SalaController salaController = new SalaController(servicioSala);
 
-
   /*
   @Test
   public void deberiaMostrarLaVistaDeSala() {
