@@ -18,7 +18,8 @@ public class ServicioPartidaPreguntaTest {
   private String textoCorrectoObtenido;
 
   @Test
-  public void deberiaObtenerTodasLasgivenExisteUnServicioPartidaPregunta();
+  public void deberiaObtenerTodasLasCategorias() {
+    givenExisteUnServicioPartidaPregunta();
 
     whenObtengoLasCategorias();
 
