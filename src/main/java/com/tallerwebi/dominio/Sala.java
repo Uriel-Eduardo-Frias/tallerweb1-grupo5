@@ -84,4 +84,8 @@ public class Sala {
 
     estado = EstadoSala.EN_CURSO;
   }
+
+  public void setEstado(EstadoSala estadoSala) {
+    this.estado = estadoSala;
+  }
 }

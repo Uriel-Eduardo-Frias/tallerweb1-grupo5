@@ -4,6 +4,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 public class ServicioSalaTest {
@@ -265,5 +267,83 @@ public class ServicioSalaTest {
     assertThat(partida, notNullValue());
     assertThat(partida.getSala(), equalTo(sala));
     assertThat(partida.getEstado(), equalTo(EstadoPartida.INICIADA));
+  }
+
+  @Test
+  public void deberiaAgregarAlUsuarioCuandoLaSalaEstaEnEspera() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+    Usuario invitado = new Usuario();
+    invitado.setUsername("Ana");
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+
+    servicioSala.unirse(sala, invitado);
+
+    assertThat(sala.getJugadores(), hasItem(invitado));
+    assertThat(sala.getJugadores(), hasSize(2));
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionSiLaSalaNoEstaEnEspera() {
+    Usuario host = new Usuario();
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+    sala.setEstado(EstadoSala.EN_CURSO); // ajustá al valor real de tu enum
+
+    assertThrows(IllegalStateException.class, () -> servicioSala.unirse(sala, new Usuario()));
+  }
+
+  @Test
+  public void deberiaEncontrarUnaSalaPorSuCodigo() {
+    Usuario host = new Usuario();
+    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
+
+    assertThat(servicioSala.buscarPorCodigo(creada.getCodigo()), equalTo(creada));
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionSiLaSalaNoExiste() {
+    assertThrows(SalaNoEncontradaException.class, () -> servicioSala.buscarPorCodigo("TRV-XXXX"));
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlAgregarUnJugadorNulo() {
+    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
+
+    assertThrows(JugadorInexistenteExeption.class, () -> sala.agregarJugador(null));
+  }
+
+  @Test
+  public void deberiaPasarAEnCursoAlIniciarUnaSalaEnEspera() {
+    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
+
+    sala.iniciar();
+
+    assertThat(sala.getEstado(), equalTo(EstadoSala.EN_CURSO));
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlIniciarUnaSalaQueYaNoEstaEnEspera() {
+    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
+    sala.iniciar();
+
+    assertThrows(IllegalStateException.class, sala::iniciar);
+  }
+
+  @Test
+  public void deberiaPermitirModificarLosDatosDeLaSala() {
+    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
+    Usuario nuevoHost = new Usuario();
+    List<Usuario> jugadores = new ArrayList<>();
+    jugadores.add(nuevoHost);
+
+    sala.setCodigo("TRV-9999");
+    sala.setNombre("Otra trivia");
+    sala.setHost(nuevoHost);
+    sala.setJugadores(jugadores);
+
+    assertThat(sala.getCodigo(), equalTo("TRV-9999"));
+    assertThat(sala.getNombre(), equalTo("Otra trivia"));
+    assertThat(sala.getHost(), equalTo(nuevoHost));
+    assertThat(sala.getJugadores(), hasSize(1));
   }
 }

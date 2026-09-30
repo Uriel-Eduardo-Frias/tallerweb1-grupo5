@@ -35,6 +35,12 @@ public class ServicioPartidaImp implements ServicioPartida {
 
   @Override
   public Partida buscarPartidaPorCodigoSala(String codigoSala) {
-    return null;
+    Partida partida = partidas.get(codigoSala);
+
+    if (partida == null) {
+      throw new PartidaNoEncontradaException("No hay una partida para la sala " + codigoSala);
+    }
+
+    return partida;
   }
 }

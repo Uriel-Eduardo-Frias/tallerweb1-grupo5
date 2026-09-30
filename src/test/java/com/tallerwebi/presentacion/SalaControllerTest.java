@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.*;
@@ -181,5 +182,53 @@ public class SalaControllerTest {
 
     Sala mostrada = (Sala) resultado.getModel().get("sala");
     assertThat(mostrada.getCodigo(), equalTo(creada.getCodigo()));
+  }
+
+  @Test
+  public void deberiaRedirigirAlDetalleCuandoElInvitadoSeUneCorrectamente() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "  Ana  ");
+
+    assertThat(resultado.getViewName(), equalTo("redirect:/salas/" + sala.getCodigo()));
+    assertThat(sala.getJugadores(), hasSize(2));
+    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Ana"))));
+  }
+
+  @Test
+  public void deberiaMostrarErrorCuandoLaSalaEstaLlena() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+    sala.setMaxJugadores(1);
+
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "Ana");
+
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+    assertThat(resultado.getModel().get("error"), equalTo("Sala llena"));
+    assertThat(sala.getJugadores(), hasSize(1));
+  }
+
+  @Test
+  public void deberiaMostrarErrorCuandoLaSalaYaNoAceptaJugadores() {
+    Usuario host = new Usuario();
+    host.setUsername("Juan");
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+    sala.setEstado(EstadoSala.EN_CURSO); // ajustá al valor real de tu enum
+
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "Ana");
+
+    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+    assertThat(
+      resultado.getModel().get("error"),
+      equalTo("La sala ya no está aceptando jugadores")
+    );
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlVerUnaSalaInexistente() {
+    assertThrows(SalaNoEncontradaException.class, () -> salaController.verSala("TRV-XXXX"));
   }
 }
