@@ -17,8 +17,7 @@
             Error al registrar
         </div>
 
-        <form th:action="@{/registro}" method="POST" th:object="${datosLogin}" style="display: flex; flex-direction: column; gap: 1.1rem;">
-
+        <form th:action="@{/registro}" method="POST" th:object="${datosLogin}" accept-charset="UTF-8" style="display: flex; flex-direction: column; gap: 1.1rem;">
             <div>
                 <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">Nombre de Usuario</label>
                 <input type="text" th:field="*{username}" style="width: 100%; border: 1px solid var(--border-color); padding: 0.8rem; border-radius: 8px;" placeholder="Tu apodo de jugador" required>

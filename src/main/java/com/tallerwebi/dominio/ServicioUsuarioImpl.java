@@ -125,8 +125,7 @@ public class ServicioUsuarioImpl implements ServicioUsuario {
   public List<Usuario> buscarUsuariosPorNombre(String terminoBusqueda) {
     List<Usuario> usuariosEncontrados = new ArrayList<>();
 
-    // CAMBIO ACÁ: Devuelve una lista vacía si no buscaron nada todavía
-    if (terminoBusqueda == null || "".equals(terminoBusqueda)) {
+    if (terminoBusqueda == null || terminoBusqueda.isEmpty()) {
       return new ArrayList<>();
     }
 
@@ -151,7 +150,7 @@ public class ServicioUsuarioImpl implements ServicioUsuario {
     if (usuario != null && usuario.getPerfil() != null) {
       usuario.getPerfil().setBiografia(biografia);
 
-      if (avatarUrl == null || "".equals(avatarUrl.trim())) {
+      if (avatarUrl == null || avatarUrl.trim().isEmpty()) {
         usuario.getPerfil().setAvatarUrl(null);
       } else {
         usuario.getPerfil().setAvatarUrl(avatarUrl);
