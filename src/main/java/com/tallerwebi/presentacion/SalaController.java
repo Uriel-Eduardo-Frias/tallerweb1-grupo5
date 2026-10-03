@@ -16,42 +16,12 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class SalaController {
 
-  private final ServicioSala servicioSala;
+  private ServicioSala servicioSala;
 
   @Autowired
   public SalaController(ServicioSala servicioSala) {
     this.servicioSala = servicioSala;
   }
-
-  /*
-  @RequestMapping(path = "salas", method = RequestMethod.GET)
-  public ModelAndView listarSalas() {
-    Map<String, Object> modelo = new ModelMap();
-
-    modelo.put("mensaje", "la lista de salas estará disponible proximamente");
-
-    return new ModelAndView("salas-lista", modelo);
-  }
-*/
-
-  /*
-  @RequestMapping(path = "/salas", method = RequestMethod.GET)
-  public ModelAndView listarSalas() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    Sala sala = servicioSala.crearSala("TRV-1234", "Trivia del viernes", host);
-
-    List<Sala> salas = new ArrayList<>();
-    salas.add(sala);
-
-    Map<String, Object> modelo = new ModelMap();
-    modelo.put("salas", salas);
-
-    return new ModelAndView("salas-lista", modelo);
-  }
-
-   */
 
   /* código nuevo que va a empezar a tener sentido */
   /* mostrar las salas disponibles */
@@ -64,53 +34,6 @@ public class SalaController {
 
     return new ModelAndView("salas-lista", modelo);
   }
-
-  /*
-  @RequestMapping(path = "/salas/unirse", method = RequestMethod.POST)
-  public ModelAndView unirse(
-    @RequestParam("codigo") String codigo,
-    @RequestParam("invitado") String invitado
-  ) {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    Sala sala = servicioSala.crearSala(codigo,  host);
-
-    Usuario usuarioInvitado = new Usuario();
-    usuarioInvitado.setUsername(invitado);
-
-    Map<String, Object> modelo = new ModelMap();
-
-    try {
-      servicioSala.unirse(sala, usuarioInvitado);
-      modelo.put("sala", sala);
-    } catch (SalaLlenaException e) {
-      modelo.put("sala", sala);
-      modelo.put("error", e.getMessage());
-    }
-
-    return new ModelAndView("sala-detalle", modelo);
-  }
-*/
-  /*
-  @RequestMapping(path = "/salas/crear", method = RequestMethod.POST)
-  public ModelAndView crearSala(
-    @RequestParam("nombre") String nombre,
-    @RequestParam("codigo") String codigo,
-    @RequestParam("host") String nombreHost
-  ) {
-    Usuario host = new Usuario();
-    host.setUsername(nombreHost);
-
-    Sala sala = servicioSala.crearSala(codigo, nombre, host);
-
-    Map<String, Object> modelo = new ModelMap();
-    modelo.put("sala", sala);
-
-    return new ModelAndView("sala-detalle", modelo);
-  }
-
-   */
 
   // Crea la sala; el servicio genera su código automáticamente
   @RequestMapping(path = "/salas/crear", method = RequestMethod.POST)
@@ -140,28 +63,30 @@ public class SalaController {
     return new ModelAndView("sala-detalle", modelo);
   }
 
-  // Une a un invitado a la sala indicada en la URL
   @RequestMapping(path = "/salas/{codigo}/unirse", method = RequestMethod.POST)
   public ModelAndView unirse(
     @PathVariable("codigo") String codigo,
-    @RequestParam("invitado") String invitado
+    @RequestParam("invitado") Long usuarioId
   ) {
-    Sala sala = servicioSala.buscarPorCodigo(codigo);
-
     try {
-      Usuario usuarioInvitado = new Usuario();
-      usuarioInvitado.setUsername(invitado.trim());
+      Sala sala = servicioSala.unirse(codigo, usuarioId);
 
-      servicioSala.unirse(sala, usuarioInvitado);
-
-      return new ModelAndView("redirect:/salas/" + codigo);
-    } catch (SalaLlenaException | IllegalStateException e) {
       Map<String, Object> modelo = new ModelMap();
       modelo.put("sala", sala);
-      modelo.put("error", e.getMessage());
-
-      return new ModelAndView("sala-detalle", modelo);
+      modelo.put("codigo", codigo);
+      return new ModelAndView("salas", modelo);
+    } catch (SalaLlenaException e) {
+      return vistaErrorUnirse("Sala llena");
+    } catch (IllegalStateException e) {
+      return vistaErrorUnirse(e.getMessage());
     }
+  }
+
+  private ModelAndView vistaErrorUnirse(String mensaje) {
+    Map<String, Object> modelo = new ModelMap();
+    modelo.put("mensaje", mensaje);
+    modelo.put("salas", servicioSala.listarSalas());
+    return new ModelAndView("error-unirse", modelo);
   }
 
   /* Mostrar el formulario para crear una sala  */

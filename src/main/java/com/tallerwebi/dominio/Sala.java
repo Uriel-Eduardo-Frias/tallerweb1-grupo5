@@ -8,7 +8,7 @@ public class Sala {
   private String codigo;
   private String nombre;
   private Usuario host;
-  private List<Usuario> jugadores;
+  private List<SalaJugador> jugadores;
   private Integer maxJugadores;
   private EstadoSala estado;
 
@@ -21,16 +21,21 @@ public class Sala {
     this.estado = EstadoSala.EN_ESPERA;
   }
 
-  public boolean agregarJugador(Usuario usuario) {
-    if (usuario == null) {
+  public boolean agregarJugador(SalaJugador salaJugador) {
+    if (salaJugador == null) {
       throw new JugadorInexistenteExeption("No se encontro el jugador");
     }
 
-    return this.jugadores.add(usuario);
+    return this.jugadores.add(salaJugador);
   }
 
   public void quitarJugador(Usuario usuario) {
-    jugadores.remove(usuario);
+    for (int i = 0; i < jugadores.size(); i++) {
+      if (jugadores.get(i).getUsuario().getId().equals(usuario.getId())) {
+        jugadores.remove(i);
+        break;
+      }
+    }
   }
 
   public String getCodigo() {
@@ -45,7 +50,7 @@ public class Sala {
     return this.host;
   }
 
-  public List<Usuario> getJugadores() {
+  public List<SalaJugador> getJugadores() {
     return this.jugadores;
   }
 
@@ -61,7 +66,7 @@ public class Sala {
     this.host = host;
   }
 
-  public void setJugadores(List<Usuario> jugadores) {
+  public void setJugadores(List<SalaJugador> jugadores) {
     this.jugadores = jugadores;
   }
 

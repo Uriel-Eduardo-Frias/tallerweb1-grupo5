@@ -7,58 +7,26 @@ import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.*;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 
+@Controller
 public class SalaControllerTest {
 
-  private ServicioSala servicioSala = new ServicioSalaIm();
-  private SalaController salaController = new SalaController(servicioSala);
+  private AlmacenEnMemoria almacen;
+  private ServicioSala servicioSala;
+  private SalaController salaController;
 
-  /*
-  @Test
-  public void deberiaMostrarLaVistaDeSala() {
-    SalaController controlador = new SalaController();
-
-    ModelAndView salasListas = controlador.listarSalas();
-
-    assertThat(salasListas.getViewName(), equalTo("salas-lista"));
+  @BeforeEach
+  void setUp() {
+    almacen = new AlmacenEnMemoria();
+    servicioSala = new ServicioSalaIm(almacen);
+    salaController = new SalaController(servicioSala); // ajustalo a tu constructor
   }
-
-  @Test
-  public void deberiaMostrarLaVistaDeSalasConUnMensaje() {
-    ModelAndView resultado = salaController.listarSalas();
-
-    assertThat(resultado.getViewName(), equalTo("salas-lista"));
-
-    assertThat(
-      resultado.getModel().get("mensaje"),
-      equalTo("la lista de salas estará disponible proximamente")
-    );
-  }
-*/
-
-  /*
-  @Test
-  public void deberiaMostrarLaSalaEnLaLista() {
-    // When
-    ModelAndView resultado = salaController.listarSalas();
-
-    // Then
-    assertThat(resultado.getViewName(), equalTo("salas-lista"));
-
-    //al devolver un tipo Object , se debe castear porque java no tiene idea de le estamos pasando una litsa de salas
-    List<Sala> salas = (List<Sala>) resultado.getModel().get("salas");
-
-    assertThat(salas, hasSize(1));
-    //valido que encuentre el primer código que encuentre y a su vez con los demás atributos , teniendo en cuenta que es una lista iterable
-    //estos son datos hardcodeados que hacen que el test corra
-    assertThat(salas.get(0).getCodigo(), equalTo("TRV-1234"));
-    assertThat(salas.get(0).getNombre(), equalTo("Trivia del viernes"));
-    assertThat(salas.get(0).getHost().getUsername(), equalTo("Juan"));
-  }
-*/
 
   @Test
   public void deberiaMostrarLaSalaEnLaLista() {
@@ -79,50 +47,54 @@ public class SalaControllerTest {
     assertThat(salas.get(0).getHost().getUsername(), equalTo("Juan"));
   }
 
-  /*
   @Test
-  public void deberiaAgregarAlInvitadoALaSalaCuandoElCodigoEsValido() {
-    // Given
-    String codigo = "TRV-1234";
-    String nombreInvitado = "Ana";
-
-    // When
-    ModelAndView resultado = salaController.unirse(codigo, nombreInvitado);
-
-    // Then
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-
-    Sala sala = (Sala) resultado.getModel().get("sala");
-
-    assertThat(sala, notNullValue());
-    assertThat(sala.getCodigo(), equalTo(codigo));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo(nombreInvitado))));
-    assertThat(sala.getJugadores(), hasSize(2));
-    assertThat(resultado.getModel().get("error"), nullValue());
-  }
-*/
-  /*
-  @Test
-  public void deberiaAgregarAlInvitadoALaSalaExistente() {
+  public void deberiaMostrarErrorCuandoLaSalaNoEstaEnEspera() {
     Usuario host = new Usuario();
+    host.setId(1L);
     host.setUsername("Juan");
 
-    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
-    String codigo = creada.getCodigo();
+    Usuario invitado = new Usuario();
+    invitado.setId(2L);
+    invitado.setUsername("Ana");
 
-    ModelAndView resultado = salaController.unirse(codigo, "Ana");
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+    sala.setEstado(EstadoSala.EN_CURSO);
+    almacen.getUsuarios().put(2L, invitado);
 
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), 2L);
 
-    Sala sala = (Sala) resultado.getModel().get("sala");
-
-    assertThat(sala, notNullValue());
-    assertThat(sala.getCodigo(), equalTo(codigo));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Ana"))));
-    assertThat(sala.getJugadores(), hasSize(2));
-    assertThat(resultado.getModel().get("error"), nullValue());
+    assertThat(resultado.getViewName(), equalTo("error-unirse"));
+    assertThat(
+      resultado.getModel().get("mensaje"),
+      equalTo("La sala ya no se encuentra en fase de espera o ya comenzó")
+    );
   }
-*/
+
+  @Test
+  public void deberiaMostrarLaSalaCuandoElInvitadoSeUneCorrectamente() {
+    Usuario host = new Usuario();
+    host.setId(1L);
+    host.setUsername("Juan");
+
+    Usuario invitado = new Usuario();
+    invitado.setId(2L);
+    invitado.setUsername("Ana");
+
+    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+    almacen.getUsuarios().put(2L, invitado);
+
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), 2L);
+
+    assertThat(resultado.getViewName(), equalTo("salas"));
+
+    Sala mostrada = (Sala) resultado.getModel().get("sala");
+    assertThat(mostrada, equalTo(sala));
+    assertThat(sala.getJugadores(), hasSize(2));
+
+    SalaJugador participacionInvitado = sala.getJugadores().get(1);
+    assertThat(participacionInvitado.getUsuario(), equalTo(invitado));
+    assertThat(participacionInvitado.isEsAnfitrion(), is(false));
+  }
 
   @Test
   public void deberiaMostrarElFormularioParaCrearUnaSala() {
@@ -137,23 +109,6 @@ public class SalaControllerTest {
   }
 
   @Test
-  public void deberiaPasarElHostEnLaSalaMostradaAlCrear() {
-    // Given
-    ServicioSala servicioReal = new ServicioSalaIm();
-    SalaController controlador = new SalaController(servicioReal);
-
-    // When
-    ModelAndView resultado = controlador.crearSala("TRV-1234", "Juan");
-
-    // Then
-    Sala sala = (Sala) resultado.getModel().get("sala");
-
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-    assertThat(sala.getJugadores(), hasSize(1));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Juan"))));
-  }
-
-  @Test
   public void deberiaCrearUnaSalaConCodigoGeneradoYAgregarAlHost() {
     ModelAndView resultado = salaController.crearSala("Trivia del viernes", "Juan");
 
@@ -165,8 +120,13 @@ public class SalaControllerTest {
     assertThat(sala.getCodigo(), matchesPattern("TRV-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}"));
     assertThat(sala.getNombre(), equalTo("Trivia del viernes"));
     assertThat(sala.getHost().getUsername(), equalTo("Juan"));
+
     assertThat(sala.getJugadores(), hasSize(1));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Juan"))));
+
+    SalaJugador participacionHost = sala.getJugadores().get(0);
+    assertThat(participacionHost.getUsuario(), equalTo(sala.getHost()));
+    assertThat(participacionHost.getUsuario().getUsername(), equalTo("Juan"));
+    assertThat(participacionHost.isEsAnfitrion(), is(true));
   }
 
   @Test
@@ -185,46 +145,24 @@ public class SalaControllerTest {
   }
 
   @Test
-  public void deberiaRedirigirAlDetalleCuandoElInvitadoSeUneCorrectamente() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "  Ana  ");
-
-    assertThat(resultado.getViewName(), equalTo("redirect:/salas/" + sala.getCodigo()));
-    assertThat(sala.getJugadores(), hasSize(2));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Ana"))));
-  }
-
-  @Test
   public void deberiaMostrarErrorCuandoLaSalaEstaLlena() {
     Usuario host = new Usuario();
+    host.setId(1L);
     host.setUsername("Juan");
+
+    Usuario invitado = new Usuario();
+    invitado.setId(2L);
+    invitado.setUsername("Ana");
+
     Sala sala = servicioSala.crearSala("Trivia del viernes", host);
     sala.setMaxJugadores(1);
+    almacen.getUsuarios().put(2L, invitado);
 
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "Ana");
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), 2L);
 
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-    assertThat(resultado.getModel().get("error"), equalTo("Sala llena"));
+    assertThat(resultado.getViewName(), equalTo("error-unirse"));
+    assertThat(resultado.getModel().get("mensaje"), equalTo("Sala llena"));
     assertThat(sala.getJugadores(), hasSize(1));
-  }
-
-  @Test
-  public void deberiaMostrarErrorCuandoLaSalaYaNoAceptaJugadores() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-    sala.setEstado(EstadoSala.EN_CURSO); // ajustá al valor real de tu enum
-
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "Ana");
-
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-    assertThat(
-      resultado.getModel().get("error"),
-      equalTo("La sala ya no está aceptando jugadores")
-    );
   }
 
   @Test
