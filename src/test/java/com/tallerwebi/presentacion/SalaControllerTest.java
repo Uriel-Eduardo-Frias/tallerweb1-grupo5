@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -61,7 +62,7 @@ public class SalaControllerTest {
     sala.setEstado(EstadoSala.EN_CURSO);
     almacen.getUsuarios().put(2L, invitado);
 
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), 2L);
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), requestConSesionDe(invitado));
 
     assertThat(resultado.getViewName(), equalTo("error-unirse"));
     assertThat(
@@ -83,7 +84,7 @@ public class SalaControllerTest {
     Sala sala = servicioSala.crearSala("Trivia del viernes", host);
     almacen.getUsuarios().put(2L, invitado);
 
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), 2L);
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), requestConSesionDe(invitado));
 
     assertThat(resultado.getViewName(), equalTo("salas"));
 
@@ -158,7 +159,7 @@ public class SalaControllerTest {
     sala.setMaxJugadores(1);
     almacen.getUsuarios().put(2L, invitado);
 
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), 2L);
+    ModelAndView resultado = salaController.unirse(sala.getCodigo(), requestConSesionDe(invitado));
 
     assertThat(resultado.getViewName(), equalTo("error-unirse"));
     assertThat(resultado.getModel().get("mensaje"), equalTo("Sala llena"));
@@ -168,5 +169,11 @@ public class SalaControllerTest {
   @Test
   public void deberiaLanzarExcepcionAlVerUnaSalaInexistente() {
     assertThrows(SalaNoEncontradaException.class, () -> salaController.verSala("TRV-XXXX"));
+  }
+
+  private MockHttpServletRequest requestConSesionDe(Usuario usuario) {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.getSession().setAttribute("USUARIO", usuario);
+    return request;
   }
 }

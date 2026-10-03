@@ -381,11 +381,6 @@
                                   method="post">
 
 
-                                <input type="text"
-                                       name="invitado"
-                                       placeholder="Tu nombre"
-                                       required>
-
                                 <button type="submit"
                                         class="btn-primary-sm"
                                         th:disabled="${#lists.size(s.jugadores) >= s.maxJugadores}">

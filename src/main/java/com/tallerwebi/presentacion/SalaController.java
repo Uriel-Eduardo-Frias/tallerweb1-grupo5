@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.*;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,12 +65,15 @@ public class SalaController {
   }
 
   @RequestMapping(path = "/salas/{codigo}/unirse", method = RequestMethod.POST)
-  public ModelAndView unirse(
-    @PathVariable("codigo") String codigo,
-    @RequestParam("invitado") Long usuarioId
-  ) {
+  public ModelAndView unirse(@PathVariable("codigo") String codigo, HttpServletRequest request) {
+    Usuario usuario = (Usuario) request.getSession().getAttribute("USUARIO");
+
+    if (usuario == null) {
+      return new ModelAndView("redirect:/login");
+    }
+
     try {
-      Sala sala = servicioSala.unirse(codigo, usuarioId);
+      Sala sala = servicioSala.unirse(codigo, usuario.getId());
 
       Map<String, Object> modelo = new ModelMap();
       modelo.put("sala", sala);

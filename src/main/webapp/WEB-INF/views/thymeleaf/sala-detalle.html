@@ -300,7 +300,7 @@
 
         <ul th:unless="${#lists.isEmpty(sala.jugadores)}">
             <li th:each="jugador : ${sala.jugadores}"
-                th:text="${jugador.username}">
+                th:text="${jugador.usuario.username}">
                 Nombre del jugador
             </li>
         </ul>
