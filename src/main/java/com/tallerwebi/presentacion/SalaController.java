@@ -2,26 +2,30 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class SalaController {
 
   private ServicioSala servicioSala;
+  private ServicioUsuario servicioUsuario;
+  private static final String ATRIBUTO_CREAR_SALA_DTO = "crearSalaDTO";
+  private static final String REDIRECT_LOGIN = "redirect:/login";
+  private static final String ATRIBUTO_ID_USUARIO = "ID_USUARIO";
 
   @Autowired
-  public SalaController(ServicioSala servicioSala) {
+  public SalaController(ServicioSala servicioSala, ServicioUsuario servicioUsuario) {
     this.servicioSala = servicioSala;
+    this.servicioUsuario = servicioUsuario;
   }
 
   /* código nuevo que va a empezar a tener sentido */
@@ -39,18 +43,43 @@ public class SalaController {
   // Crea la sala; el servicio genera su código automáticamente
   @RequestMapping(path = "/salas/crear", method = RequestMethod.POST)
   public ModelAndView crearSala(
-    @RequestParam("nombre") String nombre,
-    @RequestParam("host") String nombreHost
+    @ModelAttribute(ATRIBUTO_CREAR_SALA_DTO) CrearSalaDTO form,
+    BindingResult result,
+    HttpSession session
   ) {
-    Usuario host = new Usuario();
-    host.setUsername(nombreHost);
+    Long usuarioId = (Long) session.getAttribute(ATRIBUTO_ID_USUARIO);
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
 
-    Sala sala = servicioSala.crearSala(nombre, host);
+    Usuario host = servicioUsuario.buscarUsuarioPorId(usuarioId);
+    if (host == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
 
     Map<String, Object> modelo = new ModelMap();
-    modelo.put("sala", sala);
 
-    return new ModelAndView("sala-detalle", modelo);
+    if (result.hasErrors()) {
+      modelo.put(ATRIBUTO_CREAR_SALA_DTO, form);
+      return new ModelAndView("crear-sala", modelo);
+    }
+
+    try {
+      Sala sala = servicioSala.crearSala(
+        form.getNombre(),
+        host,
+        form.getMaxJugadores(),
+        form.getTotalRondas(),
+        form.getModoJuego(),
+        form.isEsPrivada()
+      );
+
+      return new ModelAndView("redirect:/salas/" + sala.getCodigo());
+    } catch (Exception ex) {
+      modelo.put(ATRIBUTO_CREAR_SALA_DTO, form);
+      modelo.put("error", ex.getMessage());
+      return new ModelAndView("crear-sala", modelo);
+    }
   }
 
   // Busca y muestra una sala existente
@@ -65,15 +94,14 @@ public class SalaController {
   }
 
   @RequestMapping(path = "/salas/{codigo}/unirse", method = RequestMethod.POST)
-  public ModelAndView unirse(@PathVariable("codigo") String codigo, HttpServletRequest request) {
-    Usuario usuario = (Usuario) request.getSession().getAttribute("USUARIO");
-
-    if (usuario == null) {
-      return new ModelAndView("redirect:/login");
+  public ModelAndView unirse(@PathVariable("codigo") String codigo, HttpSession session) {
+    Long usuarioId = (Long) session.getAttribute(ATRIBUTO_ID_USUARIO);
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
     }
 
     try {
-      Sala sala = servicioSala.unirse(codigo, usuario.getId());
+      Sala sala = servicioSala.unirse(codigo, usuarioId);
 
       Map<String, Object> modelo = new ModelMap();
       modelo.put("sala", sala);
@@ -93,9 +121,16 @@ public class SalaController {
     return new ModelAndView("error-unirse", modelo);
   }
 
-  /* Mostrar el formulario para crear una sala  */
   @RequestMapping(path = "/salas/crear", method = RequestMethod.GET)
-  public ModelAndView mostrarFormularioCrearSala() {
-    return new ModelAndView("sala-formulario");
+  public ModelAndView mostrarFormularioCrearSala(HttpSession session) {
+    if (session.getAttribute(ATRIBUTO_ID_USUARIO) == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    Map<String, Object> modelo = new ModelMap();
+    modelo.put(ATRIBUTO_CREAR_SALA_DTO, new CrearSalaDTO());
+    modelo.put("modos", ModoJuego.values());
+
+    return new ModelAndView("crear-sala", modelo);
   }
 }

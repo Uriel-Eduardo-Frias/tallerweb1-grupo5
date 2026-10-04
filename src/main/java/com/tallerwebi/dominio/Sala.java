@@ -11,6 +11,11 @@ public class Sala {
   private List<SalaJugador> jugadores;
   private Integer maxJugadores;
   private EstadoSala estado;
+  private int totalRondas;
+  private ModoJuego modoJuego;
+  private boolean esPrivada;
+
+  public Sala() {}
 
   public Sala(String codigo, String nombre, Usuario host) {
     this.codigo = codigo;
@@ -92,5 +97,29 @@ public class Sala {
 
   public void setEstado(EstadoSala estadoSala) {
     this.estado = estadoSala;
+  }
+
+  public int getTotalRondas() {
+    return totalRondas;
+  }
+
+  public void setTotalRondas(int totalRondas) {
+    this.totalRondas = totalRondas;
+  }
+
+  public ModoJuego getModoJuego() {
+    return modoJuego;
+  }
+
+  public void setModoJuego(ModoJuego modoJuego) {
+    this.modoJuego = modoJuego;
+  }
+
+  public boolean isEsPrivada() {
+    return esPrivada;
+  }
+
+  public void setEsPrivada(boolean esPrivada) {
+    this.esPrivada = esPrivada;
   }
 }

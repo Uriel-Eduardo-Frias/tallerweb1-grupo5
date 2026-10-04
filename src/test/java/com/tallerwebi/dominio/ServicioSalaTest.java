@@ -132,10 +132,16 @@ public class ServicioSalaTest {
     assertThat(sala.getHost(), nullValue());
   }
 
+  private Sala crearSalaDePrueba(String nombre, Usuario host) {
+    return servicioSala.crearSala(nombre, host, 4, 5, ModoJuego.TURNO_TODOS, false);
+  }
+
   @Test
   public void deberiaEncontrarUnaSalaPorSuCodigo() {
     Usuario host = new Usuario();
-    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
+    host.setUsername("Juan");
+
+    Sala creada = crearSalaDePrueba("Trivia del viernes", host);
 
     assertThat(servicioSala.buscarPorCodigo(creada.getCodigo()), equalTo(creada));
   }

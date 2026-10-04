@@ -111,10 +111,33 @@ public class ServicioSalaIm implements ServicioSala {
   }
 
   @Override
-  public Sala crearSala(String nombre, Usuario host) {
+  public Sala crearSala(
+    String nombre,
+    Usuario host,
+    int maxJugadores,
+    int totalRondas,
+    ModoJuego modoJuego,
+    boolean esPrivada
+  ) {
+    if (host == null) {
+      throw new IllegalArgumentException("El usuario anfitrión no existe");
+    }
+
+    String nombreSala = (nombre != null && !nombre.isBlank())
+      ? nombre.trim()
+      : "Sala de " + host.getUsername();
+
     String codigo = generarCodigoUnico();
-    Sala sala = new Sala(codigo, nombre, host);
-    sala.agregarJugador(new SalaJugador(sala, EstadoJugador.CONECTADO, true, host));
+
+    Sala sala = new Sala(codigo, nombreSala, host);
+    sala.setMaxJugadores(maxJugadores);
+    sala.setTotalRondas(totalRondas);
+    sala.setModoJuego(modoJuego);
+    sala.setEsPrivada(esPrivada);
+
+    SalaJugador jugadorHost = new SalaJugador(sala, EstadoJugador.CONECTADO, true, host);
+    sala.agregarJugador(jugadorHost);
+
     almacen.getSalas().put(codigo, sala);
     return sala;
   }
