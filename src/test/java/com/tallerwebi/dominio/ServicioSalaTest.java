@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +20,14 @@ public class ServicioSalaTest {
   private AlmacenEnMemoria almacen;
   private ServicioSalaIm servicioSala;
 
+  @Mock
+  private ServicioUsuario servicioUsuario;
+
   @BeforeEach
   void limpiarAlmacen() {
+    MockitoAnnotations.openMocks(this);
     almacen = new AlmacenEnMemoria();
-    servicioSala = new ServicioSalaIm(almacen);
+    servicioSala = new ServicioSalaIm(almacen, servicioUsuario);
   }
 
   @Test
@@ -41,12 +48,6 @@ public class ServicioSalaTest {
 
     sala.agregarJugador(participacionHost);
 
-    almacen.getUsuarios().put(1L, host);
-    almacen.getUsuarios().put(2L, invitado);
-    almacen.getSalas().put(sala.getCodigo(), sala);
-
-    almacen.getUsuarios().put(host.getId(), host);
-    almacen.getUsuarios().put(invitado.getId(), invitado);
     almacen.getSalas().put(sala.getCodigo(), sala);
 
     assertThrows(SalaLlenaException.class, () -> servicioSala.unirse("TRV-1234", 2L));

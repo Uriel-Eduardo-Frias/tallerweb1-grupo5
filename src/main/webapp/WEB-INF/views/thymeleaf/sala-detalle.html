@@ -287,7 +287,7 @@
 
         <p>
             Jugadores:
-            <strong th:text="${#lists.size(sala.jugadores)}">1</strong>
+            <strong id="cantidad-jugadores" th:text="${#lists.size(sala.jugadores)}">1</strong>
             /
             <span th:text="${sala.maxJugadores}">4</span>
         </p>
@@ -298,7 +298,7 @@
             Todavía no hay jugadores en la sala.
         </p>
 
-        <ul th:unless="${#lists.isEmpty(sala.jugadores)}">
+        <ul id="lista-jugadores" th:unless="${#lists.isEmpty(sala.jugadores)}">
             <li th:each="jugador : ${sala.jugadores}"
                 th:text="${jugador.usuario.username}">
                 Nombre del jugador
@@ -347,5 +347,33 @@
         No se pudo completar la acción.
     </p>
 </main>
+
+<script  th:inline="javascript" src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
+<script th:inline="javascript">
+
+    const codigoSala = /*[[${sala.codigo}]]*/ "";
+
+    const cliente = new StompJs.Client({
+        brokerURL: "ws://localhost:8080/spring/ws"
+    });
+
+    cliente.onConnect = function () {
+
+        console.log("Conectado a la sala: " + codigoSala);
+
+        cliente.subscribe(
+            "/topic/salas/" + codigoSala,
+            function (mensaje) {
+
+                const evento = JSON.parse(mensaje.body);
+
+                console.log("Evento recibido:", evento);
+            }
+        );
+    };
+
+    cliente.activate();
+
+</script>
 </body>
 </html>

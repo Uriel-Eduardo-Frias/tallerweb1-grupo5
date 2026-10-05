@@ -13,9 +13,11 @@ import org.springframework.stereotype.Service;
 public class ServicioSalaIm implements ServicioSala {
 
   private final AlmacenEnMemoria almacen;
+  private final ServicioUsuario servicioUsuario;
 
-  public ServicioSalaIm(AlmacenEnMemoria almacen) {
+  public ServicioSalaIm(AlmacenEnMemoria almacen, ServicioUsuario servicioUsuario) {
     this.almacen = almacen;
+    this.servicioUsuario = servicioUsuario;
   }
 
   private String generarCodigoUnico() {
@@ -41,8 +43,9 @@ public class ServicioSalaIm implements ServicioSala {
       return sala;
     }
 
-    Usuario usuarioEncontrado = obtenerUsuarioOLanzar(usuarioId);
     validarCapacidad(sala);
+
+    Usuario usuarioEncontrado = obtenerUsuarioOLanzar(usuarioId);
 
     SalaJugador nuevoParticipante = new SalaJugador();
     nuevoParticipante.setSala(sala);
@@ -64,10 +67,12 @@ public class ServicioSalaIm implements ServicioSala {
   }
 
   private Usuario obtenerUsuarioOLanzar(Long usuarioId) {
-    Usuario usuario = almacen.getUsuarios().get(usuarioId);
+    Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
+
     if (usuario == null) {
       throw new IllegalArgumentException("El usuario no existe");
     }
+
     return usuario;
   }
 

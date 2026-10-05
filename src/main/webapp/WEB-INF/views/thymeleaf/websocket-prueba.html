@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prueba WebSocket</title>
+</head>
+
+<body>
+
+<h1>Prueba WebSocket</h1>
+
+<p>
+    Estado:
+    <span id="estado">Desconectado</span>
+</p>
+
+<input
+        id="mensaje"
+        type="text"
+        placeholder="Escribí un mensaje">
+
+<button id="enviar">
+    Enviar
+</button>
+
+<h2>Mensajes recibidos</h2>
+
+<ul id="mensajes"></ul>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
+<script>
+
+    const estado = document.getElementById("estado");
+    const input = document.getElementById("mensaje");
+    const boton = document.getElementById("enviar");
+    const mensajes = document.getElementById("mensajes");
+
+
+    const cliente = new StompJs.Client({
+
+        brokerURL: "ws://localhost:8080/spring/ws",
+
+        onConnect: function () {
+
+            estado.textContent = "Conectado";
+
+            cliente.subscribe(
+                "/topic/mensajes",
+                function (mensaje) {
+
+                    const elemento = document.createElement("li");
+
+                    elemento.textContent = mensaje.body;
+
+                    mensajes.appendChild(elemento);
+                }
+            );
+        },
+
+        onDisconnect: function () {
+
+            estado.textContent = "Desconectado";
+        }
+    });
+
+
+    cliente.activate();
+
+
+    boton.addEventListener("click", function () {
+
+        const contenido = input.value;
+
+        cliente.publish({
+            destination: "/app/prueba",
+            body: contenido
+        });
+
+        input.value = "";
+    });
+
+</script>
+
+</body>
+</html>

@@ -11,8 +11,10 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
@@ -30,14 +32,18 @@ public class SalaControllerTest {
   private AlmacenEnMemoria almacen;
   private ServicioSala servicioSala;
 
+  @Mock
+  private NotificadorSala notificadorSala;
+
   @InjectMocks
   private SalaController salaController;
 
   @BeforeEach
   void setUp() {
+    MockitoAnnotations.openMocks(this);
     almacen = new AlmacenEnMemoria();
-    servicioSala = new ServicioSalaIm(almacen);
-    salaController = salaController = new SalaController(servicioSala, servicioUsuario);
+    servicioSala = new ServicioSalaIm(almacen, servicioUsuario);
+    salaController = new SalaController(servicioSala, servicioUsuario, notificadorSala);
   }
 
   @Test
@@ -101,19 +107,20 @@ public class SalaControllerTest {
     invitado.setId(2L);
     invitado.setUsername("Ana");
 
+    when(servicioUsuario.buscarUsuarioPorId(2L)).thenReturn(invitado);
+
     Sala sala = crearSalaDePrueba("Trivia del viernes", host);
-    almacen.getUsuarios().put(2L, invitado);
 
     ModelAndView resultado = salaController.unirse(sala.getCodigo(), sessionDe(invitado));
 
-    assertThat(resultado.getViewName(), equalTo("salas"));
+    assertThat(resultado.getViewName(), equalTo("redirect:/salas/" + sala.getCodigo()));
 
-    Sala mostrada = (Sala) resultado.getModel().get("sala");
-    assertThat(mostrada, equalTo(sala));
     assertThat(sala.getJugadores(), hasSize(2));
 
     SalaJugador participacionInvitado = sala.getJugadores().get(1);
+
     assertThat(participacionInvitado.getUsuario(), equalTo(invitado));
+
     assertThat(participacionInvitado.isEsAnfitrion(), is(false));
   }
 

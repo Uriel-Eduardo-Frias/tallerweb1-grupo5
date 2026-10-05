@@ -21,11 +21,19 @@ public class SalaController {
   private static final String ATRIBUTO_CREAR_SALA_DTO = "crearSalaDTO";
   private static final String REDIRECT_LOGIN = "redirect:/login";
   private static final String ATRIBUTO_ID_USUARIO = "ID_USUARIO";
+  private static final String REDIRECT_SALAS = "redirect:/salas/";
+
+  private final NotificadorSala notificadorSala;
 
   @Autowired
-  public SalaController(ServicioSala servicioSala, ServicioUsuario servicioUsuario) {
+  public SalaController(
+    ServicioSala servicioSala,
+    ServicioUsuario servicioUsuario,
+    NotificadorSala notificadorSala
+  ) {
     this.servicioSala = servicioSala;
     this.servicioUsuario = servicioUsuario;
+    this.notificadorSala = notificadorSala;
   }
 
   /* código nuevo que va a empezar a tener sentido */
@@ -74,7 +82,7 @@ public class SalaController {
         form.isEsPrivada()
       );
 
-      return new ModelAndView("redirect:/salas/" + sala.getCodigo());
+      return new ModelAndView(REDIRECT_SALAS + sala.getCodigo());
     } catch (Exception ex) {
       modelo.put(ATRIBUTO_CREAR_SALA_DTO, form);
       modelo.put("error", ex.getMessage());
@@ -93,9 +101,9 @@ public class SalaController {
     return new ModelAndView("sala-detalle", modelo);
   }
 
-  @RequestMapping(path = "/salas/{codigo}/unirse", method = RequestMethod.POST)
-  public ModelAndView unirse(@PathVariable("codigo") String codigo, HttpSession session) {
+  private ModelAndView procesarUnirse(String codigo, HttpSession session) {
     Long usuarioId = (Long) session.getAttribute(ATRIBUTO_ID_USUARIO);
+
     if (usuarioId == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
@@ -103,15 +111,27 @@ public class SalaController {
     try {
       Sala sala = servicioSala.unirse(codigo, usuarioId);
 
-      Map<String, Object> modelo = new ModelMap();
-      modelo.put("sala", sala);
-      modelo.put("codigo", codigo);
-      return new ModelAndView("salas", modelo);
+      notificadorSala.jugadorSeUnio(sala);
+
+      return new ModelAndView(REDIRECT_SALAS + sala.getCodigo());
     } catch (SalaLlenaException e) {
       return vistaErrorUnirse("Sala llena");
     } catch (IllegalStateException e) {
       return vistaErrorUnirse(e.getMessage());
     }
+  }
+
+  @RequestMapping(path = "/salas/{codigo}/unirse", method = RequestMethod.POST)
+  public ModelAndView unirse(@PathVariable("codigo") String codigo, HttpSession session) {
+    return procesarUnirse(codigo, session);
+  }
+
+  @RequestMapping(path = "/salas/unirse", method = RequestMethod.POST)
+  public ModelAndView unirseDesdeCodigo(
+    @RequestParam("codigoInvitacion") String codigoInvitacion,
+    HttpSession session
+  ) {
+    return procesarUnirse(codigoInvitacion, session);
   }
 
   private ModelAndView vistaErrorUnirse(String mensaje) {
