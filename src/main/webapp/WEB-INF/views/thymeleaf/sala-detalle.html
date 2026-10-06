@@ -336,6 +336,15 @@
         La sala está completa.
     </p>
 
+
+    <div class="start-game">
+        <h3>Comenzar partida</h3>
+        <p> Cuando todos estén listos, el host puede comenzar la partida. </p>
+        <form th:action="@{/partidas/{codigo}/iniciar(codigo=${sala.codigo})}" method="post">
+            <button type="submit" class="btn btn-primary"> Comenzar partida </button>
+        </form>
+    </div>
+
     <p class="notice"
        th:if="${sala.estado.name() != 'EN_ESPERA'}">
         Esta sala ya no acepta jugadores.

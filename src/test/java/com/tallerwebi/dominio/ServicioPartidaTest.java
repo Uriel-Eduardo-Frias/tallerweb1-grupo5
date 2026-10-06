@@ -4,53 +4,71 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ServicioPartidaTest {
-  /*
-  private ServicioSala servicioSala = new ServicioSalaIm();
-  private ServicioPartida servicioPartida = new ServicioPartidaImp(servicioSala);
-  */
-  /*
-  @Test
-  public void deberiaLanzarExcepcionSiQuienIniciaLaPartidaNoEsHost() {
-    Usuario host = new Usuario();
+
+  private ServicioPartida servicioPartida;
+  private ServicioSala servicioSala;
+
+  private Sala sala;
+  private Usuario host;
+
+  @BeforeEach
+  public void inicializar() {
+    servicioSala = mock(ServicioSala.class);
+
+    servicioPartida = new ServicioPartidaImp(servicioSala);
+
+    host = new Usuario();
     host.setUsername("Juan");
-    Usuario otro = new Usuario();
-    otro.setUsername("Ana");
 
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-    servicioSala.unirse(sala, otro);
+    sala = new Sala();
+    sala.setCodigo("ABC123");
+    sala.setNombre("Trivia del viernes");
+    sala.setHost(host);
+    sala.setEstado(EstadoSala.EN_ESPERA);
+    sala.setJugadores(new ArrayList<>());
 
-    assertThrows(
-      UsuarioNoEsHostException.class,
-      () -> servicioPartida.iniciarPartida(sala.getCodigo(), otro)
-    );
+    SalaJugador jugador = new SalaJugador();
+    jugador.setUsuario(host);
+
+    sala.getJugadores().add(jugador);
+
+    when(servicioSala.buscarPorCodigo("ABC123")).thenReturn(sala);
   }
 
   @Test
-  public void deberiaLanzarExcepcionSiLaSalaDeLaPartidaNoExiste() {
-    assertThrows(
-      SalaNoEncontradaException.class,
-      () -> servicioPartida.iniciarPartida("TRV-XXXX", new Usuario())
-    );
+  public void dadoQueHayUnaSalaEnEsperaCuandoInicioLaPartidaObtengoPartidaEnCurso() {
+    Partida partida = servicioPartida.iniciarPartida("ABC123", host);
+
+    assertThat(partida.getEstado(), equalTo(EstadoPartida.EN_CURSO));
+
+    assertThat(sala.getEstado(), equalTo(EstadoSala.EN_CURSO));
   }
 
   @Test
-  public void deberiaDevolverNullPorAhoraEnFinalizarPartidaSinImplementar() {
-    assertThat(servicioPartida.finalizarPartida(), nullValue());
+  public void dadoQueHayUnaPartidaEnCursoCuandoLaFinalizoObtengoPartidaFinalizada() {
+    servicioPartida.iniciarPartida("ABC123", host);
+
+    Partida partida = servicioPartida.finalizarPartida("ABC123", host);
+
+    assertThat(partida.getEstado(), equalTo(EstadoPartida.FINALIZADA));
+
+    assertThat(sala.getEstado(), equalTo(EstadoSala.FINALIZADA));
   }
 
   @Test
-  public void deberiaEncontrarLaPartidaIniciadaPorCodigoDeSala() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+  public void dadoQueInicioUnaPartidaCuandoLaBuscoPorCodigoObtengoLaPartidaEnCurso() {
+    servicioPartida.iniciarPartida("ABC123", host);
 
-    Partida iniciada = servicioPartida.iniciarPartida(sala.getCodigo(), host);
+    Partida partida = servicioPartida.buscarPartidaPorCodigoSala("ABC123");
 
-    assertThat(servicioPartida.buscarPartidaPorCodigoSala(sala.getCodigo()), equalTo(iniciada));
+    assertThat(partida.getEstado(), equalTo(EstadoPartida.EN_CURSO));
   }
-  */
 }

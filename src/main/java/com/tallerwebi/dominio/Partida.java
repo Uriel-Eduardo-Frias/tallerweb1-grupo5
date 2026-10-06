@@ -17,4 +17,12 @@ public class Partida {
   public EstadoPartida getEstado() {
     return estado;
   }
+
+  public void setSala(Sala sala) {
+    this.sala = sala;
+  }
+
+  public void setEstado(EstadoPartida estado) {
+    this.estado = estado;
+  }
 }
