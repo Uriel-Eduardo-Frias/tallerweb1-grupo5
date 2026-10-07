@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +10,7 @@ public class ServicioPartidaImp implements ServicioPartida {
 
   private final ServicioSala servicioSala;
   private final Map<String, Partida> partidas = new HashMap<>();
+  private Long siguienteId = 1L;
 
   public ServicioPartidaImp(ServicioSala servicioSala) {
     this.servicioSala = servicioSala;
@@ -31,11 +33,26 @@ public class ServicioPartidaImp implements ServicioPartida {
     //se crea la partida
     Partida partida = this.crearPartida(salaBuscada);
 
+    this.crearPrimeraRonda(partida);
+
+    this.asignarId(partida);
+
     //se guarda la partida
     this.guardarPartida(codigoSala, partida);
 
     //se devuelve la partida
     return partida;
+  }
+
+  private void crearPrimeraRonda(Partida partida) {
+    //se instancia la ronda
+    PartidaRonda ronda = new PartidaRonda(partida, 1);
+
+    //por defecto se añade la votación categoría
+    ronda.setEstado(EstadoRonda.VOTACION_CATEGORIA);
+
+    //obtengo de partida la cantidad de rondas y añado una
+    partida.getRondas().add(ronda);
   }
 
   @Override
@@ -61,14 +78,81 @@ public class ServicioPartidaImp implements ServicioPartida {
   }
 
   @Override
+  public Partida buscarPartidaPorId(Long id) {
+    for (Partida partida : partidas.values()) {
+      if (partida.getId().equals(id)) {
+        return partida;
+      }
+    }
+
+    throw new PartidaNoEncontradaException("No existe la partida " + id);
+  }
+
+  @Override
   public Partida buscarPartidaPorCodigoSala(String codigoSala) {
     return buscarPartida(codigoSala);
   }
+
+  /*
+  @Override
+  public PartidaRonda activarPreguntaRonda(String codigoSala, int numeroRonda) {
+    Partida partida = buscarPartida(codigoSala);
+
+    if (partida == null) {
+      return null;
+    }
+
+    PartidaRonda ronda = buscarRonda(partida, numeroRonda);
+
+    if (!puedeActivarse(ronda)) {
+      return ronda;
+    }
+
+    //Pregunta pregunta = servicioPregunta.seleccionarPreguntaAleatoria();
+
+    /*
+    if (pregunta == null) {
+      return ronda;
+    }
+
+
+    //ronda.setPregunta(pregunta);
+    ronda.setEstado(EstadoRonda.PREGUNTA_ACTIVA);
+
+    return ronda;
+  }
+  */
+  /*
+  private PartidaRonda buscarRonda(Partida partida, int numeroRonda) {
+    List<PartidaRonda> rondas = partida.getRondas();
+
+    for (int i = 0; i < rondas.size(); i++) {
+      PartidaRonda ronda = rondas.get(i);
+
+      if (ronda.getNumero() == numeroRonda) {
+        return ronda;
+      }
+    }
+
+    return null;
+  }
+*/
+  /*
+  private boolean puedeActivarse(PartidaRonda ronda) {
+    return ronda != null
+            && ronda.getEstado() == EstadoRonda.VOTACION_CATEGORIA;
+  }
+*/
 
   private void validarPartidaPuedeFinalizar(Partida partida) {
     if (partida.getEstado() != EstadoPartida.EN_CURSO) {
       throw new IllegalStateException("La partida no se encuentra en curso");
     }
+  }
+
+  private void asignarId(Partida partida) {
+    partida.setId(siguienteId);
+    siguienteId++;
   }
 
   private Partida buscarPartida(String codigoSala) {
@@ -125,5 +209,45 @@ public class ServicioPartidaImp implements ServicioPartida {
 
   private void cambiarEstadoPartida(Partida partida) {
     partida.setEstado(EstadoPartida.FINALIZADA);
+  }
+
+  @Override
+  public void marcarJugadorListo(Long idPartida, Usuario usuario) {
+    Partida partida = buscarPartidaPorId(idPartida);
+
+    Sala sala = partida.getSala();
+
+    SalaJugador jugador = buscarJugadorEnSala(sala, usuario);
+
+    jugador.setEstadoJugador(EstadoJugador.LISTO);
+  }
+
+  private SalaJugador buscarJugadorEnSala(Sala sala, Usuario usuario) {
+    for (SalaJugador jugador : sala.getJugadores()) {
+      if (jugador.getUsuario().getId().equals(usuario.getId())) {
+        return jugador;
+      }
+    }
+
+    throw new JugadorInexistenteExeption("El usuario no pertenece a la sala");
+  }
+
+  @Override
+  public boolean estanTodosListos(Long idPartida) {
+    Partida partida = buscarPartidaPorId(idPartida);
+
+    Sala sala = partida.getSala();
+
+    if (sala.getJugadores().isEmpty()) {
+      return false;
+    }
+
+    for (SalaJugador jugador : sala.getJugadores()) {
+      if (jugador.getEstadoJugador() != EstadoJugador.LISTO) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

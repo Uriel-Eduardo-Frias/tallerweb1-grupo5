@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Partida;
 import com.tallerwebi.dominio.ServicioPartida;
 import com.tallerwebi.dominio.ServicioUsuario;
 import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.dominio.excepcion.Categorias;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class PartidaController {
+
+  private static final String ID_USUARIO = "ID_USUARIO";
+  private static final String REDIRECT_LOGIN = "redirect:/login";
 
   private final ServicioPartida servicioPartida;
   private final ServicioUsuario servicioUsuario;
@@ -31,10 +35,10 @@ public class PartidaController {
     @PathVariable("codigoSala") String codigoSala,
     HttpSession session
   ) {
-    Long usuarioId = (Long) session.getAttribute("ID_USUARIO");
+    Long usuarioId = (Long) session.getAttribute(ID_USUARIO);
 
     if (usuarioId == null) {
-      return new ModelAndView("redirect:/login");
+      return new ModelAndView(REDIRECT_LOGIN);
     }
 
     Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
@@ -44,7 +48,7 @@ public class PartidaController {
     Map<String, Object> modelo = new ModelMap();
     modelo.put("partida", partida);
 
-    return new ModelAndView("partida", modelo);
+    return new ModelAndView("redirect:/partida/" + partida.getId() + "/ronda");
   }
 
   @RequestMapping(path = "/partidas/{codigoSala}/finalizar", method = RequestMethod.POST)
@@ -52,10 +56,10 @@ public class PartidaController {
     @PathVariable("codigoSala") String codigoSala,
     HttpSession session
   ) {
-    Long usuarioId = (Long) session.getAttribute("ID_USUARIO");
+    Long usuarioId = (Long) session.getAttribute(ID_USUARIO);
 
     if (usuarioId == null) {
-      return new ModelAndView("redirect:/login");
+      return new ModelAndView(REDIRECT_LOGIN);
     }
 
     Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
@@ -66,5 +70,43 @@ public class PartidaController {
     modelo.put("partida", partida);
 
     return new ModelAndView("resultado", modelo);
+  }
+
+  @RequestMapping(path = "/partida/{id}/ronda", method = RequestMethod.GET)
+  public ModelAndView mostrarRonda(@PathVariable("id") Long id, HttpSession session) {
+    Long usuarioId = (Long) session.getAttribute(ID_USUARIO);
+
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
+
+    Partida partida = servicioPartida.buscarPartidaPorId(id);
+
+    boolean todosListos = servicioPartida.estanTodosListos(id);
+
+    Map<String, Object> modelo = new ModelMap();
+
+    modelo.put("partida", partida);
+    modelo.put("usuarioActual", usuario);
+    modelo.put("todosListos", todosListos);
+
+    return new ModelAndView("partida-votacion", modelo);
+  }
+
+  @RequestMapping(path = "/partida/{id}/listo", method = RequestMethod.POST)
+  public ModelAndView marcarListo(@PathVariable("id") Long id, HttpSession session) {
+    Long usuarioId = (Long) session.getAttribute(ID_USUARIO);
+
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
+
+    servicioPartida.marcarJugadorListo(id, usuario);
+
+    return new ModelAndView("redirect:/partida/" + id + "/ronda");
   }
 }
