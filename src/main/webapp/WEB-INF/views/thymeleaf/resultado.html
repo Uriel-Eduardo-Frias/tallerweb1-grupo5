@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado de la partida</title>
+</head>
+
+<body>
+
+<main>
+
+    <h1>Partida finalizada</h1>
+
+    <section>
+        <h2>Resultado</h2>
+
+        <p>
+            Sala:
+            <strong th:text="${partida.sala.codigo}">
+                ABC123
+            </strong>
+        </p>
+
+        <p>
+            Nombre:
+            <strong th:text="${partida.sala.nombre}">
+                Trivia del viernes
+            </strong>
+        </p>
+
+        <p>
+            Estado de la partida:
+            <strong th:text="${partida.estado}">
+                FINALIZADA
+            </strong>
+        </p>
+
+        <p>
+            Estado de la sala:
+            <strong th:text="${partida.sala.estado}">
+                FINALIZADA
+            </strong>
+        </p>
+    </section>
+
+</main>
+
+</body>
+
+</html>

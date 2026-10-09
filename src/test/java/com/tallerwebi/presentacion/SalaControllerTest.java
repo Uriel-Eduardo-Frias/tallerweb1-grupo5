@@ -6,229 +6,332 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.*;
+import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
 
+@Controller
 public class SalaControllerTest {
 
-  private ServicioSala servicioSala = new ServicioSalaIm();
-  private SalaController salaController = new SalaController(servicioSala);
+  private static final String ID_USUARIO = "ID_USUARIO";
 
-  /*
-  @Test
-  public void deberiaMostrarLaVistaDeSala() {
-    SalaController controlador = new SalaController();
+  @Mock
+  private ServicioUsuario servicioUsuario;
 
-    ModelAndView salasListas = controlador.listarSalas();
+  @Mock
+  private ServicioSala servicioSala;
 
-    assertThat(salasListas.getViewName(), equalTo("salas-lista"));
+  @Mock
+  private NotificadorSala notificadorSala;
+
+  private SalaController salaController;
+  private AutoCloseable mocks;
+
+  @BeforeEach
+  void inicializar() {
+    mocks = MockitoAnnotations.openMocks(this);
+    salaController = new SalaController(servicioSala, servicioUsuario, notificadorSala);
+  }
+
+  @AfterEach
+  void cerrarMocks() throws Exception {
+    mocks.close();
   }
 
   @Test
-  public void deberiaMostrarLaVistaDeSalasConUnMensaje() {
-    ModelAndView resultado = salaController.listarSalas();
+  void deberiaMostrarLasSalasEnLaLista() {
+    // given
+    Usuario host = givenUnUsuario(1L, "Juan");
+    Sala sala = givenUnaSala("TRV-1234", "Trivia del viernes", host);
+    givenUnaListaDeSalas(sala);
 
-    assertThat(resultado.getViewName(), equalTo("salas-lista"));
+    // when
+    ModelAndView resultado = whenListarSalas();
 
-    assertThat(
-      resultado.getModel().get("mensaje"),
-      equalTo("la lista de salas estará disponible proximamente")
-    );
-  }
-*/
+    // then
+    thenLaVistaEs(resultado, "salas-lista");
 
-  /*
-  @Test
-  public void deberiaMostrarLaSalaEnLaLista() {
-    // When
-    ModelAndView resultado = salaController.listarSalas();
-
-    // Then
-    assertThat(resultado.getViewName(), equalTo("salas-lista"));
-
-    //al devolver un tipo Object , se debe castear porque java no tiene idea de le estamos pasando una litsa de salas
     List<Sala> salas = (List<Sala>) resultado.getModel().get("salas");
-
     assertThat(salas, hasSize(1));
-    //valido que encuentre el primer código que encuentre y a su vez con los demás atributos , teniendo en cuenta que es una lista iterable
-    //estos son datos hardcodeados que hacen que el test corra
     assertThat(salas.get(0).getCodigo(), equalTo("TRV-1234"));
     assertThat(salas.get(0).getNombre(), equalTo("Trivia del viernes"));
     assertThat(salas.get(0).getHost().getUsername(), equalTo("Juan"));
   }
-*/
 
   @Test
-  public void deberiaMostrarLaSalaEnLaLista() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
+  void deberiaMostrarErrorCuandoLaSalaNoEstaEnEspera() {
+    // given
+    Usuario invitado = givenUnUsuario(2L, "Ana");
 
-    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
+    when(servicioSala.unirse("TRV-1234", invitado.getId()))
+      .thenThrow(
+        new IllegalStateException("La sala ya no se encuentra en fase de espera o ya comenzó")
+      );
 
-    ModelAndView resultado = salaController.listarSalas();
+    // when
+    ModelAndView resultado = whenUnirse("TRV-1234", sessionDe(invitado));
 
-    assertThat(resultado.getViewName(), equalTo("salas-lista"));
-
-    List<Sala> salas = (List<Sala>) resultado.getModel().get("salas");
-
-    assertThat(salas, hasSize(1));
-    assertThat(salas.get(0).getCodigo(), equalTo(creada.getCodigo()));
-    assertThat(salas.get(0).getNombre(), equalTo("Trivia del viernes"));
-    assertThat(salas.get(0).getHost().getUsername(), equalTo("Juan"));
-  }
-
-  /*
-  @Test
-  public void deberiaAgregarAlInvitadoALaSalaCuandoElCodigoEsValido() {
-    // Given
-    String codigo = "TRV-1234";
-    String nombreInvitado = "Ana";
-
-    // When
-    ModelAndView resultado = salaController.unirse(codigo, nombreInvitado);
-
-    // Then
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-
-    Sala sala = (Sala) resultado.getModel().get("sala");
-
-    assertThat(sala, notNullValue());
-    assertThat(sala.getCodigo(), equalTo(codigo));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo(nombreInvitado))));
-    assertThat(sala.getJugadores(), hasSize(2));
-    assertThat(resultado.getModel().get("error"), nullValue());
-  }
-*/
-  /*
-  @Test
-  public void deberiaAgregarAlInvitadoALaSalaExistente() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
-    String codigo = creada.getCodigo();
-
-    ModelAndView resultado = salaController.unirse(codigo, "Ana");
-
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-
-    Sala sala = (Sala) resultado.getModel().get("sala");
-
-    assertThat(sala, notNullValue());
-    assertThat(sala.getCodigo(), equalTo(codigo));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Ana"))));
-    assertThat(sala.getJugadores(), hasSize(2));
-    assertThat(resultado.getModel().get("error"), nullValue());
-  }
-*/
-
-  @Test
-  public void deberiaMostrarElFormularioParaCrearUnaSala() {
-    // Given
-    // El controlador ya está preparado con ServicioSala.
-
-    // When
-    ModelAndView resultado = salaController.mostrarFormularioCrearSala();
-
-    // Then
-    assertThat(resultado.getViewName(), equalTo("sala-formulario"));
+    // then
+    thenLaVistaEs(resultado, "error-unirse");
+    thenElMensajeEs(resultado, "La sala ya no se encuentra en fase de espera o ya comenzó");
   }
 
   @Test
-  public void deberiaPasarElHostEnLaSalaMostradaAlCrear() {
-    // Given
-    ServicioSala servicioReal = new ServicioSalaIm();
-    SalaController controlador = new SalaController(servicioReal);
+  void deberiaRedirigirCuandoElInvitadoSeUneCorrectamente() {
+    // given
+    Usuario host = givenUnUsuario(1L, "Juan");
+    Usuario invitado = givenUnUsuario(2L, "Ana");
+    Sala sala = givenUnaSala("TRV-1234", "Trivia del viernes", host);
 
-    // When
-    ModelAndView resultado = controlador.crearSala("TRV-1234", "Juan");
+    givenUsuarioEncontrado(invitado);
+    givenSalaAlUnirse("TRV-1234", sala);
 
-    // Then
-    Sala sala = (Sala) resultado.getModel().get("sala");
+    // when
+    ModelAndView resultado = whenUnirse(sala.getCodigo(), sessionDe(invitado));
 
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-    assertThat(sala.getJugadores(), hasSize(1));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Juan"))));
+    // then
+    thenLaVistaEs(resultado, "redirect:/salas/TRV-1234");
+    verify(notificadorSala).jugadorSeUnio(sala);
   }
 
   @Test
-  public void deberiaCrearUnaSalaConCodigoGeneradoYAgregarAlHost() {
-    ModelAndView resultado = salaController.crearSala("Trivia del viernes", "Juan");
+  void deberiaMostrarElFormularioParaCrearUnaSala() {
+    // given
+    HttpSession session = sessionDe(givenUnUsuario(1L, "Juan"));
 
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
+    // when
+    ModelAndView resultado = whenMostrarFormulario(session);
 
-    Sala sala = (Sala) resultado.getModel().get("sala");
-
-    assertThat(sala, notNullValue());
-    assertThat(sala.getCodigo(), matchesPattern("TRV-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}"));
-    assertThat(sala.getNombre(), equalTo("Trivia del viernes"));
-    assertThat(sala.getHost().getUsername(), equalTo("Juan"));
-    assertThat(sala.getJugadores(), hasSize(1));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Juan"))));
+    // then
+    thenLaVistaEs(resultado, "crear-sala");
+    assertThat(resultado.getModel().get("crearSalaDTO"), notNullValue());
   }
 
   @Test
-  public void deberiaMostrarElDetalleDeLaSalaBuscadaPorCodigo() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
+  void deberiaCrearUnaSalaYRedirigirAlLobby() {
+    // given
+    Usuario host = givenUnUsuario(1L, "Juan");
+    CrearSalaDTO formulario = givenUnFormularioValido();
+    givenUsuarioEncontrado(host);
 
-    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
+    Sala salaCreada = givenServicioCreaSala("Trivia del viernes", host);
 
-    ModelAndView resultado = salaController.verSala(creada.getCodigo());
+    // when
+    ModelAndView resultado = whenCrearSala(formulario, sessionDe(host));
 
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-
-    Sala mostrada = (Sala) resultado.getModel().get("sala");
-    assertThat(mostrada.getCodigo(), equalTo(creada.getCodigo()));
+    // then
+    thenLaVistaEs(resultado, "redirect:/salas/" + salaCreada.getCodigo());
+    verify(servicioSala).crearSala("Trivia del viernes", host, 4, 5, ModoJuego.TURNO_TODOS, false);
   }
 
   @Test
-  public void deberiaRedirigirAlDetalleCuandoElInvitadoSeUneCorrectamente() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
+  void deberiaMostrarElDetalleDeLaSalaBuscadaPorCodigo() {
+    // given
+    Usuario host = givenUnUsuario(1L, "Juan");
+    Sala sala = givenUnaSala("TRV-1234", "Trivia del viernes", host);
+    when(servicioSala.buscarPorCodigo("TRV-1234")).thenReturn(sala);
 
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "  Ana  ");
+    // when
+    ModelAndView resultado = whenVerSala("TRV-1234");
 
-    assertThat(resultado.getViewName(), equalTo("redirect:/salas/" + sala.getCodigo()));
-    assertThat(sala.getJugadores(), hasSize(2));
-    assertThat(sala.getJugadores(), hasItem(hasProperty("username", equalTo("Ana"))));
+    // then
+    thenLaVistaEs(resultado, "sala-detalle");
+    assertThat(resultado.getModel().get("sala"), equalTo(sala));
   }
 
   @Test
-  public void deberiaMostrarErrorCuandoLaSalaEstaLlena() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-    sala.setMaxJugadores(1);
+  void deberiaMostrarErrorCuandoLaSalaEstaLlena() {
+    // given
+    Usuario host = givenUnUsuario(1L, "Juan");
+    Usuario invitado = givenUnUsuario(2L, "Ana");
+    Sala sala = givenUnaSala("TRV-1234", "Trivia del viernes", host);
 
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "Ana");
+    givenUsuarioEncontrado(invitado);
+    givenSalaLlenaAlUnirse("TRV-1234");
 
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-    assertThat(resultado.getModel().get("error"), equalTo("Sala llena"));
-    assertThat(sala.getJugadores(), hasSize(1));
+    // when
+    ModelAndView resultado = whenUnirse(sala.getCodigo(), sessionDe(invitado));
+
+    // then
+    thenLaVistaEs(resultado, "error-unirse");
+    thenElMensajeEs(resultado, "Sala llena");
   }
 
   @Test
-  public void deberiaMostrarErrorCuandoLaSalaYaNoAceptaJugadores() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-    sala.setEstado(EstadoSala.EN_CURSO); // ajustá al valor real de tu enum
+  void deberiaLanzarExcepcionAlVerUnaSalaInexistente() {
+    // given
+    when(servicioSala.buscarPorCodigo("TRV-XXXX"))
+      .thenThrow(new SalaNoEncontradaException("No existe la sala"));
 
-    ModelAndView resultado = salaController.unirse(sala.getCodigo(), "Ana");
+    // when / then
+    assertThrows(SalaNoEncontradaException.class, () -> whenVerSala("TRV-XXXX"));
+  }
 
-    assertThat(resultado.getViewName(), equalTo("sala-detalle"));
-    assertThat(
-      resultado.getModel().get("error"),
-      equalTo("La sala ya no está aceptando jugadores")
+  @Test
+  void deberiaRedirigirAlLoginSiNoHaySesionAlUnirse() {
+    // given
+    HttpSession session = new MockHttpSession();
+
+    // when
+    ModelAndView resultado = salaController.unirse("TRV-1234", session);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/login"));
+    verifyNoInteractions(servicioSala, notificadorSala);
+  }
+
+  @Test
+  void deberiaRedirigirAlLoginSiNoHaySesionAlMostrarFormulario() {
+    // given
+    HttpSession session = new MockHttpSession();
+
+    // when
+    ModelAndView resultado = salaController.mostrarFormularioCrearSala(session);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/login"));
+  }
+
+  @Test
+  void deberiaRedirigirAlLoginSiElUsuarioDeSesionNoExisteAlCrearSala() {
+    // given
+    Usuario usuario = givenUnUsuario(10L, "Juan");
+    when(servicioUsuario.buscarUsuarioPorId(10L)).thenReturn(null);
+
+    // when
+    ModelAndView resultado = salaController.crearSala(
+      givenUnFormularioValido(),
+      bindingResultValido(givenUnFormularioValido()),
+      sessionDe(usuario)
     );
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/login"));
   }
 
   @Test
-  public void deberiaLanzarExcepcionAlVerUnaSalaInexistente() {
-    assertThrows(SalaNoEncontradaException.class, () -> salaController.verSala("TRV-XXXX"));
+  void deberiaVolverAlFormularioSiHayErroresDeValidacion() {
+    // given
+    Usuario usuario = givenUnUsuario(10L, "Juan");
+    CrearSalaDTO formulario = givenUnFormularioValido();
+    givenUsuarioEncontrado(usuario);
+
+    BindingResult errores = new BeanPropertyBindingResult(formulario, "crearSalaDTO");
+    errores.reject("nombre", "Nombre inválido");
+
+    // when
+    ModelAndView resultado = salaController.crearSala(formulario, errores, sessionDe(usuario));
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("crear-sala"));
+    assertThat(resultado.getModel().get("crearSalaDTO"), equalTo(formulario));
+    verifyNoInteractions(servicioSala);
+  }
+
+  /*  helpers para el given */
+  private Usuario givenUnUsuario(Long id, String username) {
+    Usuario usuario = new Usuario();
+    usuario.setId(id);
+    usuario.setUsername(username);
+    return usuario;
+  }
+
+  private Sala givenUnaSala(String codigo, String nombre, Usuario host) {
+    Sala sala = new Sala(codigo, nombre, host);
+    sala.setJugadores(new ArrayList<>());
+    return sala;
+  }
+
+  private void givenUnaListaDeSalas(Sala sala) {
+    List<Sala> salas = new ArrayList<>();
+    salas.add(sala);
+    when(servicioSala.listarSalas()).thenReturn(salas);
+  }
+
+  private void givenUsuarioEncontrado(Usuario usuario) {
+    when(servicioUsuario.buscarUsuarioPorId(usuario.getId())).thenReturn(usuario);
+  }
+
+  private void givenSalaAlUnirse(String codigo, Sala sala) {
+    when(servicioSala.unirse(codigo, sala.getHost().getId())).thenReturn(sala);
+    when(servicioSala.unirse(codigo, 2L)).thenReturn(sala);
+  }
+
+  private void givenSalaLlenaAlUnirse(String codigo) {
+    when(servicioSala.unirse(codigo, 2L)).thenThrow(new SalaLlenaException("Sala llena"));
+  }
+
+  private CrearSalaDTO givenUnFormularioValido() {
+    CrearSalaDTO formulario = new CrearSalaDTO();
+    formulario.setNombre("Trivia del viernes");
+    formulario.setMaxJugadores(4);
+    formulario.setTotalRondas(5);
+    formulario.setModoJuego(ModoJuego.TURNO_TODOS);
+    formulario.setEsPrivada(false);
+    return formulario;
+  }
+
+  private Sala givenServicioCreaSala(String nombre, Usuario host) {
+    Sala sala = givenUnaSala("TRV-1234", nombre, host);
+
+    when(servicioSala.crearSala(nombre, host, 4, 5, ModoJuego.TURNO_TODOS, false)).thenReturn(sala);
+
+    return sala;
+  }
+
+  /*  helpers para otros usos */
+  private HttpSession sessionDe(Usuario usuario) {
+    MockHttpSession session = new MockHttpSession();
+    session.setAttribute(ID_USUARIO, usuario.getId());
+    return session;
+  }
+
+  private BindingResult bindingResultValido(CrearSalaDTO formulario) {
+    return new BeanPropertyBindingResult(formulario, "crearSalaDTO");
+  }
+
+  /* helpers para ejecución */
+  private ModelAndView whenListarSalas() {
+    return salaController.listarSalas();
+  }
+
+  private ModelAndView whenUnirse(String codigo, HttpSession session) {
+    return salaController.unirse(codigo, session);
+  }
+
+  private ModelAndView whenMostrarFormulario(HttpSession session) {
+    return salaController.mostrarFormularioCrearSala(session);
+  }
+
+  private ModelAndView whenCrearSala(CrearSalaDTO formulario, HttpSession session) {
+    return salaController.crearSala(formulario, bindingResultValido(formulario), session);
+  }
+
+  private ModelAndView whenVerSala(String codigo) {
+    return salaController.verSala(codigo);
+  }
+
+  /* helpers para validación */
+  private void thenLaVistaEs(ModelAndView resultado, String vistaEsperada) {
+    assertThat(resultado.getViewName(), equalTo(vistaEsperada));
+  }
+
+  private void thenElMensajeEs(ModelAndView resultado, String mensajeEsperado) {
+    assertThat(resultado.getModel().get("mensaje"), equalTo(mensajeEsperado));
   }
 }

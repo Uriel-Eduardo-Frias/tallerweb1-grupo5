@@ -1,16 +1,38 @@
 package com.tallerwebi.dominio;
 
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "salas")
 public class Sala {
 
+  @Id
   private String codigo;
+
   private String nombre;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "host_id")
   private Usuario host;
-  private List<Usuario> jugadores;
+
+  @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<SalaJugador> jugadores = new ArrayList<>();
+
   private Integer maxJugadores;
+
+  @Enumerated(EnumType.STRING)
   private EstadoSala estado;
+
+  private int totalRondas;
+
+  @Enumerated(EnumType.STRING)
+  private ModoJuego modoJuego;
+
+  private boolean esPrivada;
+
+  public Sala() {}
 
   public Sala(String codigo, String nombre, Usuario host) {
     this.codigo = codigo;
@@ -19,18 +41,6 @@ public class Sala {
     this.jugadores = new ArrayList<>();
     this.maxJugadores = 4;
     this.estado = EstadoSala.EN_ESPERA;
-  }
-
-  public boolean agregarJugador(Usuario usuario) {
-    if (usuario == null) {
-      throw new JugadorInexistenteExeption("No se encontro el jugador");
-    }
-
-    return this.jugadores.add(usuario);
-  }
-
-  public void quitarJugador(Usuario usuario) {
-    jugadores.remove(usuario);
   }
 
   public String getCodigo() {
@@ -45,7 +55,7 @@ public class Sala {
     return this.host;
   }
 
-  public List<Usuario> getJugadores() {
+  public List<SalaJugador> getJugadores() {
     return this.jugadores;
   }
 
@@ -61,7 +71,7 @@ public class Sala {
     this.host = host;
   }
 
-  public void setJugadores(List<Usuario> jugadores) {
+  public void setJugadores(List<SalaJugador> jugadores) {
     this.jugadores = jugadores;
   }
 
@@ -87,5 +97,29 @@ public class Sala {
 
   public void setEstado(EstadoSala estadoSala) {
     this.estado = estadoSala;
+  }
+
+  public int getTotalRondas() {
+    return totalRondas;
+  }
+
+  public void setTotalRondas(int totalRondas) {
+    this.totalRondas = totalRondas;
+  }
+
+  public ModoJuego getModoJuego() {
+    return modoJuego;
+  }
+
+  public void setModoJuego(ModoJuego modoJuego) {
+    this.modoJuego = modoJuego;
+  }
+
+  public boolean isEsPrivada() {
+    return esPrivada;
+  }
+
+  public void setEsPrivada(boolean esPrivada) {
+    this.esPrivada = esPrivada;
   }
 }

@@ -1,349 +1,420 @@
 package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ServicioSalaTest {
+class ServicioSalaTest {
 
-  private ServicioSala servicioSala = new ServicioSalaIm();
-  private ServicioPartida servicioPartida = new ServicioPartidaImp(servicioSala);
+  private RepositorioSala repositorioSala;
+  private RepositorioUsuario repositorioUsuario;
+  private ServicioSalaIm servicioSala;
 
-  @Test
-  public void deberiaLanzarExcepcionCuandoLaSalaEstaLlena() {
-    Usuario host = new Usuario();
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
-    Usuario invitado = new Usuario();
+  @BeforeEach
+  void inicializar() {
+    repositorioSala = mock(RepositorioSala.class);
+    repositorioUsuario = mock(RepositorioUsuario.class);
 
-    invitado.setUsername("Ana");
-    host.setUsername("Juan");
-
-    sala.setMaxJugadores(1);
-    sala.agregarJugador(host);
-
-    assertThrows(SalaLlenaException.class, () -> servicioSala.unirse(sala, invitado));
-
-    assertThat(sala.getJugadores(), hasSize(1));
-  }
-
-  /*
-  @Test
-  public void deberiaCrearUnaSala() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    Sala sala = servicioSala.crearSala("TRV-1234", "Trivia del viernes", host);
-
-    assertThat(sala, notNullValue());
-    assertThat(sala.getCodigo(), is("TRV-1234"));
-    assertThat(sala.getNombre(), is("Trivia del viernes"));
-    assertThat(sala.getHost(), is(host));
-  }
-*/
-
-  @Test
-  public void deberiaQuitarAlIntegranteCuandoSaleDeLaSala() {
-    // Given
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    Usuario integrante = new Usuario();
-    integrante.setUsername("Ana");
-
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
-
-    sala.agregarJugador(host);
-
-    sala.agregarJugador(integrante);
-
-    // When
-    servicioSala.salir(sala, integrante);
-
-    // Then
-    assertThat(sala.getJugadores(), hasSize(1));
-
-    assertThat(sala.getJugadores(), not(hasItem(hasProperty("username", equalTo("Ana")))));
-
-    assertThat(sala.getHost(), equalTo(host));
+    servicioSala = new ServicioSalaIm(repositorioSala, repositorioUsuario);
   }
 
   @Test
-  public void deberiaLanzarExcepcionSiElUsuarioNoPerteneceALaSala() {
-    // Given
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
+  void deberiaLanzarExcepcionCuandoLaSalaAlcanzaSuCapacidadMaxima() {
+    // given
+    Sala sala = givenUnaSalaLlena();
 
-    Usuario usuarioAjeno = new Usuario();
-    usuarioAjeno.setUsername("Pedro");
+    // when
+    Throwable excepcion = whenUnirseCapturandoExcepcion(sala.getCodigo(), 2L);
 
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
+    // then
+    thenSeLanza(excepcion, SalaLlenaException.class);
+    thenLaCantidadDeJugadoresEs(sala, 1);
+    thenNoSeGuardaLaSala();
+  }
 
-    sala.agregarJugador(host);
+  @Test
+  void deberiaLanzarExcepcionSiElUsuarioNoPerteneceALaSala() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    Usuario usuarioAjeno = usuario(2L, "Pedro");
+    givenUsuarioPersistido(usuarioAjeno);
 
-    assertThrows(
-      UsuarioNoPerteneceASalaException.class,
-      () -> servicioSala.salir(sala, usuarioAjeno)
+    // when
+    Throwable excepcion = whenSalirCapturandoExcepcion(sala, usuarioAjeno);
+
+    // then
+    thenSeLanza(excepcion, UsuarioNoPerteneceASalaException.class);
+    thenLaCantidadDeJugadoresEs(sala, 1);
+    thenElHostEs(sala, sala.getHost());
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  void deberiaReasignarElAnfitrionCuandoElAnfitrionSale() {
+    // given
+    Sala sala = givenUnaSalaConTresJugadores();
+    Usuario nuevoHost = sala.getJugadores().get(1).getUsuario();
+
+    // when
+    whenElHostSale(sala);
+
+    // then
+    thenLaCantidadDeJugadoresEs(sala, 2);
+    thenElHostEs(sala, nuevoHost);
+    thenElJugadorEsAnfitrion(sala, nuevoHost);
+    thenSeGuardaLaSala(sala);
+  }
+
+  @Test
+  void deberiaDejarLaSalaSinHostCuandoSaleElUltimoIntegrante() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+
+    // when
+    whenElHostSale(sala);
+
+    // then
+    thenLaCantidadDeJugadoresEs(sala, 0);
+    thenLaSalaNoTieneHost(sala);
+    thenSeGuardaLaSala(sala);
+  }
+
+  @Test
+  void deberiaEncontrarUnaSalaPorSuCodigo() {
+    // given
+    Sala sala = givenUnaSalaPersistida();
+
+    // when
+    Sala resultado = servicioSala.buscarPorCodigo(sala.getCodigo());
+
+    // then
+    assertThat(resultado, equalTo(sala));
+  }
+
+  @Test
+  void deberiaLanzarExcepcionSiLaSalaNoExiste() {
+    // given
+    when(repositorioSala.obtenerPorCodigoConJugadores("TRV-XXXX")).thenReturn(null);
+
+    // when
+    Throwable excepcion = whenBuscarSalaCapturandoExcepcion("TRV-XXXX");
+
+    // then
+    thenSeLanza(excepcion, SalaNoEncontradaException.class);
+  }
+
+  @Test
+  void deberiaCrearYGuardarUnaSalaConSuHostPersistido() {
+    // given
+    Usuario host = usuario(1L, "Juan");
+    givenUsuarioPersistido(host);
+    when(repositorioSala.obtenerSalaPorCodigo(anyString())).thenReturn(null);
+
+    // when
+    Sala salaCreada = servicioSala.crearSala(
+      "Trivia del viernes",
+      host,
+      4,
+      5,
+      ModoJuego.TURNO_TODOS,
+      false
     );
 
-    assertThat(sala.getJugadores(), hasSize(1));
-    assertThat(sala.getJugadores(), hasItem(host));
-    assertThat(sala.getHost(), equalTo(host));
+    // then
+    assertThat(salaCreada.getNombre(), equalTo("Trivia del viernes"));
+    assertThat(salaCreada.getHost(), equalTo(host));
+    assertThat(salaCreada.getJugadores(), hasSize(1));
+    assertThat(salaCreada.getJugadores().get(0).getUsuario(), equalTo(host));
+    thenSeGuardaLaSala(salaCreada);
   }
 
   @Test
-  public void deberiaReasignarElHostCuandoElHostSale() {
-    // Given
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
+  void deberiaLanzarExcepcionSiElCodigoDeInvitacionEsNulo() {
+    // when
+    Throwable excepcion = whenUnirseCapturandoExcepcion(null, 2L);
 
-    Usuario siguienteHost = new Usuario();
-
-    siguienteHost.setUsername("Ana");
-
-    Usuario usuarioAjeno = new Usuario();
-    usuarioAjeno.setUsername("Pedro");
-
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
-
-    sala.agregarJugador(host);
-
-    sala.agregarJugador(siguienteHost);
-
-    sala.agregarJugador(usuarioAjeno);
-
-    // When
-    servicioSala.salir(sala, host);
-
-    // Then
-    assertThat(sala.getJugadores(), not(hasItem(host)));
-    assertThat(sala.getHost(), equalTo(siguienteHost));
+    // then
+    thenSeLanza(excepcion, IllegalArgumentException.class);
+    thenNoSeGuardaLaSala();
   }
 
   @Test
-  public void deberiaDejarLaSalaSinHostCuandoSaleElUltimoIntegrante() {
-    // Given
-    Usuario host = new Usuario();
+  void deberiaLanzarExcepcionSiLaSalaNoExisteAlUnirse() {
+    // given
+    when(repositorioSala.obtenerPorCodigoConJugadores("NO-EXISTE")).thenReturn(null);
 
-    host.setUsername("Juan");
+    // when
+    Throwable excepcion = whenUnirseCapturandoExcepcion("NO-EXISTE", 2L);
+
+    // then
+    thenSeLanza(excepcion, SalaNoEncontradaException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  void deberiaLanzarExcepcionSiElUsuarioNoEstaPersistidoAlUnirse() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    sala.setMaxJugadores(4);
+    when(repositorioUsuario.buscarPorId(2L)).thenReturn(null);
+
+    // when
+    Throwable excepcion = whenUnirseCapturandoExcepcion("TRV-1234", 2L);
+
+    // then
+    thenSeLanza(excepcion, IllegalArgumentException.class);
+    thenLaCantidadDeJugadoresEs(sala, 1);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  void deberiaReconectarAlJugadorQueYaPerteneceALaSala() {
+    // given
+    Usuario host = usuario(1L, "Juan");
+    Usuario ana = usuario(2L, "Ana");
+    Sala sala = nuevaSalaConHost(host);
+
+    SalaJugador participacionAna = new SalaJugador(sala, EstadoJugador.DESCONECTADO, false, ana);
+    sala.getJugadores().add(participacionAna);
+
+    when(repositorioSala.obtenerPorCodigoConJugadores("TRV-1234")).thenReturn(sala);
+
+    // when
+    Sala resultado = servicioSala.unirse("TRV-1234", ana.getId());
+
+    // then
+    assertThat(resultado, equalTo(sala));
+    assertThat(participacionAna.getEstadoJugador(), equalTo(EstadoJugador.CONECTADO));
+    thenLaCantidadDeJugadoresEs(sala, 2);
+    thenSeGuardaLaSala(sala);
+  }
+
+  @Test
+  void deberiaLanzarExcepcionSiSolicitanteNoEsHostAlCambiarHost() {
+    // given
+    Sala sala = givenUnaSalaConTresJugadores();
+    Usuario solicitante = sala.getJugadores().get(1).getUsuario();
+    Usuario nuevoHost = sala.getJugadores().get(2).getUsuario();
+    Usuario hostAnterior = sala.getHost();
+
+    // when
+    Throwable excepcion = whenCambiarHostCapturandoExcepcion(sala, solicitante, nuevoHost);
+
+    // then
+    thenSeLanza(excepcion, UsuarioNoEsHostException.class);
+    thenElHostEs(sala, hostAnterior);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  void deberiaLanzarExcepcionSiElNuevoHostNoPerteneceALaSala() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    Usuario host = sala.getHost();
+    Usuario usuarioAjeno = usuario(9L, "Pedro");
+    givenUsuarioPersistido(usuarioAjeno);
+
+    // when
+    Throwable excepcion = whenCambiarHostCapturandoExcepcion(sala, host, usuarioAjeno);
+
+    // then
+    thenSeLanza(excepcion, UsuarioNoPerteneceASalaException.class);
+    thenElHostEs(sala, host);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  void deberiaCambiarElHostYActualizarLasParticipaciones() {
+    // given
+    Sala sala = givenUnaSalaConTresJugadores();
+    Usuario hostAnterior = sala.getHost();
+    Usuario nuevoHost = sala.getJugadores().get(1).getUsuario();
+
+    // when
+    servicioSala.cambiarHost(sala, hostAnterior, nuevoHost);
+
+    // then
+    thenElHostEs(sala, nuevoHost);
+    thenElJugadorEsAnfitrion(sala, nuevoHost);
+    thenElJugadorNoEsAnfitrion(sala, hostAnterior);
+    thenSeGuardaLaSala(sala);
+  }
+
+  // Given: preparación
+
+  private Sala givenUnaSalaLlena() {
+    Usuario host = usuario(1L, "Juan");
+    Sala sala = nuevaSalaConHost(host);
+    sala.setMaxJugadores(1);
+
+    when(repositorioSala.obtenerPorCodigoConJugadores("TRV-1234")).thenReturn(sala);
+
+    return sala;
+  }
+
+  private Sala givenUnaSalaConUnHost() {
+    Usuario host = usuario(1L, "Juan");
+    Sala sala = nuevaSalaConHost(host);
+
+    when(repositorioSala.obtenerPorCodigoConJugadores("TRV-1234")).thenReturn(sala);
+    givenUsuarioPersistido(host);
+
+    return sala;
+  }
+
+  private Sala givenUnaSalaConTresJugadores() {
+    Usuario host = usuario(1L, "Juan");
+    Usuario ana = usuario(2L, "Ana");
+    Usuario pedro = usuario(3L, "Pedro");
 
     Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
+    sala.setJugadores(new ArrayList<>());
+    sala.getJugadores().add(new SalaJugador(sala, EstadoJugador.CONECTADO, true, host));
+    sala.getJugadores().add(new SalaJugador(sala, EstadoJugador.CONECTADO, false, ana));
+    sala.getJugadores().add(new SalaJugador(sala, EstadoJugador.CONECTADO, false, pedro));
 
-    sala.agregarJugador(host);
+    when(repositorioSala.obtenerPorCodigoConJugadores("TRV-1234")).thenReturn(sala);
 
-    // When
-    servicioSala.salir(sala, host);
+    givenUsuarioPersistido(host);
+    givenUsuarioPersistido(ana);
+    givenUsuarioPersistido(pedro);
 
-    // Then
-    assertThat(sala.getJugadores(), empty());
+    return sala;
+  }
+
+  private Sala givenUnaSalaPersistida() {
+    Usuario host = usuario(1L, "Juan");
+    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
+    sala.setJugadores(new ArrayList<>());
+
+    when(repositorioSala.obtenerPorCodigoConJugadores("TRV-1234")).thenReturn(sala);
+
+    return sala;
+  }
+
+  private Sala nuevaSalaConHost(Usuario host) {
+    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
+    sala.setJugadores(new ArrayList<>());
+    sala.getJugadores().add(new SalaJugador(sala, EstadoJugador.CONECTADO, true, host));
+    return sala;
+  }
+
+  private void givenUsuarioPersistido(Usuario usuario) {
+    when(repositorioUsuario.buscarPorId(usuario.getId())).thenReturn(usuario);
+  }
+
+  // When: ejecución
+
+  private Throwable whenUnirseCapturandoExcepcion(String codigo, Long usuarioId) {
+    try {
+      servicioSala.unirse(codigo, usuarioId);
+      return null;
+    } catch (RuntimeException excepcion) {
+      return excepcion;
+    }
+  }
+
+  private Throwable whenSalirCapturandoExcepcion(Sala sala, Usuario usuario) {
+    try {
+      servicioSala.salir(sala, usuario);
+      return null;
+    } catch (RuntimeException excepcion) {
+      return excepcion;
+    }
+  }
+
+  private void whenElHostSale(Sala sala) {
+    servicioSala.salir(sala, sala.getHost());
+  }
+
+  private Throwable whenBuscarSalaCapturandoExcepcion(String codigo) {
+    try {
+      servicioSala.buscarPorCodigo(codigo);
+      return null;
+    } catch (RuntimeException excepcion) {
+      return excepcion;
+    }
+  }
+
+  private Throwable whenCambiarHostCapturandoExcepcion(
+    Sala sala,
+    Usuario solicitante,
+    Usuario nuevoHost
+  ) {
+    try {
+      servicioSala.cambiarHost(sala, solicitante, nuevoHost);
+      return null;
+    } catch (RuntimeException excepcion) {
+      return excepcion;
+    }
+  }
+
+  // Then: validación
+
+  private void thenSeLanza(Throwable excepcion, Class<?> tipoEsperado) {
+    assertThat(excepcion, instanceOf(tipoEsperado));
+  }
+
+  private void thenLaCantidadDeJugadoresEs(Sala sala, int cantidad) {
+    assertThat(sala.getJugadores(), hasSize(cantidad));
+  }
+
+  private void thenElHostEs(Sala sala, Usuario hostEsperado) {
+    assertThat(sala.getHost(), equalTo(hostEsperado));
+  }
+
+  private void thenLaSalaNoTieneHost(Sala sala) {
     assertThat(sala.getHost(), nullValue());
   }
 
-  /*
-  @Test
-  public void deberiaCrearUnaSalaConElHostComoPrimerJugador() {
-    // Given
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    // When
-    Sala sala = servicioSala.crearSala("TRV-1234", "Trivia del viernes", host);
-
-    // Then
-    assertThat(sala, notNullValue());
-    assertThat(sala.getCodigo(), equalTo("TRV-1234"));
-    assertThat(sala.getNombre(), equalTo("Trivia del viernes"));
-    assertThat(sala.getHost(), equalTo(host));
-    assertThat(sala.getJugadores(), hasSize(1));
-    assertThat(sala.getJugadores(), hasItem(host));
-  }
-*/
-
-  @Test
-  public void deberiaCambiarElHostCuandoElHostActualLoSolicita() {
-    // Given
-    Usuario hostActual = new Usuario();
-
-    hostActual.setUsername("Juan");
-
-    Usuario nuevoHost = new Usuario();
-    nuevoHost.setUsername("Ana");
-
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", hostActual);
-    sala.agregarJugador(hostActual);
-    sala.agregarJugador(nuevoHost);
-
-    // When
-    servicioSala.cambiarHost(sala, hostActual, nuevoHost);
-
-    // Then
-    assertThat(sala.getHost(), equalTo(nuevoHost));
-    assertThat(sala.getJugadores(), hasItem(hostActual));
-    assertThat(sala.getJugadores(), hasItem(nuevoHost));
+  private void thenElJugadorEsAnfitrion(Sala sala, Usuario usuario) {
+    SalaJugador participacion = buscarParticipacion(sala, usuario);
+    assertThat(participacion, notNullValue());
+    assertThat(participacion.isEsAnfitrion(), is(true));
   }
 
-  @Test
-  public void deberiaRechazarElCambioSiElSolicitanteNoEsElHost() {
-    // Given
-    Usuario hostActual = new Usuario();
-    Usuario integrante = new Usuario();
-    Usuario nuevoHost = new Usuario();
-
-    hostActual.setUsername("Juan");
-    integrante.setUsername("Ana");
-    nuevoHost.setUsername("Pedro");
-
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", hostActual);
-    sala.agregarJugador(hostActual);
-    sala.agregarJugador(integrante);
-    sala.agregarJugador(nuevoHost);
-
-    assertThrows(
-      UsuarioNoEsHostException.class,
-      () -> servicioSala.cambiarHost(sala, integrante, nuevoHost)
-    );
+  private void thenElJugadorNoEsAnfitrion(Sala sala, Usuario usuario) {
+    SalaJugador participacion = buscarParticipacion(sala, usuario);
+    assertThat(participacion, notNullValue());
+    assertThat(participacion.isEsAnfitrion(), is(false));
   }
 
-  @Test
-  public void deberiaRechazarElCambioSiElNuevoHostNoPerteneceALaSala() {
-    // Given
-    Usuario hostActual = new Usuario();
-    hostActual.setUsername("Juan");
+  private SalaJugador buscarParticipacion(Sala sala, Usuario usuario) {
+    for (SalaJugador participacion : sala.getJugadores()) {
+      if (participacion.getUsuario().getId().equals(usuario.getId())) {
+        return participacion;
+      }
+    }
 
-    Usuario usuarioAjeno = new Usuario();
-    usuarioAjeno.setUsername("Pedro");
-
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", hostActual);
-    sala.agregarJugador(hostActual);
-
-    assertThrows(
-      UsuarioNoPerteneceASalaException.class,
-      () -> servicioSala.cambiarHost(sala, hostActual, usuarioAjeno)
-    );
-
-    assertThat(sala.getHost(), equalTo(hostActual));
+    return null;
   }
 
-  /*
-  @Test
-  public void deberiaCrearUnaPartidaAsociadaALaSalaConEstadoInicial() {
-    // Given
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    Usuario integrante = new Usuario();
-    integrante.setUsername("Ana");
-
-    Sala sala = new Sala("TRV-1234", "Trivia del viernes", host);
-    sala.agregarJugador(host);
-    sala.agregarJugador(integrante);
-
-    // When
-    Partida partida = servicioPartida.iniciarPartida("TRV-1234", host);
-
-    // Then
-    assertThat(partida, notNullValue());
-    assertThat(partida.getSala(), equalTo(sala));
-    assertThat(partida.getEstado(), equalTo(EstadoPartida.INICIADA));
-  }
-  */
-
-  @Test
-  public void deberiaCrearUnaPartidaAsociadaALaSalaConEstadoInicial() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-
-    Usuario integrante = new Usuario();
-    integrante.setUsername("Ana");
-
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-    servicioSala.unirse(sala, integrante);
-
-    Partida partida = servicioPartida.iniciarPartida(sala.getCodigo(), host);
-
-    assertThat(partida, notNullValue());
-    assertThat(partida.getSala(), equalTo(sala));
-    assertThat(partida.getEstado(), equalTo(EstadoPartida.INICIADA));
+  private void thenSeGuardaLaSala(Sala sala) {
+    verify(repositorioSala).guardar(sala);
   }
 
-  @Test
-  public void deberiaAgregarAlUsuarioCuandoLaSalaEstaEnEspera() {
-    Usuario host = new Usuario();
-    host.setUsername("Juan");
-    Usuario invitado = new Usuario();
-    invitado.setUsername("Ana");
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-
-    servicioSala.unirse(sala, invitado);
-
-    assertThat(sala.getJugadores(), hasItem(invitado));
-    assertThat(sala.getJugadores(), hasSize(2));
+  private void thenNoSeGuardaLaSala() {
+    verify(repositorioSala, never()).guardar(any(Sala.class));
   }
 
-  @Test
-  public void deberiaLanzarExcepcionSiLaSalaNoEstaEnEspera() {
-    Usuario host = new Usuario();
-    Sala sala = servicioSala.crearSala("Trivia del viernes", host);
-    sala.setEstado(EstadoSala.EN_CURSO); // ajustá al valor real de tu enum
-
-    assertThrows(IllegalStateException.class, () -> servicioSala.unirse(sala, new Usuario()));
-  }
-
-  @Test
-  public void deberiaEncontrarUnaSalaPorSuCodigo() {
-    Usuario host = new Usuario();
-    Sala creada = servicioSala.crearSala("Trivia del viernes", host);
-
-    assertThat(servicioSala.buscarPorCodigo(creada.getCodigo()), equalTo(creada));
-  }
-
-  @Test
-  public void deberiaLanzarExcepcionSiLaSalaNoExiste() {
-    assertThrows(SalaNoEncontradaException.class, () -> servicioSala.buscarPorCodigo("TRV-XXXX"));
-  }
-
-  @Test
-  public void deberiaLanzarExcepcionAlAgregarUnJugadorNulo() {
-    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
-
-    assertThrows(JugadorInexistenteExeption.class, () -> sala.agregarJugador(null));
-  }
-
-  @Test
-  public void deberiaPasarAEnCursoAlIniciarUnaSalaEnEspera() {
-    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
-
-    sala.iniciar();
-
-    assertThat(sala.getEstado(), equalTo(EstadoSala.EN_CURSO));
-  }
-
-  @Test
-  public void deberiaLanzarExcepcionAlIniciarUnaSalaQueYaNoEstaEnEspera() {
-    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
-    sala.iniciar();
-
-    assertThrows(IllegalStateException.class, sala::iniciar);
-  }
-
-  @Test
-  public void deberiaPermitirModificarLosDatosDeLaSala() {
-    Sala sala = new Sala("TRV-1234", "Trivia", new Usuario());
-    Usuario nuevoHost = new Usuario();
-    List<Usuario> jugadores = new ArrayList<>();
-    jugadores.add(nuevoHost);
-
-    sala.setCodigo("TRV-9999");
-    sala.setNombre("Otra trivia");
-    sala.setHost(nuevoHost);
-    sala.setJugadores(jugadores);
-
-    assertThat(sala.getCodigo(), equalTo("TRV-9999"));
-    assertThat(sala.getNombre(), equalTo("Otra trivia"));
-    assertThat(sala.getHost(), equalTo(nuevoHost));
-    assertThat(sala.getJugadores(), hasSize(1));
+  private Usuario usuario(Long id, String username) {
+    Usuario usuario = new Usuario();
+    usuario.setId(id);
+    usuario.setUsername(username);
+    return usuario;
   }
 }

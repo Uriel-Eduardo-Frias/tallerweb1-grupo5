@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>No se pudo unir a la sala</title>
+</head>
+<body>
+<h1>No se pudo unir a la sala</h1>
+
+<p th:text="${mensaje}">
+    Ocurrió un error al intentar unirse.
+</p>
+
+<h2>Salas públicas disponibles</h2>
+
+<p th:if="${salas == null or #lists.isEmpty(salas)}">
+    No hay salas públicas disponibles.
+</p>
+
+<ul th:if="${salas != null and !#lists.isEmpty(salas)}">
+    <li th:each="sala : ${salas}">
+        <span th:text="${sala.nombre}">Nombre de sala</span>
+        <span th:text="${sala.codigo}">Código</span>
+        <a th:href="@{/salas/{codigo}(codigo=${sala.codigo})}">
+            Ver sala
+        </a>
+    </li>
+</ul>
+
+<a th:href="@{/salas}">Volver a la lista de salas</a>
+</body>
+</html>

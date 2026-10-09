@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Trivia - Votación de categoría</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .contenedor {
+            max-width: 700px;
+            margin: auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .informacion {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .votacion {
+            margin-top: 30px;
+        }
+
+        .categorias {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .categoria {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .categoria:hover {
+            background-color: #eeeeee;
+        }
+
+        .boton {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #temporizador {
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+
+<h1>TRIVIA</h1>
+
+<h2>
+    Ronda
+    <span th:text="${partida.rondaActual}">1</span>
+    /
+    <span th:text="${partida.totalRondas}">5</span>
+</h2>
+
+<h3>Jugadores</h3>
+
+<div th:each="jugador : ${partida.sala.jugadores}">
+
+    <span th:text="${jugador.usuario.username}">
+        jugador
+    </span>
+
+    -
+
+    <span th:if="${jugador.estadoJugador.name() == 'LISTO'}">
+        ✓ LISTO
+    </span>
+
+    <span th:unless="${jugador.estadoJugador.name() == 'LISTO'}">
+        Esperando...
+    </span>
+
+</div>
+
+<hr>
+
+<div th:if="${todosListos}">
+    <h3>✓ Todos los jugadores están listos</h3>
+</div>
+
+<div th:unless="${todosListos}">
+    <h3>Esperando a que todos estén listos...</h3>
+</div>
+
+<hr>
+
+<form th:action="@{/partida/{id}/listo(id=${partida.id})}"
+      method="post">
+
+    <button type="submit">
+        ESTOY LISTO
+    </button>
+
+</form>
+
+<script>
+
+    let tiempo = [[${tiempoVotacion}]];
+
+    const temporizador =
+        document.getElementById("temporizador");
+
+    const intervalo = setInterval(function () {
+
+        tiempo--;
+
+        temporizador.textContent = tiempo;
+
+        if (tiempo <= 0) {
+            clearInterval(intervalo);
+        }
+
+    }, 1000);
+
+</script>
+
+</body>
+</html>

@@ -5,7 +5,6 @@
     <title>Salas de Trivia</title>
     <link rel="stylesheet" th:href="@{/resources/core/css/salas-lista.css}">
     <style>
-        <style>
         :root {
             --bg: #10101a;
             --surface: #1a1a29;
@@ -380,11 +379,6 @@
                                   th:action="@{/salas/{codigo}/unirse(codigo=${s.codigo})}"
                                   method="post">
 
-
-                                <input type="text"
-                                       name="invitado"
-                                       placeholder="Tu nombre"
-                                       required>
 
                                 <button type="submit"
                                         class="btn-primary-sm"

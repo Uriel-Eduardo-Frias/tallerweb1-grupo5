@@ -2,63 +2,21 @@ package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 @Service
 public class ServicioUsuarioImpl implements ServicioUsuario {
 
-  // Atributos
-  private final List<Usuario> usuariosMock;
-  private Long generarId = 5L;
+  private final RepositorioUsuario repositorioUsuario;
 
   // Constructor
-  public ServicioUsuarioImpl() {
-    this.usuariosMock = new ArrayList<Usuario>();
-
-    Usuario admin = new Usuario();
-    admin.setId(1L);
-    admin.setUsername("admin");
-    admin.setEmail("admin@trivia.com");
-    admin.setPassword("1234");
-    admin.setNombreCompleto("Administrador del sistema");
-
-    PerfilUsuario perfil = new PerfilUsuario();
-    perfil.setNivel(99);
-    perfil.setExperiencia(9999);
-    perfil.setUsuario(admin);
-    admin.setPerfil(perfil);
-
-    Usuario pepito = new Usuario();
-    pepito.setId(2L);
-    pepito.setUsername("pepito");
-    pepito.setEmail("pepito@trivia.com");
-    pepito.setPassword("1234");
-    pepito.setNombreCompleto("Pepito Jugador");
-
-    PerfilUsuario perfilPepito = new PerfilUsuario();
-    perfilPepito.setNivel(12);
-    perfilPepito.setExperiencia(1500);
-    perfilPepito.setUsuario(pepito);
-    pepito.setPerfil(perfilPepito);
-
-    Usuario sofia = new Usuario();
-    sofia.setId(3L);
-    sofia.setUsername("sofia");
-    sofia.setEmail("sofia@trivia.com");
-    sofia.setPassword("1234");
-    sofia.setNombreCompleto("Sofia Experta");
-
-    PerfilUsuario perfilSofia = new PerfilUsuario();
-    perfilSofia.setNivel(35);
-    perfilSofia.setExperiencia(8200);
-    perfilSofia.setUsuario(sofia);
-    sofia.setPerfil(perfilSofia);
-
-    this.usuariosMock.add(sofia);
-    this.usuariosMock.add(pepito);
-    this.usuariosMock.add(admin);
+  public ServicioUsuarioImpl(RepositorioUsuario repositorioUsuario) {
+    this.repositorioUsuario = repositorioUsuario;
   }
 
   @Override
@@ -68,94 +26,80 @@ public class ServicioUsuarioImpl implements ServicioUsuario {
     String password,
     String nombreCompleto
   ) throws UsuarioExistente {
-    // Verifico si el usuario existe
-    if (buscarUsuarioPorUsername(username) != null) {
-      throw new RuntimeException("El nombre de usuario ya esta en uso");
+    if (
+      repositorioUsuario.buscarPorUsername(username) != null ||
+      repositorioUsuario.buscar(email) != null
+    ) {
+      throw new UsuarioExistente();
     }
 
-    // Creacion del nuevo usuario y asignacion del perfil
-    Usuario nuevoUsuario = new Usuario();
-    nuevoUsuario.setId(generarId);
-    generarId++;
-    nuevoUsuario.setUsername(username);
-    nuevoUsuario.setEmail(email);
-    nuevoUsuario.setPassword(password);
-    nuevoUsuario.setNombreCompleto(nombreCompleto);
+    Usuario usuario = new Usuario();
+    usuario.setUsername(username);
+    usuario.setEmail(email);
+    usuario.setPassword(password);
+    usuario.setNombreCompleto(nombreCompleto);
 
-    PerfilUsuario nuevoPerfil = new PerfilUsuario();
-    nuevoPerfil.setUsuario(nuevoUsuario);
-    nuevoUsuario.setPerfil(nuevoPerfil);
+    PerfilUsuario perfil = new PerfilUsuario();
+    perfil.setUsuario(usuario);
+    usuario.setPerfil(perfil);
 
-    this.usuariosMock.add(nuevoUsuario);
-
-    return nuevoUsuario;
+    // El ID lo genera Hibernate; Usuario tiene cascade hacia PerfilUsuario.
+    repositorioUsuario.guardar(usuario);
+    return usuario;
   }
 
   @Override
   public Usuario autenticarUsuario(String username, String password) {
-    Usuario usuario = buscarUsuarioPorUsername(username);
-
-    if (usuario != null && usuario.getPassword().equals(password)) {
-      return usuario;
+    if (username == null || password == null) {
+      return null;
     }
-    return null;
+
+    return repositorioUsuario.buscarPorUsernameYPassword(username, password);
   }
 
   @Override
   public Usuario buscarUsuarioPorId(Long id) {
-    for (Usuario usuario : usuariosMock) {
-      if (usuario.getId().equals(id)) {
-        return usuario;
-      }
+    if (id == null) {
+      return null;
     }
-    return null;
+
+    return repositorioUsuario.buscarPorId(id);
   }
 
   @Override
   public Usuario buscarUsuarioPorUsername(String username) {
-    for (Usuario usuario : usuariosMock) {
-      if (usuario.getUsername().equals(username)) {
-        return usuario;
-      }
+    if (username == null) {
+      return null;
     }
-    return null;
+
+    return repositorioUsuario.buscarPorUsername(username);
   }
 
   @Override
   public List<Usuario> buscarUsuariosPorNombre(String terminoBusqueda) {
-    List<Usuario> usuariosEncontrados = new ArrayList<>();
-
-    // CAMBIO ACÁ: Devuelve una lista vacía si no buscaron nada todavía
-    if (terminoBusqueda == null || "".equals(terminoBusqueda)) {
-      return new ArrayList<>();
+    if (terminoBusqueda == null || terminoBusqueda.isBlank()) {
+      return Collections.emptyList();
     }
 
-    String busquedaMinuscula = terminoBusqueda.toLowerCase(Locale.ROOT);
-
-    for (Usuario usuario : usuariosMock) {
-      if (usuario.getUsername() != null) {
-        String nombreUsuario = usuario.getUsername().toLowerCase(Locale.ROOT);
-
-        if (nombreUsuario.contains(busquedaMinuscula)) {
-          usuariosEncontrados.add(usuario);
-        }
-      }
-    }
-
-    return usuariosEncontrados;
+    return repositorioUsuario.buscarUsuariosPorNombre(terminoBusqueda.trim());
   }
 
   @Override
   public void actualizarPerfil(Long idUsuario, String biografia, String avatarUrl) {
-    Usuario usuario = buscarUsuarioPorId(idUsuario);
-    if (usuario != null && usuario.getPerfil() != null) {
-      usuario.getPerfil().setBiografia(biografia);
+    Usuario usuario = repositorioUsuario.buscarPorId(idUsuario);
 
-      if (avatarUrl == null || "".equals(avatarUrl.trim())) {
-        usuario.getPerfil().setAvatarUrl(null);
-      } else {
-        usuario.getPerfil().setAvatarUrl(avatarUrl);
-      }
+    if (usuario == null || usuario.getPerfil() == null) {
+      return;
     }
+
+    usuario.getPerfil().setBiografia(biografia);
+
+    if (avatarUrl == null || avatarUrl.isBlank()) {
+      usuario.getPerfil().setAvatarUrl(null);
+    } else {
+      usuario.getPerfil().setAvatarUrl(avatarUrl);
+    }
+    // El usuario está gestionado dentro de la transacción; Hibernate
+    // persiste los cambios al confirmarla.
   }
 }
