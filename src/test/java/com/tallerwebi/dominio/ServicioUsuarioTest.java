@@ -2,16 +2,24 @@ package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ServicioUsuarioTest {
 
+  private RepositorioUsuario repositorioUsuario;
   private ServicioUsuarioImpl servicioUsuario;
-  private String busqueda;
+
+  private String terminoBusqueda;
   private List<Usuario> resultadoBusqueda;
 
   private Long idUsuarioActualizar;
@@ -20,123 +28,167 @@ class ServicioUsuarioTest {
   private Usuario usuarioActualizado;
 
   @BeforeEach
-  public void init() {
-    servicioUsuario = new ServicioUsuarioImpl();
+  void inicializar() {
+    repositorioUsuario = mock(RepositorioUsuario.class);
+    servicioUsuario = new ServicioUsuarioImpl(repositorioUsuario);
   }
 
   @Test
-  public void queSiElUsuarioDejaVacioElCampoBuscarDevuelvaUnaListaVacia() {
-    // preparacion given)
-    givenTengoUnTerminoDeBusquedaVacio();
+  void siElTerminoDeBusquedaEstaVacioDevuelveUnaListaVacia() {
+    // given
+    givenTengoUnTerminoDeBusqueda("");
 
-    // ejecucion (when)
+    // when
     whenBuscoUsuariosPorNombre();
 
-    // verificacion (then)
+    // then
     thenLaListaDeResultadosEstaVacia();
+    verifyNoInteractions(repositorioUsuario);
   }
 
   @Test
-  public void queElUsuarioBuscaUnJugadorExistenteLoPuedaEncontrar() {
-    // prepacion
-    givenTengoUnTerminoDeBusquedaValido("pepi");
+  void siBuscaUnJugadorExistenteLoEncuentra() {
+    // given
+    Usuario pepito = givenUnUsuario("pepito");
+    List<Usuario> usuarios = givenUnaListaCon(pepito);
+    givenTengoUnTerminoDeBusqueda("pepi");
+    givenElRepositorioDevuelveUsuarios("pepi", usuarios);
 
-    // ejecucion
+    // when
     whenBuscoUsuariosPorNombre();
 
-    // validacion
+    // then
     thenEncuentroAlJugadorEsperado(1, "pepito");
   }
 
   @Test
-  public void queSiElUsuarioIngresaMayusculaYMinusculaPuedaEncontrarAlJugador() {
-    // preparacion
-    givenTengoUnTerminoDeBusquedaValido("Sofi");
+  void laBusquedaIgnoraMayusculasYMinusculas() {
+    // given
+    Usuario sofia = givenUnUsuario("sofia");
+    List<Usuario> usuarios = givenUnaListaCon(sofia);
+    givenTengoUnTerminoDeBusqueda("Sofi");
+    givenElRepositorioDevuelveUsuarios("Sofi", usuarios);
 
-    // ejecucion
+    // when
     whenBuscoUsuariosPorNombre();
 
-    // validacion
+    // then
     thenEncuentroAlJugadorEsperado(1, "sofia");
   }
 
   @Test
-  public void queSiElUsuarioIngresaUnJugadorQueNoExisteDebeDevolverUnaListaVacia() {
-    // preparacion
-    givenTengoUnTerminoDeBusquedaValido("jugadorquenoexiste");
+  void siElJugadorNoExisteDevuelveUnaListaVacia() {
+    // given
+    givenTengoUnTerminoDeBusqueda("jugadorquenoexiste");
+    givenElRepositorioDevuelveUsuarios("jugadorquenoexiste", new ArrayList<>());
 
-    // ejecucion
+    // when
     whenBuscoUsuariosPorNombre();
 
-    // validacion
+    // then
     thenLaListaDeResultadosEstaVacia();
   }
 
   @Test
-  public void queSePuedaActualizarLaBiografiaYElAvatarDeUnUsuario() {
-    // preparacion
-    givenDatosParaActualizarElPerfil(2L, "Esta es mi nueva biografia", "fotocualquiera");
+  void actualizaLaBiografiaYElAvatarDelPerfil() {
+    // given
+    Usuario usuario = givenUnUsuarioConPerfil(2L);
+    givenDatosParaActualizarElPerfil(2L, "Esta es mi nueva biografía", "fotocualquiera");
+    givenElRepositorioDevuelveUsuario(2L, usuario);
 
-    // ejecucion
+    // when
     whenActualizoElPerfil();
 
-    // validacion
+    // then
     thenElPerfilSeActualizaCorrectamente();
   }
 
   @Test
-  public void siElUsuarioActualizaSuPerfilConUnAvatarVacioSeMuestrePorDefectoUnaFotoCualquiera() {
-    // preparacion
-    givenDatosParaActualizarElPerfil(3L, "Esta es mi nueva biografia", "");
+  void siElAvatarEsVacioLoGuardaComoNull() {
+    // given
+    Usuario usuario = givenUnUsuarioConPerfil(3L);
+    givenDatosParaActualizarElPerfil(3L, "Esta es mi nueva biografía", "");
+    givenElRepositorioDevuelveUsuario(3L, usuario);
 
-    // ejecucion
+    // when
     whenActualizoElPerfil();
 
-    // validacion
+    // then
     thenElAvatarSeGuardaVacio();
   }
 
-  // given
-  private void givenTengoUnTerminoDeBusquedaValido(String busqueda) {
-    this.busqueda = busqueda;
+  // Given: preparación
+
+  private void givenTengoUnTerminoDeBusqueda(String termino) {
+    terminoBusqueda = termino;
   }
 
-  private void givenTengoUnTerminoDeBusquedaVacio() {
-    this.busqueda = "";
+  private Usuario givenUnUsuario(String username) {
+    Usuario usuario = new Usuario();
+    usuario.setUsername(username);
+    return usuario;
+  }
+
+  private Usuario givenUnUsuarioConPerfil(Long id) {
+    Usuario usuario = new Usuario();
+    usuario.setId(id);
+    usuario.setUsername("usuario" + id);
+
+    PerfilUsuario perfil = new PerfilUsuario();
+    perfil.setUsuario(usuario);
+    usuario.setPerfil(perfil);
+
+    return usuario;
+  }
+
+  private List<Usuario> givenUnaListaCon(Usuario usuario) {
+    List<Usuario> usuarios = new ArrayList<>();
+    usuarios.add(usuario);
+    return usuarios;
+  }
+
+  private void givenElRepositorioDevuelveUsuarios(String termino, List<Usuario> usuarios) {
+    when(repositorioUsuario.buscarUsuariosPorNombre(termino)).thenReturn(usuarios);
   }
 
   private void givenDatosParaActualizarElPerfil(Long id, String biografia, String avatar) {
-    this.idUsuarioActualizar = id;
-    this.nuevaBiografia = biografia;
-    this.nuevoAvatar = avatar;
+    idUsuarioActualizar = id;
+    nuevaBiografia = biografia;
+    nuevoAvatar = avatar;
   }
 
-  // when
+  private void givenElRepositorioDevuelveUsuario(Long id, Usuario usuario) {
+    when(repositorioUsuario.buscarPorId(id)).thenReturn(usuario);
+  }
+
+  // When: ejecución
+
   private void whenBuscoUsuariosPorNombre() {
-    this.resultadoBusqueda = this.servicioUsuario.buscarUsuariosPorNombre(busqueda);
+    resultadoBusqueda = servicioUsuario.buscarUsuariosPorNombre(terminoBusqueda);
   }
 
   private void whenActualizoElPerfil() {
-    this.servicioUsuario.actualizarPerfil(idUsuarioActualizar, nuevaBiografia, nuevoAvatar);
-    this.usuarioActualizado = servicioUsuario.buscarUsuarioPorId(idUsuarioActualizar);
+    servicioUsuario.actualizarPerfil(idUsuarioActualizar, nuevaBiografia, nuevoAvatar);
+    usuarioActualizado = servicioUsuario.buscarUsuarioPorId(idUsuarioActualizar);
   }
 
-  // then
+  // Then: validación
+
   private void thenLaListaDeResultadosEstaVacia() {
-    assertTrue(this.resultadoBusqueda.isEmpty());
+    assertTrue(resultadoBusqueda.isEmpty());
   }
 
   private void thenEncuentroAlJugadorEsperado(int cantidadEsperada, String nombreEsperado) {
-    assertThat(this.resultadoBusqueda.size(), equalTo(cantidadEsperada));
-    assertThat(this.resultadoBusqueda.get(0).getUsername(), equalTo(nombreEsperado));
+    assertThat(resultadoBusqueda.size(), equalTo(cantidadEsperada));
+    assertThat(resultadoBusqueda.get(0).getUsername(), equalTo(nombreEsperado));
   }
 
   private void thenElPerfilSeActualizaCorrectamente() {
-    assertThat(this.usuarioActualizado.getPerfil().getBiografia(), equalTo(this.nuevaBiografia));
-    assertThat(this.usuarioActualizado.getPerfil().getAvatarUrl(), equalTo(this.nuevoAvatar));
+    assertThat(usuarioActualizado.getPerfil().getBiografia(), equalTo(nuevaBiografia));
+    assertThat(usuarioActualizado.getPerfil().getAvatarUrl(), equalTo(nuevoAvatar));
   }
 
   private void thenElAvatarSeGuardaVacio() {
-    assertThat(this.usuarioActualizado.getPerfil().getAvatarUrl(), equalTo(null));
+    assertThat(usuarioActualizado.getPerfil().getAvatarUrl(), is((String) null));
   }
 }

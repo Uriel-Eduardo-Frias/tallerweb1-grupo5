@@ -4,88 +4,59 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service("servicioPartidaImp")
+@Transactional
 public class ServicioPartidaImp implements ServicioPartida {
 
   private final ServicioSala servicioSala;
-  private final Map<String, Partida> partidas = new HashMap<>();
-  private Long siguienteId = 1L;
+  private final RepositorioPartida repositorioPartida;
 
-  public ServicioPartidaImp(ServicioSala servicioSala) {
+  public ServicioPartidaImp(ServicioSala servicioSala, RepositorioPartida repositorioPartida) {
     this.servicioSala = servicioSala;
+    this.repositorioPartida = repositorioPartida;
   }
 
   @Override
   public Partida iniciarPartida(String codigoSala, Usuario solicitante) {
-    //primero busco la sala mediante su código
-    Sala salaBuscada = this.buscarSala(codigoSala);
+    Sala sala = buscarSala(codigoSala);
 
-    //la sala se puede iniciar
-    this.validarSalaPuedeIniciarse(salaBuscada);
+    validarSalaPuedeIniciarse(sala);
+    validarEsHost(sala, solicitante);
 
-    //es host el usuario
-    this.validarEsHost(salaBuscada, solicitante);
+    cambiarSalaAEnCurso(sala);
 
-    //se cambia el estado de la sala
-    this.cambiarSalaAEnCurso(salaBuscada);
+    Partida partida = crearPartida(sala);
+    crearPrimeraRonda(partida);
 
-    //se crea la partida
-    Partida partida = this.crearPartida(salaBuscada);
-
-    this.crearPrimeraRonda(partida);
-
-    this.asignarId(partida);
-
-    //se guarda la partida
-    this.guardarPartida(codigoSala, partida);
-
-    //se devuelve la partida
+    repositorioPartida.guardar(partida);
     return partida;
-  }
-
-  private void crearPrimeraRonda(Partida partida) {
-    //se instancia la ronda
-    PartidaRonda ronda = new PartidaRonda(partida, 1);
-
-    //por defecto se añade la votación categoría
-    ronda.setEstado(EstadoRonda.VOTACION_CATEGORIA);
-
-    //obtengo de partida la cantidad de rondas y añado una
-    partida.getRondas().add(ronda);
   }
 
   @Override
   public Partida finalizarPartida(String codigoSala, Usuario solicitante) {
-    //se busca la partida por el código de sala
-    Partida partidaBuscada = buscarPartida(codigoSala);
+    Partida partida = buscarPartida(codigoSala);
 
-    //se valida si la partida puede finalizar
-    this.validarPartidaPuedeFinalizar(partidaBuscada);
+    validarPartidaPuedeFinalizar(partida);
+    validarEsHost(partida.getSala(), solicitante);
 
-    //se obtiene de la partida la sala
-    Sala sala = partidaBuscada.getSala();
+    cambiarEstadoPartida(partida);
+    cambiarSalaAFinalizada(partida.getSala());
 
-    //se valida si es host
-    validarEsHost(sala, solicitante);
-
-    //se cambia el estado partida
-    this.cambiarEstadoPartida(partidaBuscada);
-
-    this.cambiarSalaAFinalizada(sala);
-
-    return partidaBuscada;
+    repositorioPartida.guardar(partida);
+    return partida;
   }
 
   @Override
   public Partida buscarPartidaPorId(Long id) {
-    for (Partida partida : partidas.values()) {
-      if (partida.getId().equals(id)) {
-        return partida;
-      }
+    Partida partida = repositorioPartida.obtenerPorId(id);
+
+    if (partida == null) {
+      throw new PartidaNoEncontradaException("No existe la partida " + id);
     }
 
-    throw new PartidaNoEncontradaException("No existe la partida " + id);
+    return partida;
   }
 
   @Override
@@ -93,70 +64,38 @@ public class ServicioPartidaImp implements ServicioPartida {
     return buscarPartida(codigoSala);
   }
 
-  /*
   @Override
-  public PartidaRonda activarPreguntaRonda(String codigoSala, int numeroRonda) {
-    Partida partida = buscarPartida(codigoSala);
+  public void marcarJugadorListo(Long idPartida, Usuario usuario) {
+    Partida partida = buscarPartidaPorId(idPartida);
+    SalaJugador jugador = buscarJugadorEnSala(partida.getSala(), usuario);
 
-    if (partida == null) {
-      return null;
-    }
-
-    PartidaRonda ronda = buscarRonda(partida, numeroRonda);
-
-    if (!puedeActivarse(ronda)) {
-      return ronda;
-    }
-
-    //Pregunta pregunta = servicioPregunta.seleccionarPreguntaAleatoria();
-
-    /*
-    if (pregunta == null) {
-      return ronda;
-    }
-
-
-    //ronda.setPregunta(pregunta);
-    ronda.setEstado(EstadoRonda.PREGUNTA_ACTIVA);
-
-    return ronda;
+    jugador.setEstadoJugador(EstadoJugador.LISTO);
   }
-  */
-  /*
-  private PartidaRonda buscarRonda(Partida partida, int numeroRonda) {
-    List<PartidaRonda> rondas = partida.getRondas();
 
-    for (int i = 0; i < rondas.size(); i++) {
-      PartidaRonda ronda = rondas.get(i);
+  @Override
+  public boolean estanTodosListos(Long idPartida) {
+    Partida partida = buscarPartidaPorId(idPartida);
+    List<SalaJugador> jugadores = partida.getSala().getJugadores();
 
-      if (ronda.getNumero() == numeroRonda) {
-        return ronda;
+    if (jugadores.isEmpty()) {
+      return false;
+    }
+
+    for (SalaJugador jugador : jugadores) {
+      if (jugador.getEstadoJugador() != EstadoJugador.LISTO) {
+        return false;
       }
     }
 
-    return null;
-  }
-*/
-  /*
-  private boolean puedeActivarse(PartidaRonda ronda) {
-    return ronda != null
-            && ronda.getEstado() == EstadoRonda.VOTACION_CATEGORIA;
-  }
-*/
-
-  private void validarPartidaPuedeFinalizar(Partida partida) {
-    if (partida.getEstado() != EstadoPartida.EN_CURSO) {
-      throw new IllegalStateException("La partida no se encuentra en curso");
-    }
+    return true;
   }
 
-  private void asignarId(Partida partida) {
-    partida.setId(siguienteId);
-    siguienteId++;
+  private Sala buscarSala(String codigoSala) {
+    return servicioSala.buscarPorCodigo(codigoSala);
   }
 
   private Partida buscarPartida(String codigoSala) {
-    Partida partida = partidas.get(codigoSala);
+    Partida partida = repositorioPartida.obtenerPorCodigoSala(codigoSala);
 
     if (partida == null) {
       throw new PartidaNoEncontradaException("No hay una partida para la sala " + codigoSala);
@@ -165,14 +104,32 @@ public class ServicioPartidaImp implements ServicioPartida {
     return partida;
   }
 
-  private Sala buscarSala(String codigoSala) {
-    Sala sala = servicioSala.buscarPorCodigo(codigoSala);
+  private Partida crearPartida(Sala sala) {
+    Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
+    partida.setTotalRondas(sala.getTotalRondas());
+    partida.setModoJuego(sala.getModoJuego());
+    return partida;
+  }
 
-    if (sala == null) {
-      throw new SalaNoEncontradaException("No existe la sala " + codigoSala);
-    }
+  private void crearPrimeraRonda(Partida partida) {
+    PartidaRonda ronda = new PartidaRonda(partida, 1);
+    ronda.setEstado(EstadoRonda.VOTACION_CATEGORIA);
 
-    return sala;
+    // La ronda es el lado dueño de la relación.
+    ronda.setPartida(partida);
+    partida.getRondas().add(ronda);
+  }
+
+  private void cambiarSalaAEnCurso(Sala sala) {
+    sala.setEstado(EstadoSala.EN_CURSO);
+  }
+
+  private void cambiarSalaAFinalizada(Sala sala) {
+    sala.setEstado(EstadoSala.FINALIZADA);
+  }
+
+  private void cambiarEstadoPartida(Partida partida) {
+    partida.setEstado(EstadoPartida.FINALIZADA);
   }
 
   private void validarSalaPuedeIniciarse(Sala sala) {
@@ -185,41 +142,16 @@ public class ServicioPartidaImp implements ServicioPartida {
     }
   }
 
-  private void validarEsHost(Sala sala, Usuario solicitante) {
-    if (!sala.getHost().equals(solicitante)) {
-      throw new UsuarioNoEsHostException("Solo el host puede iniciar la partida");
+  private void validarPartidaPuedeFinalizar(Partida partida) {
+    if (partida.getEstado() != EstadoPartida.EN_CURSO) {
+      throw new IllegalStateException("La partida no se encuentra en curso");
     }
   }
 
-  private void cambiarSalaAEnCurso(Sala sala) {
-    sala.setEstado(EstadoSala.EN_CURSO);
-  }
-
-  private void cambiarSalaAFinalizada(Sala sala) {
-    sala.setEstado(EstadoSala.FINALIZADA);
-  }
-
-  private Partida crearPartida(Sala sala) {
-    return new Partida(sala, EstadoPartida.EN_CURSO);
-  }
-
-  private void guardarPartida(String codigoSala, Partida partida) {
-    partidas.put(codigoSala, partida);
-  }
-
-  private void cambiarEstadoPartida(Partida partida) {
-    partida.setEstado(EstadoPartida.FINALIZADA);
-  }
-
-  @Override
-  public void marcarJugadorListo(Long idPartida, Usuario usuario) {
-    Partida partida = buscarPartidaPorId(idPartida);
-
-    Sala sala = partida.getSala();
-
-    SalaJugador jugador = buscarJugadorEnSala(sala, usuario);
-
-    jugador.setEstadoJugador(EstadoJugador.LISTO);
+  private void validarEsHost(Sala sala, Usuario solicitante) {
+    if (sala.getHost() == null || !sala.getHost().getId().equals(solicitante.getId())) {
+      throw new UsuarioNoEsHostException("Solo el host puede realizar esta acción");
+    }
   }
 
   private SalaJugador buscarJugadorEnSala(Sala sala, Usuario usuario) {
@@ -230,24 +162,5 @@ public class ServicioPartidaImp implements ServicioPartida {
     }
 
     throw new JugadorInexistenteExeption("El usuario no pertenece a la sala");
-  }
-
-  @Override
-  public boolean estanTodosListos(Long idPartida) {
-    Partida partida = buscarPartidaPorId(idPartida);
-
-    Sala sala = partida.getSala();
-
-    if (sala.getJugadores().isEmpty()) {
-      return false;
-    }
-
-    for (SalaJugador jugador : sala.getJugadores()) {
-      if (jugador.getEstadoJugador() != EstadoJugador.LISTO) {
-        return false;
-      }
-    }
-
-    return true;
   }
 }

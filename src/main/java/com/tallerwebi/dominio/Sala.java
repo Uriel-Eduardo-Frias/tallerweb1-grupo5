@@ -1,18 +1,35 @@
 package com.tallerwebi.dominio;
 
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "salas")
 public class Sala {
 
+  @Id
   private String codigo;
+
   private String nombre;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "host_id")
   private Usuario host;
-  private List<SalaJugador> jugadores;
+
+  @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<SalaJugador> jugadores = new ArrayList<>();
+
   private Integer maxJugadores;
+
+  @Enumerated(EnumType.STRING)
   private EstadoSala estado;
+
   private int totalRondas;
+
+  @Enumerated(EnumType.STRING)
   private ModoJuego modoJuego;
+
   private boolean esPrivada;
 
   public Sala() {}
@@ -24,23 +41,6 @@ public class Sala {
     this.jugadores = new ArrayList<>();
     this.maxJugadores = 4;
     this.estado = EstadoSala.EN_ESPERA;
-  }
-
-  public boolean agregarJugador(SalaJugador salaJugador) {
-    if (salaJugador == null) {
-      throw new JugadorInexistenteExeption("No se encontro el jugador");
-    }
-
-    return this.jugadores.add(salaJugador);
-  }
-
-  public void quitarJugador(Usuario usuario) {
-    for (int i = 0; i < jugadores.size(); i++) {
-      if (jugadores.get(i).getUsuario().getId().equals(usuario.getId())) {
-        jugadores.remove(i);
-        break;
-      }
-    }
   }
 
   public String getCodigo() {

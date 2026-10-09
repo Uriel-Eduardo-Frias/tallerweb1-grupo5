@@ -1,22 +1,38 @@
 package com.tallerwebi.dominio;
 
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "partidas")
 public class Partida {
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "sala_codigo", nullable = false, unique = true)
   private Sala sala;
+
+  @Enumerated(EnumType.STRING)
   private EstadoPartida estado;
-  private List<PartidaRonda> rondas;
+
+  @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<PartidaRonda> rondas = new ArrayList<>();
+
   private Integer rondaActual;
   private Integer totalRondas;
+
+  @Enumerated(EnumType.STRING)
   private ModoJuego modoJuego;
+
+  public Partida() {}
 
   public Partida(Sala sala, EstadoPartida estado) {
     this.sala = sala;
     this.estado = estado;
-    this.rondas = new ArrayList<>();
     this.rondaActual = 1;
     this.totalRondas = 5;
     this.modoJuego = ModoJuego.TURNO_TODOS;

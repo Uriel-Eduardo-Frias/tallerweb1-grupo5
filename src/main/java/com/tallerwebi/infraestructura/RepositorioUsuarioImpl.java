@@ -3,6 +3,7 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.RepositorioUsuario;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioNoEncontrado;
+import java.util.List;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -52,5 +53,53 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
       throw new UsuarioNoEncontrado();
     }
     sessionFactory.getCurrentSession().merge(usuario);
+  }
+
+  @Override
+  public Usuario buscarPorUsername(String username) {
+    String hql = "FROM Usuario u WHERE u.username = :username";
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, Usuario.class)
+      .setParameter("username", username)
+      .uniqueResult();
+  }
+
+  @Override
+  public Usuario buscarPorUsernameYPassword(String username, String password) {
+    String hql =
+      """
+      FROM Usuario u
+      WHERE u.username = :username
+        AND u.password = :password
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, Usuario.class)
+      .setParameter("username", username)
+      .setParameter("password", password)
+      .uniqueResult();
+  }
+
+  @Override
+  public List<Usuario> buscarUsuariosPorNombre(String termino) {
+    String hql =
+      """
+      FROM Usuario u
+      WHERE LOWER(u.username) LIKE :termino
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, Usuario.class)
+      .setParameter("termino", "%" + termino.toLowerCase(java.util.Locale.ROOT) + "%")
+      .getResultList();
+  }
+
+  @Override
+  public Usuario buscarPorId(Long id) {
+    return sessionFactory.getCurrentSession().get(Usuario.class, id);
   }
 }
