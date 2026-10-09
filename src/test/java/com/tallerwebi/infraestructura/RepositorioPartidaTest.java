@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = HibernateInfraestructuraTestConfig.class)
-public class RepositorioPartida {
+public class RepositorioPartidaTest {
 
   @Autowired
   private SessionFactory sessionFactory;
