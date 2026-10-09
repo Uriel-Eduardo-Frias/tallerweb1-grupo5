@@ -2,13 +2,19 @@ package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ServicioPartidaPreguntaTest {
 
+  private RepositorioPartidaPregunta repositorioPartidaPregunta;
   private ServicioPartidaPregunta servicioPartidaPregunta;
+
   private Long idCategoriaSeleccionada;
   private Long idOpcionSeleccionada;
 
@@ -17,17 +23,29 @@ public class ServicioPartidaPreguntaTest {
   private Boolean resultadoVerificacion;
   private String textoCorrectoObtenido;
 
+  @BeforeEach
+  public void init() {
+    this.repositorioPartidaPregunta = mock(RepositorioPartidaPregunta.class);
+    this.servicioPartidaPregunta = new ServicioPartidaPreguntaImpl(this.repositorioPartidaPregunta);
+  }
+
   @Test
   public void deberiaObtenerTodasLasCategorias() {
-    givenExisteUnServicioPartidaPregunta();
+    givenExistenCategoriasEnElRepositorio();
 
     whenObtengoLasCategorias();
 
     thenLasCategoriasNoSonNulasYContienenElementos();
   }
 
-  private void givenExisteUnServicioPartidaPregunta() {
-    this.servicioPartidaPregunta = new ServicioPartidaPreguntaImpl();
+  private void givenExistenCategoriasEnElRepositorio() {
+    Categoria historia = new Categoria("Historia");
+    historia.setId(1L);
+    Categoria ciencia = new Categoria("Ciencia");
+    ciencia.setId(2L);
+
+    when(this.repositorioPartidaPregunta.obtenerTodasLasCategorias())
+      .thenReturn(List.of(historia, ciencia));
   }
 
   private void whenObtengoLasCategorias() {
@@ -41,8 +59,8 @@ public class ServicioPartidaPreguntaTest {
 
   @Test
   public void deberiaObtenerPreguntaPorCategoriaExistente() {
-    givenExisteUnServicioPartidaPregunta();
     givenTengoElIdentificadorDeCategoria(1L);
+    givenExisteUnaPreguntaParaLaCategoria(1L);
 
     whenObtengoLaPreguntaPorCategoria();
 
@@ -51,6 +69,17 @@ public class ServicioPartidaPreguntaTest {
 
   private void givenTengoElIdentificadorDeCategoria(Long idCategoria) {
     this.idCategoriaSeleccionada = idCategoria;
+  }
+
+  private void givenExisteUnaPreguntaParaLaCategoria(Long idCategoria) {
+    Categoria categoria = new Categoria("Historia");
+    categoria.setId(idCategoria);
+
+    Pregunta pregunta = new Pregunta("¿En qué año se descubrió América?", categoria);
+    pregunta.setIdentificador(101L);
+
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(idCategoria))
+      .thenReturn(pregunta);
   }
 
   private void whenObtengoLaPreguntaPorCategoria() {
@@ -66,8 +95,8 @@ public class ServicioPartidaPreguntaTest {
 
   @Test
   public void deberiaVerificarQueLaRespuestaSeleccionadaEsCorrecta() {
-    givenExisteUnServicioPartidaPregunta();
-    givenTengoElIdentificadorDeOpcion(1L); // 1L es la opción correcta '1492'
+    givenTengoElIdentificadorDeOpcion(1L);
+    givenExisteUnaOpcionEnElRepositorio(1L, "1492", true);
 
     whenVerificoLaRespuesta();
 
@@ -76,8 +105,8 @@ public class ServicioPartidaPreguntaTest {
 
   @Test
   public void deberiaVerificarQueLaRespuestaSeleccionadaEsIncorrecta() {
-    givenExisteUnServicioPartidaPregunta();
-    givenTengoElIdentificadorDeOpcion(2L); // 2L es la opción incorrecta '1810'
+    givenTengoElIdentificadorDeOpcion(2L);
+    givenExisteUnaOpcionEnElRepositorio(2L, "1810", false);
 
     whenVerificoLaRespuesta();
 
@@ -86,6 +115,17 @@ public class ServicioPartidaPreguntaTest {
 
   private void givenTengoElIdentificadorDeOpcion(Long idOpcion) {
     this.idOpcionSeleccionada = idOpcion;
+  }
+
+  private void givenExisteUnaOpcionEnElRepositorio(
+    Long idOpcion,
+    String texto,
+    boolean esCorrecta
+  ) {
+    Opcion opcion = new Opcion(texto, esCorrecta);
+    opcion.setId(idOpcion);
+
+    when(this.repositorioPartidaPregunta.buscarOpcionPorId(idOpcion)).thenReturn(opcion);
   }
 
   private void whenVerificoLaRespuesta() {
@@ -99,12 +139,29 @@ public class ServicioPartidaPreguntaTest {
 
   @Test
   public void deberiaDevolverElTextoDeLaRespuestaCorrectaDadaCualquierOpcion() {
-    givenExisteUnServicioPartidaPregunta();
-    givenTengoElIdentificadorDeOpcion(2L); // 2L es opción de la pregunta de Colón
+    givenTengoElIdentificadorDeOpcion(2L);
+    givenExisteUnaPreguntaConOpcionCorrectaParaLaOpcion(2L, "1492");
 
     whenObtengoElTextoDeLaRespuestaCorrecta();
 
     thenElTextoCorrectoEs("1492");
+  }
+
+  private void givenExisteUnaPreguntaConOpcionCorrectaParaLaOpcion(
+    Long idOpcion,
+    String textoCorrecto
+  ) {
+    Opcion opcionCorrecta = new Opcion(textoCorrecto, true);
+    opcionCorrecta.setId(1L);
+
+    Opcion opcionIncorrecta = new Opcion("1810", false);
+    opcionIncorrecta.setId(idOpcion);
+
+    Pregunta pregunta = new Pregunta();
+    pregunta.setIdentificador(101L);
+    pregunta.setOpciones(List.of(opcionCorrecta, opcionIncorrecta));
+
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorOpcionId(idOpcion)).thenReturn(pregunta);
   }
 
   private void whenObtengoElTextoDeLaRespuestaCorrecta() {

@@ -27,20 +27,6 @@ public class Pregunta {
     this.categoria = categoria;
   }
 
-  public void agregarOpcion(Opcion opcion) {
-    if (opcion != null) {
-      this.opciones.add(opcion);
-      opcion.setPregunta(this);
-    }
-  }
-
-  public void removerOpcion(Opcion opcion) {
-    if (opcion != null) {
-      this.opciones.remove(opcion);
-      opcion.setPregunta(null);
-    }
-  }
-
   public Long getIdentificador() {
     return identificador;
   }

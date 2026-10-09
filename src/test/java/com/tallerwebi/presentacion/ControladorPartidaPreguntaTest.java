@@ -26,7 +26,6 @@ public class ControladorPartidaPreguntaTest {
 
   @Test
   public void deberiaRetornarVistaVotacionConElMapaDeCategorias() {
-
     Map<Long, Categoria> categoriasSimuladas = givenExistenCategorias();
 
     ModelAndView mav = this.controlador.mostrarPantalla();
@@ -90,7 +89,6 @@ public class ControladorPartidaPreguntaTest {
 
   @Test
   public void deberiaMostrarResultadoNegativoCuandoLaOpcionEsIncorrecta() {
-
     Long opcionId = 11L;
     String textoRespuesta = "1492";
     givenElServicioVerificaRespuesta(opcionId, false, textoRespuesta);
