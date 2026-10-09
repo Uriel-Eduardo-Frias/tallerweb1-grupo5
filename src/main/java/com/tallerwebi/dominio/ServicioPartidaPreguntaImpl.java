@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,12 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
     if (identificadorCategoria == null) {
       return null;
     }
-    return this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(identificadorCategoria);
+    Pregunta pregunta =
+      this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(identificadorCategoria);
+    if (pregunta != null && pregunta.getOpciones() != null) {
+      Collections.shuffle(pregunta.getOpciones());
+    }
+    return pregunta;
   }
 
   @Override
@@ -71,5 +77,10 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
       }
     }
     return "";
+  }
+
+  @Override
+  public Pregunta obtenerPreguntaPorOpcionId(Long opcionId) {
+    return this.repositorioPartidaPregunta.buscarPreguntaPorOpcionId(opcionId);
   }
 }

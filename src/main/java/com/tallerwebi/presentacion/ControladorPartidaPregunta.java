@@ -53,7 +53,9 @@ public class ControladorPartidaPregunta {
 
     boolean esCorrecta = this.servicioPartidaPregunta.verificarRespuesta(opcionId);
     String textoCorrecto = this.servicioPartidaPregunta.obtenerTextoRespuestaCorrecta(opcionId);
+    Pregunta pregunta = this.servicioPartidaPregunta.obtenerPreguntaPorOpcionId(opcionId);
 
+    modelo.put("pregunta", pregunta);
     modelo.put("yaRespondio", true);
     modelo.put("esCorrecta", esCorrecta);
     modelo.put("textoCorrecto", textoCorrecto);

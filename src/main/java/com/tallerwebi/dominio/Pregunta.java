@@ -13,7 +13,7 @@ public class Pregunta {
 
   private String descripcion;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "categoria_id")
   private Categoria categoria;
 

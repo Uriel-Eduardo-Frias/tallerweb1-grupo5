@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +55,7 @@ public class ServicioPartidaPreguntaTest {
 
   private void thenLasCategoriasNoSonNulasYContienenElementos() {
     assertThat(this.categoriasObtenidas, is(notNullValue()));
-    assertThat(this.categoriasObtenidas.size(), is(greaterThan(0)));
+    assertThat(this.categoriasObtenidas.size() > 0, is(true));
   }
 
   @Test
@@ -91,6 +92,51 @@ public class ServicioPartidaPreguntaTest {
     assertThat(this.preguntaObtenida, is(notNullValue()));
     assertThat(this.preguntaObtenida.getCategoria(), is(notNullValue()));
     assertThat(this.preguntaObtenida.getCategoria().getId(), equalTo(idEsperado));
+  }
+
+  @Test
+  public void deberiaMezclarLasOpcionesSinPerderNingunaAlObtenerPreguntaPorCategoria() {
+    givenTengoElIdentificadorDeCategoria(1L);
+    givenExisteUnaPreguntaConCuatroOpciones(1L);
+
+    whenObtengoLaPreguntaPorCategoria();
+
+    thenLaPreguntaMantieneSusCuatroOpcionesOriginales();
+  }
+
+  private void givenExisteUnaPreguntaConCuatroOpciones(Long idCategoria) {
+    Categoria categoria = new Categoria("Historia");
+    categoria.setId(idCategoria);
+
+    Pregunta pregunta = new Pregunta("¿En qué año se descubrió América?", categoria);
+    pregunta.setIdentificador(101L);
+
+    List<Opcion> opciones = new ArrayList<>();
+    opciones.add(new Opcion("1492", true));
+    opciones.add(new Opcion("1810", false));
+    opciones.add(new Opcion("1776", false));
+    opciones.add(new Opcion("1914", false));
+    pregunta.setOpciones(opciones);
+
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(idCategoria))
+      .thenReturn(pregunta);
+  }
+
+  private void thenLaPreguntaMantieneSusCuatroOpcionesOriginales() {
+    assertThat(this.preguntaObtenida, is(notNullValue()));
+    List<Opcion> opciones = this.preguntaObtenida.getOpciones();
+
+    assertThat(opciones.size(), equalTo(4));
+
+    List<String> textos = new ArrayList<>();
+    for (Opcion op : opciones) {
+      textos.add(op.getTexto());
+    }
+
+    assertThat(textos.contains("1492"), is(true));
+    assertThat(textos.contains("1810"), is(true));
+    assertThat(textos.contains("1776"), is(true));
+    assertThat(textos.contains("1914"), is(true));
   }
 
   @Test
@@ -159,7 +205,11 @@ public class ServicioPartidaPreguntaTest {
 
     Pregunta pregunta = new Pregunta();
     pregunta.setIdentificador(101L);
-    pregunta.setOpciones(List.of(opcionCorrecta, opcionIncorrecta));
+
+    List<Opcion> opciones = new ArrayList<>();
+    opciones.add(opcionCorrecta);
+    opciones.add(opcionIncorrecta);
+    pregunta.setOpciones(opciones);
 
     when(this.repositorioPartidaPregunta.buscarPreguntaPorOpcionId(idOpcion)).thenReturn(pregunta);
   }

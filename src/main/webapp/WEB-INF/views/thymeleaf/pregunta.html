@@ -10,15 +10,17 @@
 
     <div class="card p-4 shadow-sm">
 
+        <!-- Categoría -->
         <div class="mb-3 text-end" th:if="${pregunta != null and pregunta.categoria != null}">
             <span class="badge bg-info text-dark fs-6" th:text="${pregunta.categoria.nombre}">Categoría</span>
         </div>
 
-        <div th:if="${!yaRespondio}">
-            <h4 class="mb-4 text-center" th:text="${pregunta.descripcion}">¿Pregunta?</h4>
+        <!-- LA PREGUNTA SIEMPRE VISIBLE -->
+        <h4 class="mb-4 text-center" th:if="${pregunta != null}" th:text="${pregunta.descripcion}">¿Pregunta?</h4>
 
+        <!-- PANTALLA 1: Formulario para responder -->
+        <div th:if="${!yaRespondio}">
             <form th:action="@{/responder}" method="POST" class="d-grid gap-3">
-                <!-- Se envía el ID de la opción seleccionada -->
                 <button th:each="op : ${pregunta.opciones}"
                         type="submit"
                         name="opcionId"
@@ -30,6 +32,7 @@
             </form>
         </div>
 
+        <!-- PANTALLA 2: Resultado de la respuesta -->
         <div th:if="${yaRespondio}" class="text-center">
 
             <h3 th:if="${esCorrecta != null}"

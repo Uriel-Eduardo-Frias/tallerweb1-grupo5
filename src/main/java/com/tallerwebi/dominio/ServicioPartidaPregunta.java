@@ -10,4 +10,6 @@ public interface ServicioPartidaPregunta {
   Boolean verificarRespuesta(Long opcionId);
 
   String obtenerTextoRespuestaCorrecta(Long opcionId);
+
+  Pregunta obtenerPreguntaPorOpcionId(Long opcionId);
 }
