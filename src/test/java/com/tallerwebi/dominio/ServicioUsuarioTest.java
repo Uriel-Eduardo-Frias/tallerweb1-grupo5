@@ -3,12 +3,17 @@ package com.tallerwebi.dominio;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,10 +38,34 @@ class ServicioUsuarioTest {
     servicioUsuario = new ServicioUsuarioImpl(repositorioUsuario);
   }
 
+  // ---------- búsqueda por nombre ----------
+
   @Test
   void siElTerminoDeBusquedaEstaVacioDevuelveUnaListaVacia() {
     // given
     givenTengoUnTerminoDeBusqueda("");
+
+    // when
+    whenBuscoUsuariosPorNombre();
+
+    // then
+    thenLaListaDeResultadosEstaVacia();
+    verifyNoInteractions(repositorioUsuario);
+  }
+
+  @Test
+  void siElTerminoDeBusquedaEsNuloODeSoloEspaciosDevuelveUnaListaVacia() {
+    // given
+    givenTengoUnTerminoDeBusqueda(null);
+
+    // when
+    whenBuscoUsuariosPorNombre();
+
+    // then
+    thenLaListaDeResultadosEstaVacia();
+
+    // given
+    givenTengoUnTerminoDeBusqueda("   ");
 
     // when
     whenBuscoUsuariosPorNombre();
@@ -77,6 +106,21 @@ class ServicioUsuarioTest {
   }
 
   @Test
+  void laBusquedaQuitaLosEspaciosDelTermino() {
+    // given
+    Usuario ana = givenUnUsuario("ana");
+    List<Usuario> usuarios = givenUnaListaCon(ana);
+    givenTengoUnTerminoDeBusqueda("  ana  ");
+    givenElRepositorioDevuelveUsuarios("ana", usuarios);
+
+    // when
+    whenBuscoUsuariosPorNombre();
+
+    // then
+    thenEncuentroAlJugadorEsperado(1, "ana");
+  }
+
+  @Test
   void siElJugadorNoExisteDevuelveUnaListaVacia() {
     // given
     givenTengoUnTerminoDeBusqueda("jugadorquenoexiste");
@@ -88,6 +132,117 @@ class ServicioUsuarioTest {
     // then
     thenLaListaDeResultadosEstaVacia();
   }
+
+  // ---------- registrar usuario ----------
+
+  @Test
+  void deberiaRegistrarUnUsuarioNuevoConSuPerfil() throws UsuarioExistente {
+    // given
+    // El repositorio no encuentra ni el username ni el email (devuelve null).
+
+    // when
+    Usuario registrado = servicioUsuario.registrarUsuario(
+      "ana",
+      "ana@test.com",
+      "1234",
+      "Ana Perez"
+    );
+
+    // then
+    assertThat(registrado.getUsername(), equalTo("ana"));
+    assertThat(registrado.getEmail(), equalTo("ana@test.com"));
+    assertThat(registrado.getPassword(), equalTo("1234"));
+    assertThat(registrado.getNombreCompleto(), equalTo("Ana Perez"));
+    assertThat(registrado.getPerfil(), is(notNullValue()));
+    verify(repositorioUsuario).guardar(registrado);
+  }
+
+  @Test
+  void noDeberiaRegistrarSiElUsernameYaExiste() {
+    // given
+    when(repositorioUsuario.buscarPorUsername("ana")).thenReturn(givenUnUsuario("ana"));
+
+    // when / then
+    assertThrows(
+      UsuarioExistente.class,
+      () -> servicioUsuario.registrarUsuario("ana", "ana@test.com", "1234", "Ana")
+    );
+  }
+
+  @Test
+  void noDeberiaRegistrarSiElEmailYaExiste() {
+    // given
+    when(repositorioUsuario.buscarPorUsername("ana")).thenReturn(null);
+    when(repositorioUsuario.buscar("ana@test.com")).thenReturn(givenUnUsuario("otra"));
+
+    // when / then
+    assertThrows(
+      UsuarioExistente.class,
+      () -> servicioUsuario.registrarUsuario("ana", "ana@test.com", "1234", "Ana")
+    );
+  }
+
+  // ---------- autenticación y búsquedas puntuales ----------
+
+  @Test
+  void autenticarConUsernameOPasswordNulosDevuelveNull() {
+    assertThat(servicioUsuario.autenticarUsuario(null, "1234"), is(nullValue()));
+    assertThat(servicioUsuario.autenticarUsuario("ana", null), is(nullValue()));
+    verifyNoInteractions(repositorioUsuario);
+  }
+
+  @Test
+  void autenticarConCredencialesValidasDevuelveElUsuario() {
+    // given
+    Usuario ana = givenUnUsuario("ana");
+    when(repositorioUsuario.buscarPorUsernameYPassword("ana", "1234")).thenReturn(ana);
+
+    // when
+    Usuario autenticado = servicioUsuario.autenticarUsuario("ana", "1234");
+
+    // then
+    assertThat(autenticado, sameInstance(ana));
+  }
+
+  @Test
+  void buscarUsuarioPorIdNuloDevuelveNull() {
+    assertThat(servicioUsuario.buscarUsuarioPorId(null), is(nullValue()));
+    verifyNoInteractions(repositorioUsuario);
+  }
+
+  @Test
+  void buscarUsuarioPorIdDevuelveElUsuarioDelRepositorio() {
+    // given
+    Usuario ana = givenUnUsuarioConPerfil(4L);
+    when(repositorioUsuario.buscarPorId(4L)).thenReturn(ana);
+
+    // when
+    Usuario encontrado = servicioUsuario.buscarUsuarioPorId(4L);
+
+    // then
+    assertThat(encontrado, sameInstance(ana));
+  }
+
+  @Test
+  void buscarUsuarioPorUsernameNuloDevuelveNull() {
+    assertThat(servicioUsuario.buscarUsuarioPorUsername(null), is(nullValue()));
+    verifyNoInteractions(repositorioUsuario);
+  }
+
+  @Test
+  void buscarUsuarioPorUsernameDevuelveElUsuarioDelRepositorio() {
+    // given
+    Usuario ana = givenUnUsuario("ana");
+    when(repositorioUsuario.buscarPorUsername("ana")).thenReturn(ana);
+
+    // when
+    Usuario encontrado = servicioUsuario.buscarUsuarioPorUsername("ana");
+
+    // then
+    assertThat(encontrado, sameInstance(ana));
+  }
+
+  // ---------- actualizar perfil ----------
 
   @Test
   void actualizaLaBiografiaYElAvatarDelPerfil() {
@@ -117,7 +272,56 @@ class ServicioUsuarioTest {
     thenElAvatarSeGuardaVacio();
   }
 
-  // Given: preparación
+  @Test
+  void siElAvatarEsNuloOSoloEspaciosLoGuardaComoNull() {
+    // given
+    Usuario usuario = givenUnUsuarioConPerfil(5L);
+    givenDatosParaActualizarElPerfil(5L, "bio", null);
+    givenElRepositorioDevuelveUsuario(5L, usuario);
+
+    // when
+    whenActualizoElPerfil();
+
+    // then
+    thenElAvatarSeGuardaVacio();
+
+    // given
+    givenDatosParaActualizarElPerfil(5L, "bio", "   ");
+
+    // when
+    whenActualizoElPerfil();
+
+    // then
+    thenElAvatarSeGuardaVacio();
+  }
+
+  @Test
+  void siElUsuarioNoExisteNoActualizaNada() {
+    // given
+    when(repositorioUsuario.buscarPorId(99L)).thenReturn(null);
+
+    // when
+    servicioUsuario.actualizarPerfil(99L, "bio", "avatar");
+
+    // then
+    verify(repositorioUsuario).buscarPorId(99L);
+  }
+
+  @Test
+  void siElUsuarioNoTienePerfilNoActualizaNada() {
+    // given
+    Usuario sinPerfil = givenUnUsuario("sinperfil");
+    sinPerfil.setPerfil(null);
+    when(repositorioUsuario.buscarPorId(6L)).thenReturn(sinPerfil);
+
+    // when
+    servicioUsuario.actualizarPerfil(6L, "bio", "avatar");
+
+    // then
+    assertThat(sinPerfil.getPerfil(), is(nullValue()));
+  }
+
+  // ---------- Given: preparación ----------
 
   private void givenTengoUnTerminoDeBusqueda(String termino) {
     terminoBusqueda = termino;
@@ -161,7 +365,7 @@ class ServicioUsuarioTest {
     when(repositorioUsuario.buscarPorId(id)).thenReturn(usuario);
   }
 
-  // When: ejecución
+  // ---------- When: ejecución ----------
 
   private void whenBuscoUsuariosPorNombre() {
     resultadoBusqueda = servicioUsuario.buscarUsuariosPorNombre(terminoBusqueda);
@@ -172,7 +376,7 @@ class ServicioUsuarioTest {
     usuarioActualizado = servicioUsuario.buscarUsuarioPorId(idUsuarioActualizar);
   }
 
-  // Then: validación
+  // ---------- Then: validación ----------
 
   private void thenLaListaDeResultadosEstaVacia() {
     assertTrue(resultadoBusqueda.isEmpty());

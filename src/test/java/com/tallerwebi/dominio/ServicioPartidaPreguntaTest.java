@@ -1,7 +1,11 @@
 package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +34,8 @@ public class ServicioPartidaPreguntaTest {
     this.servicioPartidaPregunta = new ServicioPartidaPreguntaImpl(this.repositorioPartidaPregunta);
   }
 
+  // ---------- categorías ----------
+
   @Test
   public void deberiaObtenerTodasLasCategorias() {
     givenExistenCategoriasEnElRepositorio();
@@ -37,6 +43,16 @@ public class ServicioPartidaPreguntaTest {
     whenObtengoLasCategorias();
 
     thenLasCategoriasNoSonNulasYContienenElementos();
+  }
+
+  @Test
+  public void deberiaDevolverMapaVacioSiElRepositorioDevuelveNullCategorias() {
+    when(this.repositorioPartidaPregunta.obtenerTodasLasCategorias()).thenReturn(null);
+
+    whenObtengoLasCategorias();
+
+    assertThat(this.categoriasObtenidas, is(notNullValue()));
+    assertThat(this.categoriasObtenidas.isEmpty(), is(true));
   }
 
   private void givenExistenCategoriasEnElRepositorio() {
@@ -58,6 +74,8 @@ public class ServicioPartidaPreguntaTest {
     assertThat(this.categoriasObtenidas.size() > 0, is(true));
   }
 
+  // ---------- pregunta por categoría ----------
+
   @Test
   public void deberiaObtenerPreguntaPorCategoriaExistente() {
     givenTengoElIdentificadorDeCategoria(1L);
@@ -66,6 +84,39 @@ public class ServicioPartidaPreguntaTest {
     whenObtengoLaPreguntaPorCategoria();
 
     thenLaPreguntaPerteneceALaCategoria(1L);
+  }
+
+  @Test
+  public void deberiaDevolverNullSiElIdentificadorDeCategoriaEsNull() {
+    givenTengoElIdentificadorDeCategoria(null);
+
+    whenObtengoLaPreguntaPorCategoria();
+
+    assertThat(this.preguntaObtenida, is(nullValue()));
+  }
+
+  @Test
+  public void deberiaDevolverNullSiNoExisteUnaPreguntaParaLaCategoria() {
+    givenTengoElIdentificadorDeCategoria(5L);
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(5L)).thenReturn(null);
+
+    whenObtengoLaPreguntaPorCategoria();
+
+    assertThat(this.preguntaObtenida, is(nullValue()));
+  }
+
+  @Test
+  public void deberiaDevolverLaPreguntaAunqueNoTengaOpciones() {
+    givenTengoElIdentificadorDeCategoria(1L);
+    Categoria categoria = new Categoria("Historia");
+    categoria.setId(1L);
+    Pregunta pregunta = new Pregunta("¿Pregunta sin opciones?", categoria);
+    pregunta.setOpciones(null);
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(1L)).thenReturn(pregunta);
+
+    whenObtengoLaPreguntaPorCategoria();
+
+    assertThat(this.preguntaObtenida, sameInstance(pregunta));
   }
 
   private void givenTengoElIdentificadorDeCategoria(Long idCategoria) {
@@ -139,6 +190,8 @@ public class ServicioPartidaPreguntaTest {
     assertThat(textos.contains("1914"), is(true));
   }
 
+  // ---------- verificar respuesta ----------
+
   @Test
   public void deberiaVerificarQueLaRespuestaSeleccionadaEsCorrecta() {
     givenTengoElIdentificadorDeOpcion(1L);
@@ -153,6 +206,25 @@ public class ServicioPartidaPreguntaTest {
   public void deberiaVerificarQueLaRespuestaSeleccionadaEsIncorrecta() {
     givenTengoElIdentificadorDeOpcion(2L);
     givenExisteUnaOpcionEnElRepositorio(2L, "1810", false);
+
+    whenVerificoLaRespuesta();
+
+    thenElResultadoDeLaRespuestaEs(false);
+  }
+
+  @Test
+  public void deberiaDevolverFalseSiElIdentificadorDeOpcionEsNull() {
+    givenTengoElIdentificadorDeOpcion(null);
+
+    whenVerificoLaRespuesta();
+
+    thenElResultadoDeLaRespuestaEs(false);
+  }
+
+  @Test
+  public void deberiaDevolverFalseSiLaOpcionNoExiste() {
+    givenTengoElIdentificadorDeOpcion(9L);
+    when(this.repositorioPartidaPregunta.buscarOpcionPorId(9L)).thenReturn(null);
 
     whenVerificoLaRespuesta();
 
@@ -183,6 +255,8 @@ public class ServicioPartidaPreguntaTest {
     assertThat(this.resultadoVerificacion, equalTo(esperado));
   }
 
+  // ---------- texto de la respuesta correcta ----------
+
   @Test
   public void deberiaDevolverElTextoDeLaRespuestaCorrectaDadaCualquierOpcion() {
     givenTengoElIdentificadorDeOpcion(2L);
@@ -191,6 +265,41 @@ public class ServicioPartidaPreguntaTest {
     whenObtengoElTextoDeLaRespuestaCorrecta();
 
     thenElTextoCorrectoEs("1492");
+  }
+
+  @Test
+  public void deberiaDevolverTextoVacioSiElIdentificadorDeOpcionEsNull() {
+    givenTengoElIdentificadorDeOpcion(null);
+
+    whenObtengoElTextoDeLaRespuestaCorrecta();
+
+    thenElTextoCorrectoEs("");
+  }
+
+  @Test
+  public void deberiaDevolverTextoVacioSiNoExisteLaPregunta() {
+    givenTengoElIdentificadorDeOpcion(8L);
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorOpcionId(8L)).thenReturn(null);
+
+    whenObtengoElTextoDeLaRespuestaCorrecta();
+
+    thenElTextoCorrectoEs("");
+  }
+
+  @Test
+  public void deberiaDevolverTextoVacioSiNingunaOpcionEsCorrecta() {
+    givenTengoElIdentificadorDeOpcion(3L);
+
+    Pregunta pregunta = new Pregunta();
+    List<Opcion> opciones = new ArrayList<>();
+    opciones.add(new Opcion("1810", false));
+    opciones.add(new Opcion("1776", false));
+    pregunta.setOpciones(opciones);
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorOpcionId(3L)).thenReturn(pregunta);
+
+    whenObtengoElTextoDeLaRespuestaCorrecta();
+
+    thenElTextoCorrectoEs("");
   }
 
   private void givenExisteUnaPreguntaConOpcionCorrectaParaLaOpcion(
@@ -221,5 +330,18 @@ public class ServicioPartidaPreguntaTest {
 
   private void thenElTextoCorrectoEs(String textoEsperado) {
     assertThat(this.textoCorrectoObtenido, equalTo(textoEsperado));
+  }
+
+  // ---------- pregunta por opción ----------
+
+  @Test
+  public void deberiaObtenerLaPreguntaDeUnaOpcion() {
+    Pregunta pregunta = new Pregunta();
+    pregunta.setIdentificador(101L);
+    when(this.repositorioPartidaPregunta.buscarPreguntaPorOpcionId(7L)).thenReturn(pregunta);
+
+    Pregunta obtenida = this.servicioPartidaPregunta.obtenerPreguntaPorOpcionId(7L);
+
+    assertThat(obtenida, sameInstance(pregunta));
   }
 }
