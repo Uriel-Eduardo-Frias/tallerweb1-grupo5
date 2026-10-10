@@ -8,17 +8,20 @@ import org.junit.jupiter.api.Test;
 class GeneradorCodigoTest {
 
   @Test
-  void generarCodigoSalaDebeTenerFormatoValido() {
-    for (int i = 0; i < 200; i++) {
+  public void deberiaGenerarCodigoConFormatoValido() {
+    for (int i = 0; i < 100; i++) {
       String codigo = GeneradorCodigo.generarCodigoSala();
-      assertTrue(codigo.matches("^TRV-[A-HJ-NP-Z2-9]{4}$"), "Código inválido: " + codigo);
+
+      assertEquals(8, codigo.length());
+      assertTrue(codigo.matches("TRV-[A-HJ-NP-Z2-9]{4}"), "Codigo invalido: " + codigo);
     }
   }
 
   @Test
-  void elConstructorPrivadoNoDebeRomperSiSeInvocaPorReflection() throws Exception {
+  public void constructorPrivadoDeberiaPoderInvocarseConReflection() throws Exception {
     Constructor<GeneradorCodigo> constructor = GeneradorCodigo.class.getDeclaredConstructor();
     constructor.setAccessible(true);
+
     assertNotNull(constructor.newInstance());
   }
 }

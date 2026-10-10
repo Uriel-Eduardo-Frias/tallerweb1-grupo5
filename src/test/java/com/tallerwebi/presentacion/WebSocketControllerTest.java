@@ -12,7 +12,9 @@ public class WebSocketControllerTest {
   }
 
   @Test
-  void mostrarPaginaDebeDevolverLaVistaDePrueba() {
-    assertEquals("websocket-prueba", new WebSocketPruebaController().mostrarPagina());
+  public void deberiaDevolverElMismoMensajeRecibido() {
+    WebSocketController controller = new WebSocketController();
+
+    assertEquals("hola", controller.recibirMensaje("hola"));
   }
 }

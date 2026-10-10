@@ -1,7 +1,7 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.Partida;
-import com.tallerwebi.dominio.RepositorioPartida;
+import com.tallerwebi.dominio.*;
+import java.util.List;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -50,5 +50,53 @@ public class RepositorioPartidaImpl implements RepositorioPartida {
   @Override
   public void guardar(Partida partida) {
     sessionFactory.getCurrentSession().persist(partida);
+  }
+
+  @Override
+  public List<Comodin> listarComodines() {
+    String hql =
+      """
+      FROM Comodin c
+      """;
+
+    return sessionFactory.getCurrentSession().createQuery(hql, Comodin.class).getResultList();
+  }
+
+  @Override
+  public Comodin buscarComodinPorCodigo(TipoComodin codigo) {
+    if (codigo == null) {
+      return null;
+    }
+
+    String hql =
+      """
+      FROM Comodin c
+      WHERE c.codigo = :codigo
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, Comodin.class)
+      .setParameter("codigo", codigo)
+      .uniqueResult();
+  }
+
+  @Override
+  public List<PartidaJugador> listarPartidasDeUsuario(Long usuarioId) {
+    String hql =
+      """
+      SELECT pj
+      FROM PartidaJugador pj
+      JOIN FETCH pj.partida p
+      WHERE pj.usuario.id = :usuarioId
+      ORDER BY p.fechaInicio DESC
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, PartidaJugador.class)
+      .setParameter("usuarioId", usuarioId)
+      .setMaxResults(20)
+      .getResultList();
   }
 }

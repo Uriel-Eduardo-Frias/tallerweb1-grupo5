@@ -228,4 +228,171 @@ public class ServicioPartidaTest {
   private void thenSeGuardaLaPartidaDosVeces(Partida partida) {
     verify(repositorioPartida, times(2)).guardar(partida);
   }
+
+  @Test
+  public void dadoUnJugadorCuandoSumaPuntajePositivoObtienePuntajeAcumuladoIncrementado() {
+    // given
+    PartidaJugador jugador = givenUnJugadorConPuntaje(10);
+
+    // when
+    whenSumoPuntajeAJugador(jugador, 5);
+
+    // then
+    thenElPuntajeDelJugadorEs(jugador, 15);
+  }
+
+  @Test
+  public void dadoUnComodinConCantidadCuandoSeConsumeSeReduceSuCantidadYAumentaSuUso() {
+    // given
+    PartidaJugadorComodin comodinJugador = givenUnComodinDisponibleParaJugador(1);
+
+    // when
+    boolean resultado = whenConsumoElComodin(comodinJugador);
+
+    // then
+    thenElComodinFueConsumidoConExito(resultado, comodinJugador);
+  }
+
+  @Test
+  public void dadoUnComodinSinCantidadCuandoSeConsumeFallaLaOperacion() {
+    // given
+    PartidaJugadorComodin comodinJugador = givenUnComodinDisponibleParaJugador(0);
+
+    // when
+    boolean resultado = whenConsumoElComodin(comodinJugador);
+
+    // then
+    thenElComodinNoPudoConsumirse(resultado, comodinJugador);
+  }
+
+  /*
+  @Test
+  public void dadaUnaRondaConRespuestaDeJugadorCuandoSeVerificaSiRespondioObtieneTrue() {
+    // given
+    PartidaRonda ronda = givenUnaRondaConRespuestaDeJugador(100L);
+
+    // when
+    boolean respondio = whenVerificoSiJugadorRespondio(ronda, 100L);
+
+    // then
+    thenElJugadorHaRespondido(respondio);
+  }
+*/
+  private PartidaJugador givenUnJugadorConPuntaje(int puntajeInicial) {
+    PartidaJugador jugador = new PartidaJugador();
+    jugador.setPuntajeAcumulado(puntajeInicial);
+    return jugador;
+  }
+
+  private PartidaJugadorComodin givenUnComodinDisponibleParaJugador(int cantidadInicial) {
+    PartidaJugador jugador = new PartidaJugador();
+    Comodin comodin = new Comodin();
+    return new PartidaJugadorComodin(jugador, comodin, cantidadInicial);
+  }
+
+  /*
+  private PartidaRonda givenUnaRondaConRespuestaDeJugador(Long partidaJugadorId) {
+    PartidaRonda ronda = new PartidaRonda();
+    PartidaJugador jugador = new PartidaJugador();
+    jugador.setId(partidaJugadorId);
+
+    RespuestaJugador respuesta = new RespuestaJugador();
+    respuesta.setPartidaJugador(jugador);
+    ronda.getRespuestas().add(respuesta);
+    return ronda;
+  }
+ */
+
+  // --- Helpers de ejecución (When) ---
+  private void whenSumoPuntajeAJugador(PartidaJugador jugador, int puntos) {
+    servicioPartida.sumarPuntaje(jugador, puntos);
+  }
+
+  private boolean whenConsumoElComodin(PartidaJugadorComodin comodinJugador) {
+    return servicioPartida.consumirComodin(comodinJugador);
+  }
+
+  /*
+  private boolean whenVerificoSiJugadorRespondio(PartidaRonda ronda, Long partidaJugadorId) {
+    return servicioPartida.haRespondido(ronda, partidaJugadorId);
+  }
+*/
+
+  // --- Helpers de validación (Then) ---
+  private void thenElPuntajeDelJugadorEs(PartidaJugador jugador, int puntajeEsperado) {
+    assertThat(jugador.getPuntajeAcumulado(), equalTo(puntajeEsperado));
+  }
+
+  private void thenElComodinFueConsumidoConExito(
+    boolean resultado,
+    PartidaJugadorComodin comodinJugador
+  ) {
+    assertThat(resultado, equalTo(true));
+    assertThat(comodinJugador.getCantidadDisponible(), equalTo(0));
+    assertThat(comodinJugador.getVecesUsado(), equalTo(1));
+  }
+
+  private void thenElComodinNoPudoConsumirse(
+    boolean resultado,
+    PartidaJugadorComodin comodinJugador
+  ) {
+    assertThat(resultado, equalTo(false));
+    assertThat(comodinJugador.getCantidadDisponible(), equalTo(0));
+    assertThat(comodinJugador.getVecesUsado(), equalTo(0));
+  }
+
+  private void thenElJugadorHaRespondido(boolean respondio) {
+    assertThat(respondio, equalTo(true));
+  }
+
+  @Test
+  public void dadoUnJugadorCuandoRegistraAciertoAumentanAciertosYRacha() {
+    // given
+    PartidaJugador jugador = new PartidaJugador();
+
+    // when
+    servicioPartida.registrarAcierto(jugador);
+
+    // then
+    assertThat(jugador.getAciertos(), equalTo(1));
+    assertThat(jugador.getRachaRespuestasPartida(), equalTo(1));
+  }
+
+  @Test
+  public void dadoUnJugadorCuandoRegistraFalloAumentanErroresYSeReiniciaRacha() {
+    // given
+    PartidaJugador jugador = new PartidaJugador();
+    jugador.setRachaRespuestasPartida(3); // tenía racha previa
+
+    // when
+    servicioPartida.registrarFallo(jugador);
+
+    // then
+    assertThat(jugador.getErrores(), equalTo(1));
+    assertThat(jugador.getRachaRespuestasPartida(), equalTo(0));
+  }
+  /*
+  @Test
+  public void dadaUnaRondaConVariasRespuestasCuandoBuscoPrimerAciertoObtieneElMasRapido() {
+    // given
+    PartidaRonda ronda = new PartidaRonda();
+
+    RespuestaJugador r1 = new RespuestaJugador();
+    r1.setEsAcierto(true);
+    r1.setTiempoRespuestaMs(2000L);
+
+    RespuestaJugador r2 = new RespuestaJugador();
+    r2.setEsAcierto(true);
+    r2.setTiempoRespuestaMs(1000L); // Más rápido (debe ser el ganador)
+
+    ronda.getRespuestas().add(r1);
+    ronda.getRespuestas().add(r2);
+
+    // when
+    RespuestaJugador primerAcierto = servicioPartida.obtenerPrimerAcierto(ronda);
+
+    // then
+    assertThat(primerAcierto, equalTo(r2));
+  }
+ */
 }

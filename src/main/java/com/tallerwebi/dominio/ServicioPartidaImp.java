@@ -163,4 +163,108 @@ public class ServicioPartidaImp implements ServicioPartida {
 
     throw new JugadorInexistenteExeption("El usuario no pertenece a la sala");
   }
+
+  //Busca la respuesta de un jugador específico dentro de una ronda dada.
+  /*
+  public RespuestaJugador buscarRespuestaDeJugador(PartidaRonda partidaRonda, Long partidaJugadorId) {
+    if (partidaRonda == null || partidaRonda.getRespuestas() == null || partidaJugadorId == null) {
+      return null;
+    }
+
+    for (RespuestaJugador r : partidaRonda.getRespuestas()) {
+      if (r.getPartidaJugador() != null && partidaJugadorId.equals(r.getPartidaJugador().getId())) {
+        return r;
+      }
+    }
+    return null;
+  }
+  */
+
+  //Verifica si un jugador ya ha respondido en una ronda específica.
+  /*
+  public boolean haRespondido(PartidaRonda partidaRonda, Long partidaJugadorId) {
+    return buscarRespuestaDeJugador(partidaRonda, partidaJugadorId) != null;
+  }
+  */
+
+  //Obtiene el primer acierto (la respuesta correcta con menor tiempo en milisegundos) de la ronda.
+  /*
+  public RespuestaJugador obtenerPrimerAcierto(PartidaRonda partidaRonda) {
+    if (partidaRonda == null || partidaRonda.getRespuestas() == null) {
+      return null;
+    }
+
+    RespuestaJugador primerAcierto = null;
+    for (RespuestaJugador r : partidaRonda.getRespuestas()) {
+      if (r.isEsAcierto()) {
+        if (primerAcierto == null || r.getTiempoRespuestaMs() < primerAcierto.getTiempoRespuestaMs()) {
+          primerAcierto = r;
+        }
+      }
+    }
+    return primerAcierto;
+  }
+  */
+
+  @Override
+  public void sumarPuntaje(PartidaJugador jugador, int puntos) {
+    if (jugador != null && puntos > 0) {
+      jugador.setPuntajeAcumulado(jugador.getPuntajeAcumulado() + puntos);
+    }
+  }
+
+  @Override
+  public void registrarAcierto(PartidaJugador jugador) {
+    if (jugador != null) {
+      jugador.setAciertos(jugador.getAciertos() + 1);
+      jugador.setRachaRespuestasPartida(jugador.getRachaRespuestasPartida() + 1);
+    }
+  }
+
+  @Override
+  public void registrarFallo(PartidaJugador jugador) {
+    if (jugador != null) {
+      jugador.setErrores(jugador.getErrores() + 1);
+      jugador.setRachaRespuestasPartida(0);
+    }
+  }
+
+  /*
+  public PartidaJugadorComodin buscarComodin(PartidaJugador jugador, Long comodinId) {
+    if (jugador == null || jugador.getComodines() == null || comodinId == null) {
+      return null;
+    }
+
+    for (PartidaJugadorComodin pjc : jugador.getComodines()) {
+      if (pjc.getComodin() != null && comodinId.equals(pjc.getComodin().getId())) {
+        return pjc;
+      }
+    }
+    return null;
+  }
+  */
+
+  /**
+   * Verifica si un comodín del jugador tiene cantidad disponible para ser usado.
+   */
+  @Override
+  public boolean puedeUsarse(PartidaJugadorComodin comodinJugador) {
+    if (comodinJugador == null) {
+      return false;
+    }
+    return comodinJugador.getCantidadDisponible() > 0;
+  }
+
+  /**
+   * Intenta consumir un comodín del jugador, reduciendo su disponibilidad y sumando un uso.
+   */
+  @Override
+  public boolean consumirComodin(PartidaJugadorComodin comodinJugador) {
+    if (puedeUsarse(comodinJugador)) {
+      comodinJugador.setCantidadDisponible(comodinJugador.getCantidadDisponible() - 1);
+      comodinJugador.setVecesUsado(comodinJugador.getVecesUsado() + 1);
+      return true;
+    }
+    return false;
+  }
 }

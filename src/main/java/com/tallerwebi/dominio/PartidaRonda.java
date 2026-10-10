@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -26,12 +27,23 @@ public class PartidaRonda {
   @Enumerated(EnumType.STRING)
   private EstadoRonda estado;
 
-  public PartidaRonda() {}
+  @Column(name = "fecha_inicio", nullable = false)
+  private LocalDateTime fechaInicio;
 
-  public PartidaRonda(Partida partida, int numero) {
+  @Column(name = "fecha_fin")
+  private LocalDateTime fechaFin;
+
+  public PartidaRonda(Partida partida, Integer numeroRonda) {
+    this();
     this.partida = partida;
-    this.numero = numero;
-    this.estado = EstadoRonda.PENDIENTE;
+    this.numero = numeroRonda;
+  }
+
+  public PartidaRonda() {
+    this.estado = EstadoRonda.VOTACION_CATEGORIA;
+    this.fechaInicio = LocalDateTime.now();
+    //this.respuestas = new ArrayList<>();
+    //this.votaciones = new ArrayList<>();
   }
 
   public Partida getPartida() {
@@ -58,7 +70,7 @@ public class PartidaRonda {
     this.estado = estado;
   }
 
-  public void setNumero(int numero) {
+  public void setNumero(Integer numero) {
     this.numero = numero;
   }
 
@@ -73,4 +85,26 @@ public class PartidaRonda {
   public void setId(Long id) {
     this.id = id;
   }
+
+  public LocalDateTime getFechaInicio() {
+    return fechaInicio;
+  }
+
+  public void setFechaInicio(LocalDateTime fechaInicio) {
+    this.fechaInicio = fechaInicio;
+  }
+
+  public LocalDateTime getFechaFin() {
+    return fechaFin;
+  }
+
+  public void setFechaFin(LocalDateTime fechaFin) {
+    this.fechaFin = fechaFin;
+  }
+  /*
+  public List<RespuestaJugador> getRespuestas() { return respuestas; }
+  public void setRespuestas(List<RespuestaJugador> respuestas) { this.respuestas = respuestas; }
+  public List<VotacionRonda> getVotaciones() { return votaciones; }
+  public void setVotaciones(List<VotacionRonda> votaciones) { this.votaciones = votaciones; }
+  */
 }

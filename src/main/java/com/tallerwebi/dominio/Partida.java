@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,12 @@ public class Partida {
 
   @Enumerated(EnumType.STRING)
   private ModoJuego modoJuego;
+
+  @Column(name = "fecha_inicio", nullable = false)
+  private LocalDateTime fechaInicio;
+
+  @Column(name = "fecha_fin")
+  private LocalDateTime fechaFin;
 
   public Partida() {}
 
@@ -106,5 +113,21 @@ public class Partida {
 
   public void setId(Long id) {
     this.id = id;
+  }
+
+  public LocalDateTime getFechaInicio() {
+    return fechaInicio;
+  }
+
+  public void setFechaInicio(LocalDateTime fechaInicio) {
+    this.fechaInicio = fechaInicio;
+  }
+
+  public LocalDateTime getFechaFin() {
+    return fechaFin;
+  }
+
+  public void setFechaFin(LocalDateTime fechaFin) {
+    this.fechaFin = fechaFin;
   }
 }
