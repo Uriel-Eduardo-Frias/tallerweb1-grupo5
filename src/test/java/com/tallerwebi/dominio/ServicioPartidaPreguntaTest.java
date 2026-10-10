@@ -12,6 +12,13 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import com.tallerwebi.dominio.modelo.Categoria;
+import com.tallerwebi.dominio.modelo.Opcion;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.repositorio.RepositorioPartidaPregunta;
+import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
+import com.tallerwebi.dominio.servicio.impl.ServicioPartidaPreguntaImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

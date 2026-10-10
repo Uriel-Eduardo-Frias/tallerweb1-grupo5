@@ -3,7 +3,14 @@ package com.tallerwebi.infraestructura;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import com.tallerwebi.dominio.*;
+import com.tallerwebi.dominio.enums.EstadoPartida;
+import com.tallerwebi.dominio.enums.EstadoSala;
+import com.tallerwebi.dominio.enums.ModoJuego;
+import com.tallerwebi.dominio.enums.TipoComodin;
+import com.tallerwebi.dominio.modelo.Comodin;
+import com.tallerwebi.dominio.modelo.Partida;
+import com.tallerwebi.dominio.modelo.Sala;
+import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import java.time.LocalDateTime;
 import java.util.List;

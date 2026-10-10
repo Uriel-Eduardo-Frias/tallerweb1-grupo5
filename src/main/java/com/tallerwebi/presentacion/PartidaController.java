@@ -1,10 +1,9 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.dominio.Partida;
-import com.tallerwebi.dominio.ServicioPartida;
-import com.tallerwebi.dominio.ServicioUsuario;
-import com.tallerwebi.dominio.Usuario;
-import com.tallerwebi.dominio.excepcion.Categorias;
+import com.tallerwebi.dominio.modelo.Partida;
+import com.tallerwebi.dominio.servicio.ServicioPartida;
+import com.tallerwebi.dominio.servicio.ServicioUsuario;
+import com.tallerwebi.dominio.modelo.Usuario;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;

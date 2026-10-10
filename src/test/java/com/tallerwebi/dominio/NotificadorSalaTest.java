@@ -6,6 +6,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.tallerwebi.dominio.enums.EstadoJugador;
+import com.tallerwebi.dominio.modelo.Sala;
+import com.tallerwebi.dominio.modelo.SalaJugador;
+import com.tallerwebi.dominio.modelo.Usuario;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 

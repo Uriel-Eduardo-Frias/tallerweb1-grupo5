@@ -3,7 +3,7 @@ package com.tallerwebi.dominio;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.tallerwebi.dominio.excepcion.Categorias;
+import com.tallerwebi.dominio.enums.Categorias;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoEncontrado;
 import org.junit.jupiter.api.Test;

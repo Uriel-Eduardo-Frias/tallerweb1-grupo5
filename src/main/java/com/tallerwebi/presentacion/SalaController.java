@@ -1,9 +1,14 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.*;
-import jakarta.servlet.http.HttpServletRequest;
+import com.tallerwebi.dominio.enums.ModoJuego;
+import com.tallerwebi.dominio.excepcion.SalaLlenaException;
+import com.tallerwebi.dominio.modelo.Sala;
+import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.dominio.servicio.ServicioSala;
+import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpSession;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;

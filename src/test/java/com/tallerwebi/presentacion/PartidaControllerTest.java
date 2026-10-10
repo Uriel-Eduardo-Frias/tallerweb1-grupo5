@@ -4,7 +4,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.*;
+import com.tallerwebi.dominio.enums.EstadoPartida;
+import com.tallerwebi.dominio.modelo.Partida;
+import com.tallerwebi.dominio.modelo.Sala;
+import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.dominio.servicio.ServicioPartida;
+import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +47,7 @@ public class PartidaControllerTest {
     Usuario usuario = givenUsuarioEnSesion(1L);
     Partida partida = new Partida(
       new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.EstadoPartida.EN_CURSO
+      EstadoPartida.EN_CURSO
     );
     partida.setId(10L);
 
@@ -75,7 +80,7 @@ public class PartidaControllerTest {
     Usuario usuario = givenUsuarioEnSesion(1L);
     Partida partida = new Partida(
       new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.EstadoPartida.FINALIZADA
+      EstadoPartida.FINALIZADA
     );
 
     when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);
@@ -107,7 +112,7 @@ public class PartidaControllerTest {
     Usuario usuario = givenUsuarioEnSesion(1L);
     Partida partida = new Partida(
       new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.EstadoPartida.EN_CURSO
+      EstadoPartida.EN_CURSO
     );
 
     when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);

@@ -1,5 +1,7 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.enums.ModoJuego;
+
 public class CrearSalaDTO {
 
   private String nombre;
