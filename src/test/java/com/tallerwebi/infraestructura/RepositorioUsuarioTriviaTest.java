@@ -19,12 +19,10 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { HibernateInfraestructuraTestConfig.class })
 public class RepositorioUsuarioTriviaTest {
 
-  @ExtendWith(SpringExtension.class)
-  @ContextConfiguration(classes = { HibernateInfraestructuraTestConfig.class })
-  class RepositorioUsuarioTest {
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -316,5 +314,4 @@ public class RepositorioUsuarioTriviaTest {
       assertThat(obtenido.getActivo(), equalTo(esperado.getActivo()));
       assertThat(obtenido.getRol(), equalTo(esperado.getRol()));
     }
-  }
 }
