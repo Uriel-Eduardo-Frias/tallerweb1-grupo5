@@ -92,11 +92,45 @@ public class SalaController {
 
   // Busca y muestra una sala existente
   @RequestMapping(path = "/salas/{codigo}", method = RequestMethod.GET)
-  public ModelAndView verSala(@PathVariable("codigo") String codigo) {
+  public ModelAndView verSala(@PathVariable("codigo") String codigo, HttpSession session) {
+    Long usuarioId = (Long) session.getAttribute(ATRIBUTO_ID_USUARIO);
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
     Sala sala = servicioSala.buscarPorCodigo(codigo);
+    Long idHost = sala.getHost().getId();
+
+    boolean esHost = idHost.equals(usuarioId);
+    boolean yaUnido = false;
+    boolean todosListos = true;
+    int cantidadInvitados = 0;
+
+    for (SalaJugador salaJugador : sala.getJugadores()) {
+      Long idJugador = salaJugador.getUsuario().getId();
+
+      if (idJugador.equals(usuarioId)) {
+        yaUnido = true;
+      }
+
+      if (!idJugador.equals(idHost)) {
+        cantidadInvitados++;
+        if (!salaJugador.isListo()) {
+          todosListos = false;
+        }
+      }
+    }
+
+    // sin invitados no se puede comenzar
+    if (cantidadInvitados == 0) {
+      todosListos = false;
+    }
 
     Map<String, Object> modelo = new ModelMap();
     modelo.put("sala", sala);
+    modelo.put("esHost", esHost);
+    modelo.put("yaUnido", yaUnido);
+    modelo.put("todosListos", todosListos);
 
     return new ModelAndView("sala-detalle", modelo);
   }
@@ -152,5 +186,20 @@ public class SalaController {
     modelo.put("modos", ModoJuego.values());
 
     return new ModelAndView("crear-sala", modelo);
+  }
+
+  @PostMapping("/salas/{codigo}/listo")
+  public ModelAndView marcarComoListo(@PathVariable("codigo") String codigo, HttpSession session) {
+    Long usuarioId = (Long) session.getAttribute(ATRIBUTO_ID_USUARIO);
+
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    Sala sala = servicioSala.marcarListo(codigo, usuarioId);
+
+    notificadorSala.jugadorListo(sala);
+
+    return new ModelAndView("redirect:/salas/" + codigo);
   }
 }

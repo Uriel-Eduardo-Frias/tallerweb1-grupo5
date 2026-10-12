@@ -10,12 +10,16 @@ public class Usuario {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(unique = true)
   private String email;
+
   private String password;
   private String rol;
   private Boolean activo = false;
 
+  @Column(unique = true, nullable = false)
   private String username;
+
   private String nombreCompleto;
 
   public Long getId() {

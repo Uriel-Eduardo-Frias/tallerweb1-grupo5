@@ -1,8 +1,6 @@
 package com.tallerwebi.dominio;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,25 +10,57 @@ public class ServicioPartidaImp implements ServicioPartida {
 
   private final ServicioSala servicioSala;
   private final RepositorioPartida repositorioPartida;
+  private final ServicioVotacionCategoria servicioVotacionCategoria;
+  private final RepositorioPartidaJugador repositorioPartidaJugador;
 
-  public ServicioPartidaImp(ServicioSala servicioSala, RepositorioPartida repositorioPartida) {
+  public ServicioPartidaImp(
+    ServicioSala servicioSala,
+    RepositorioPartida repositorioPartida,
+    ServicioVotacionCategoria servicioVotacionCategoria,
+    RepositorioPartidaJugador repositorioPartidaJugador
+  ) {
     this.servicioSala = servicioSala;
     this.repositorioPartida = repositorioPartida;
+    this.servicioVotacionCategoria = servicioVotacionCategoria;
+    this.repositorioPartidaJugador = repositorioPartidaJugador;
   }
+
+  private void crearJugadoresDePartida(Partida partida, Sala sala) {
+    for (SalaJugador jugadorSala : sala.getJugadores()) {
+      Usuario usuario = jugadorSala.getUsuario();
+
+      PartidaJugador jugadorPartida = new PartidaJugador(partida, usuario);
+
+      repositorioPartidaJugador.guardar(jugadorPartida);
+    }
+  }
+
+  // INICIO Y FINALIZACIÓN DE PARTIDAS
 
   @Override
   public Partida iniciarPartida(String codigoSala, Usuario solicitante) {
     Sala sala = buscarSala(codigoSala);
 
-    validarSalaPuedeIniciarse(sala);
     validarEsHost(sala, solicitante);
 
+    Partida existente = repositorioPartida.obtenerPorCodigoSala(codigoSala);
+
+    if (existente != null) {
+      return existente;
+    }
+
+    validarSalaPuedeIniciarse(sala);
     cambiarSalaAEnCurso(sala);
 
     Partida partida = crearPartida(sala);
+
     crearPrimeraRonda(partida);
+    partida.iniciarVotacionCategoria();
 
     repositorioPartida.guardar(partida);
+
+    crearJugadoresDePartida(partida, sala);
+
     return partida;
   }
 
@@ -45,12 +75,45 @@ public class ServicioPartidaImp implements ServicioPartida {
     cambiarSalaAFinalizada(partida.getSala());
 
     repositorioPartida.guardar(partida);
+
     return partida;
   }
 
+  private Partida crearPartida(Sala sala) {
+    Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
+
+    partida.setTotalRondas(sala.getTotalRondas());
+    partida.setModoJuego(sala.getModoJuego());
+
+    return partida;
+  }
+
+  private void crearPrimeraRonda(Partida partida) {
+    PartidaRonda ronda = new PartidaRonda(partida, 1);
+
+    ronda.setEstado(EstadoRonda.VOTACION_CATEGORIA);
+    ronda.setPartida(partida);
+
+    partida.getRondas().add(ronda);
+  }
+
+  private void cambiarEstadoPartida(Partida partida) {
+    partida.setEstado(EstadoPartida.FINALIZADA);
+  }
+
+  private void cambiarSalaAEnCurso(Sala sala) {
+    sala.setEstado(EstadoSala.EN_CURSO);
+  }
+
+  private void cambiarSalaAFinalizada(Sala sala) {
+    sala.setEstado(EstadoSala.FINALIZADA);
+  }
+
+  // BÚSQUEDAS
+
   @Override
   public Partida buscarPartidaPorId(Long id) {
-    Partida partida = repositorioPartida.obtenerPorId(id);
+    Partida partida = repositorioPartida.obtenerPorIdConRondas(id);
 
     if (partida == null) {
       throw new PartidaNoEncontradaException("No existe la partida " + id);
@@ -62,32 +125,6 @@ public class ServicioPartidaImp implements ServicioPartida {
   @Override
   public Partida buscarPartidaPorCodigoSala(String codigoSala) {
     return buscarPartida(codigoSala);
-  }
-
-  @Override
-  public void marcarJugadorListo(Long idPartida, Usuario usuario) {
-    Partida partida = buscarPartidaPorId(idPartida);
-    SalaJugador jugador = buscarJugadorEnSala(partida.getSala(), usuario);
-
-    jugador.setEstadoJugador(EstadoJugador.LISTO);
-  }
-
-  @Override
-  public boolean estanTodosListos(Long idPartida) {
-    Partida partida = buscarPartidaPorId(idPartida);
-    List<SalaJugador> jugadores = partida.getSala().getJugadores();
-
-    if (jugadores.isEmpty()) {
-      return false;
-    }
-
-    for (SalaJugador jugador : jugadores) {
-      if (jugador.getEstadoJugador() != EstadoJugador.LISTO) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   private Sala buscarSala(String codigoSala) {
@@ -104,33 +141,7 @@ public class ServicioPartidaImp implements ServicioPartida {
     return partida;
   }
 
-  private Partida crearPartida(Sala sala) {
-    Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
-    partida.setTotalRondas(sala.getTotalRondas());
-    partida.setModoJuego(sala.getModoJuego());
-    return partida;
-  }
-
-  private void crearPrimeraRonda(Partida partida) {
-    PartidaRonda ronda = new PartidaRonda(partida, 1);
-    ronda.setEstado(EstadoRonda.VOTACION_CATEGORIA);
-
-    // La ronda es el lado dueño de la relación.
-    ronda.setPartida(partida);
-    partida.getRondas().add(ronda);
-  }
-
-  private void cambiarSalaAEnCurso(Sala sala) {
-    sala.setEstado(EstadoSala.EN_CURSO);
-  }
-
-  private void cambiarSalaAFinalizada(Sala sala) {
-    sala.setEstado(EstadoSala.FINALIZADA);
-  }
-
-  private void cambiarEstadoPartida(Partida partida) {
-    partida.setEstado(EstadoPartida.FINALIZADA);
-  }
+  // VALIDACIONES
 
   private void validarSalaPuedeIniciarse(Sala sala) {
     if (sala.getEstado() != EstadoSala.EN_ESPERA) {
@@ -149,14 +160,58 @@ public class ServicioPartidaImp implements ServicioPartida {
   }
 
   private void validarEsHost(Sala sala, Usuario solicitante) {
-    if (sala.getHost() == null || !sala.getHost().getId().equals(solicitante.getId())) {
+    if (
+      solicitante == null ||
+      solicitante.getId() == null ||
+      sala.getHost() == null ||
+      sala.getHost().getId() == null ||
+      !sala.getHost().getId().equals(solicitante.getId())
+    ) {
       throw new UsuarioNoEsHostException("Solo el host puede realizar esta acción");
     }
   }
 
+  // ESTADO DE LOS JUGADORES
+
+  @Override
+  public void marcarJugadorListo(Long idPartida, Usuario usuario) {
+    Partida partida = buscarPartidaPorId(idPartida);
+
+    SalaJugador jugador = buscarJugadorEnSala(partida.getSala(), usuario);
+
+    jugador.setEstadoJugador(EstadoJugador.LISTO);
+  }
+
+  @Override
+  public boolean estanTodosListos(Long idPartida) {
+    Partida partida = buscarPartidaPorId(idPartida);
+
+    List<SalaJugador> jugadores = partida.getSala().getJugadores();
+
+    if (jugadores.isEmpty()) {
+      return false;
+    }
+
+    for (SalaJugador jugador : jugadores) {
+      if (jugador.getEstadoJugador() != EstadoJugador.LISTO) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   private SalaJugador buscarJugadorEnSala(Sala sala, Usuario usuario) {
+    if (usuario == null || usuario.getId() == null) {
+      throw new JugadorInexistenteExeption("El usuario no pertenece a la sala");
+    }
+
+    return buscarJugadorPorIdEnSala(sala, usuario.getId());
+  }
+
+  private SalaJugador buscarJugadorPorIdEnSala(Sala sala, Long usuarioId) {
     for (SalaJugador jugador : sala.getJugadores()) {
-      if (jugador.getUsuario().getId().equals(usuario.getId())) {
+      if (jugador.getUsuario().getId().equals(usuarioId)) {
         return jugador;
       }
     }
@@ -164,47 +219,7 @@ public class ServicioPartidaImp implements ServicioPartida {
     throw new JugadorInexistenteExeption("El usuario no pertenece a la sala");
   }
 
-  //Busca la respuesta de un jugador específico dentro de una ronda dada.
-  /*
-  public RespuestaJugador buscarRespuestaDeJugador(PartidaRonda partidaRonda, Long partidaJugadorId) {
-    if (partidaRonda == null || partidaRonda.getRespuestas() == null || partidaJugadorId == null) {
-      return null;
-    }
-
-    for (RespuestaJugador r : partidaRonda.getRespuestas()) {
-      if (r.getPartidaJugador() != null && partidaJugadorId.equals(r.getPartidaJugador().getId())) {
-        return r;
-      }
-    }
-    return null;
-  }
-  */
-
-  //Verifica si un jugador ya ha respondido en una ronda específica.
-  /*
-  public boolean haRespondido(PartidaRonda partidaRonda, Long partidaJugadorId) {
-    return buscarRespuestaDeJugador(partidaRonda, partidaJugadorId) != null;
-  }
-  */
-
-  //Obtiene el primer acierto (la respuesta correcta con menor tiempo en milisegundos) de la ronda.
-  /*
-  public RespuestaJugador obtenerPrimerAcierto(PartidaRonda partidaRonda) {
-    if (partidaRonda == null || partidaRonda.getRespuestas() == null) {
-      return null;
-    }
-
-    RespuestaJugador primerAcierto = null;
-    for (RespuestaJugador r : partidaRonda.getRespuestas()) {
-      if (r.isEsAcierto()) {
-        if (primerAcierto == null || r.getTiempoRespuestaMs() < primerAcierto.getTiempoRespuestaMs()) {
-          primerAcierto = r;
-        }
-      }
-    }
-    return primerAcierto;
-  }
-  */
+  // PUNTAJES Y ESTADÍSTICAS
 
   @Override
   public void sumarPuntaje(PartidaJugador jugador, int puntos) {
@@ -217,6 +232,7 @@ public class ServicioPartidaImp implements ServicioPartida {
   public void registrarAcierto(PartidaJugador jugador) {
     if (jugador != null) {
       jugador.setAciertos(jugador.getAciertos() + 1);
+
       jugador.setRachaRespuestasPartida(jugador.getRachaRespuestasPartida() + 1);
     }
   }
@@ -229,42 +245,35 @@ public class ServicioPartidaImp implements ServicioPartida {
     }
   }
 
-  /*
-  public PartidaJugadorComodin buscarComodin(PartidaJugador jugador, Long comodinId) {
-    if (jugador == null || jugador.getComodines() == null || comodinId == null) {
-      return null;
-    }
+  // COMODINES
 
-    for (PartidaJugadorComodin pjc : jugador.getComodines()) {
-      if (pjc.getComodin() != null && comodinId.equals(pjc.getComodin().getId())) {
-        return pjc;
-      }
-    }
-    return null;
-  }
-  */
-
-  /**
-   * Verifica si un comodín del jugador tiene cantidad disponible para ser usado.
-   */
   @Override
   public boolean puedeUsarse(PartidaJugadorComodin comodinJugador) {
-    if (comodinJugador == null) {
-      return false;
-    }
-    return comodinJugador.getCantidadDisponible() > 0;
+    return comodinJugador != null && comodinJugador.getCantidadDisponible() > 0;
   }
 
-  /**
-   * Intenta consumir un comodín del jugador, reduciendo su disponibilidad y sumando un uso.
-   */
   @Override
   public boolean consumirComodin(PartidaJugadorComodin comodinJugador) {
-    if (puedeUsarse(comodinJugador)) {
-      comodinJugador.setCantidadDisponible(comodinJugador.getCantidadDisponible() - 1);
-      comodinJugador.setVecesUsado(comodinJugador.getVecesUsado() + 1);
-      return true;
+    if (!puedeUsarse(comodinJugador)) {
+      return false;
     }
-    return false;
+
+    comodinJugador.setCantidadDisponible(comodinJugador.getCantidadDisponible() - 1);
+
+    comodinJugador.setVecesUsado(comodinJugador.getVecesUsado() + 1);
+
+    return true;
+  }
+
+  // VOTACIÓN DE CATEGORÍAS: DELEGACIÓN
+
+  @Override
+  public boolean registrarVotoCategoria(Long partidaId, Long usuarioId, Long categoriaId) {
+    return servicioVotacionCategoria.registrarVotoCategoria(partidaId, usuarioId, categoriaId);
+  }
+
+  @Override
+  public void finalizarVotacionCategoria(Long partidaId, Long usuarioId) {
+    servicioVotacionCategoria.finalizarVotacionCategoria(partidaId, usuarioId);
   }
 }

@@ -9,4 +9,5 @@ public interface RepositorioPartida {
   List<Comodin> listarComodines();
   Comodin buscarComodinPorCodigo(TipoComodin codigo);
   List<PartidaJugador> listarPartidasDeUsuario(Long usuarioId);
+  Partida obtenerPorIdConRondas(Long id);
 }

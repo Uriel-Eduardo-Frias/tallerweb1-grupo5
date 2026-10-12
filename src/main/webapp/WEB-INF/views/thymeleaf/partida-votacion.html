@@ -1,144 +1,94 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
-
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Trivia - Votación de categoría</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Elegir categoría - TRIVIA</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 40px;
-        }
-
-        .contenedor {
-            max-width: 700px;
-            margin: auto;
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        h1 {
-            margin-bottom: 30px;
-        }
-
-        .informacion {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
-        }
-
-        .votacion {
-            margin-top: 30px;
-        }
-
-        .categorias {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 30px 0;
-        }
-
-        .categoria {
-            border: 1px solid #ccc;
-            padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .categoria:hover {
-            background-color: #eeeeee;
-        }
-
-        .boton {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        #temporizador {
-            font-size: 24px;
-        }
-    </style>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 
-<body>
+<body class="bg-light p-4">
 
+<div class="container text-center" style="max-width: 600px;">
+    <div class="card p-4 shadow-sm">
 
-<h1>TRIVIA</h1>
+        <h1 class="mb-3">TRIVIA</h1>
 
-<h2>
-    Ronda
-    <span th:text="${partida.rondaActual}">1</span>
-    /
-    <span th:text="${partida.totalRondas}">5</span>
-</h2>
+        <h2 class="mb-4">
+            Ronda
+            <span th:text="${partida.rondaActual}">1</span>
+            /
+            <span th:text="${partida.totalRondas}">5</span>
+        </h2>
 
-<h3>Jugadores</h3>
+        <h3 class="mb-3">Elegí una categoría</h3>
 
-<div th:each="jugador : ${partida.sala.jugadores}">
+        <p class="text-muted">
+            Cada jugador puede votar una sola vez.
+        </p>
 
-    <span th:text="${jugador.usuario.username}">
-        jugador
-    </span>
+        <!-- Registrar un voto -->
+        <form th:action="@{/partida/{id}/votar-categoria(id=${partida.id})}"
+              method="POST"
+              class="d-grid gap-3 mt-3">
 
-    -
+            <button th:each="entry : ${mapaDeCategorias}"
+                    type="submit"
+                    name="categoriaId"
+                    th:value="${entry.key}"
+                    th:text="${entry.value.nombre}"
+                    class="btn btn-primary">
+                Categoría
+            </button>
 
-    <span th:if="${jugador.estadoJugador.name() == 'LISTO'}">
-        ✓ LISTO
-    </span>
+        </form>
 
-    <span th:unless="${jugador.estadoJugador.name() == 'LISTO'}">
-        Esperando...
-    </span>
+        <hr class="my-4">
 
+        <!-- Finalizar la votación -->
+        <form th:action="@{/partida/{id}/resultado-votacion(id=${partida.id})}"
+              method="POST">
+
+            <button type="submit" class="btn btn-success w-100">
+                Obtener categoría ganadora
+            </button>
+
+        </form>
+
+    </div>
 </div>
 
-<hr>
+<!-- WebSocket: avisar a los jugadores que terminó la votación -->
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
 
-<div th:if="${todosListos}">
-    <h3>✓ Todos los jugadores están listos</h3>
-</div>
+<script th:inline="javascript">
+    const codigoSala = /*[[${partida.sala.codigo}]]*/ "";
+    const partidaId = /*[[${partida.id}]]*/ "";
 
-<div th:unless="${todosListos}">
-    <h3>Esperando a que todos estén listos...</h3>
-</div>
+    const urlPregunta =
+        /*[[@{/partida/{id}/pregunta(id=${partida.id})}]]*/ "";
 
-<hr>
+    const cliente = new StompJs.Client({
+        brokerURL: "ws://localhost:8080/spring/ws",
+        reconnectDelay: 3000
+    });
 
-<form th:action="@{/partida/{id}/listo(id=${partida.id})}"
-      method="post">
+    cliente.onConnect = function () {
+        cliente.subscribe("/topic/salas/" + codigoSala, function (mensaje) {
+            const evento = JSON.parse(mensaje.body);
 
-    <button type="submit">
-        ESTOY LISTO
-    </button>
+            if (
+                evento.tipo === "VOTACION_CATEGORIA_FINALIZADA" &&
+                String(evento.partidaId) === String(partidaId)
+            ) {
+                window.location.href = urlPregunta;
+            }
+        });
+    };
 
-</form>
-
-<script>
-
-    let tiempo = [[${tiempoVotacion}]];
-
-    const temporizador =
-        document.getElementById("temporizador");
-
-    const intervalo = setInterval(function () {
-
-        tiempo--;
-
-        temporizador.textContent = tiempo;
-
-        if (tiempo <= 0) {
-            clearInterval(intervalo);
-        }
-
-    }, 1000);
-
+    cliente.activate();
 </script>
 
 </body>

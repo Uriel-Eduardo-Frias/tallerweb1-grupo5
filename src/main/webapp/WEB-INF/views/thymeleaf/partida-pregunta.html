@@ -1,0 +1,89 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pregunta de trivia</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light p-4">
+<div class="container" style="max-width: 700px;">
+
+    <div class="card shadow-sm p-4">
+
+        <!-- Encabezado -->
+        <h1 class="text-center mb-3">TRIVIA</h1>
+
+        <h5 class="text-center text-secondary mb-4">
+            Ronda
+            <span th:text="${ronda.numero}">1</span>
+            /
+            <span th:text="${partida.totalRondas}">5</span>
+        </h5>
+
+        <!-- Categoría -->
+        <div class="text-end mb-3"
+             th:if="${pregunta.categoria != null}">
+            <span class="badge bg-info text-dark fs-6"
+                  th:text="${pregunta.categoria.nombre}">
+                Categoría
+            </span>
+        </div>
+
+        <!-- Enunciado -->
+        <h2 class="mb-4"
+            th:text="${pregunta.descripcion}">
+            Enunciado de la pregunta
+        </h2>
+
+        <!-- RESULTADO: se muestra después de responder -->
+        <div th:if="${esCorrecta != null}"
+             class="text-center mb-4">
+
+            <h3 th:if="${esCorrecta}"
+                class="text-success fw-bold">
+                ¡Respuesta correcta!
+            </h3>
+
+            <h3 th:unless="${esCorrecta}"
+                class="text-danger fw-bold">
+                ¡Respuesta incorrecta!
+            </h3>
+
+            <p class="mt-3">
+                La respuesta correcta era:
+                <strong th:text="${textoCorrecto}">
+                    Respuesta correcta
+                </strong>
+            </p>
+
+            <p class="text-muted"
+               th:if="${mensaje != null}"
+               th:text="${mensaje}">
+            </p>
+
+        </div>
+
+        <!-- OPCIONES: se muestran antes de responder -->
+        <form th:if="${esCorrecta == null}"
+              th:action="@{/partida/{id}/responder(id=${partida.id})}"
+              method="POST"
+              class="d-grid gap-3">
+
+            <button th:each="opcion : ${pregunta.opciones}"
+                    type="submit"
+                    name="opcionId"
+                    th:value="${opcion.id}"
+                    class="btn btn-outline-primary text-start p-3 fs-5"
+                    th:text="${opcion.texto}">
+                Opción de respuesta
+            </button>
+
+        </form>
+
+    </div>
+</div>
+</body>
+</html>

@@ -16,4 +16,5 @@ public interface ServicioSala {
   void cambiarHost(Sala sala, Usuario solicitante, Usuario nuevoHost);
   Sala buscarPorCodigo(String codigo);
   List<Sala> listarSalas();
+  Sala marcarListo(String codigo, Long usuarioId);
 }

@@ -16,4 +16,6 @@ public interface ServicioPartida {
   //PartidaJugadorComodin buscarComodin(PartidaJugador jugador, Long comodinId
   boolean puedeUsarse(PartidaJugadorComodin comodinJugador);
   boolean consumirComodin(PartidaJugadorComodin comodinJugador);
+  void finalizarVotacionCategoria(Long partidaId, Long usuarioId);
+  boolean registrarVotoCategoria(Long partidaId, Long usuarioId, Long categoriaId);
 }

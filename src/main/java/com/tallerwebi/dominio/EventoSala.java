@@ -7,6 +7,7 @@ public class EventoSala {
   private String tipo;
   private String codigoSala;
   private List<String> jugadores;
+  private Long partidaId;
 
   public EventoSala(String tipo, String codigoSala, List<String> jugadores) {
     this.tipo = tipo;
@@ -36,5 +37,13 @@ public class EventoSala {
 
   public void setJugadores(List<String> jugadores) {
     this.jugadores = jugadores;
+  }
+
+  public Long getPartidaId() {
+    return partidaId;
+  }
+
+  public void setPartidaId(Long partidaId) {
+    this.partidaId = partidaId;
   }
 }

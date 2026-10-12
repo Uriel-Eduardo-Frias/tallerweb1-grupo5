@@ -26,6 +26,8 @@ public class SalaJugador {
   @JoinColumn(name = "usuario_id", nullable = false)
   private Usuario usuario;
 
+  private boolean listo = false;
+
   public SalaJugador() {}
 
   public SalaJugador(Sala sala, EstadoJugador estadoJugador, boolean esAnfitrion, Usuario usuario) {
@@ -65,5 +67,13 @@ public class SalaJugador {
 
   public void setUsuario(Usuario usuario) {
     this.usuario = usuario;
+  }
+
+  public boolean isListo() {
+    return listo;
+  }
+
+  public void setListo(boolean listo) {
+    this.listo = listo;
   }
 }

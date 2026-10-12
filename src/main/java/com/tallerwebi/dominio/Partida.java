@@ -35,6 +35,9 @@ public class Partida {
   @Column(name = "fecha_fin")
   private LocalDateTime fechaFin;
 
+  @OneToOne(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true)
+  private VotacionCategoria votacionCategoria;
+
   public Partida() {}
 
   public Partida(Sala sala, EstadoPartida estado) {
@@ -43,6 +46,7 @@ public class Partida {
     this.rondaActual = 1;
     this.totalRondas = 5;
     this.modoJuego = ModoJuego.TURNO_TODOS;
+    this.fechaInicio = LocalDateTime.now();
   }
 
   public void agregarRonda(PartidaRonda ronda) {
@@ -129,5 +133,23 @@ public class Partida {
 
   public void setFechaFin(LocalDateTime fechaFin) {
     this.fechaFin = fechaFin;
+  }
+
+  public VotacionCategoria getVotacionCategoria() {
+    return votacionCategoria;
+  }
+
+  public void setVotacionCategoria(VotacionCategoria votacionCategoria) {
+    this.votacionCategoria = votacionCategoria;
+
+    if (votacionCategoria != null) {
+      votacionCategoria.setPartida(this);
+    }
+  }
+
+  public void iniciarVotacionCategoria() {
+    if (this.votacionCategoria == null) {
+      setVotacionCategoria(new VotacionCategoria(this));
+    }
   }
 }

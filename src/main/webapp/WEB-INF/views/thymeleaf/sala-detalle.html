@@ -252,13 +252,15 @@
 </header>
 
 <main class="main-content">
+
+    <!-- DATOS DE LA SALA -->
     <section class="card" aria-labelledby="room-title">
         <h1 id="room-title" th:text="${sala.nombre}">
             Nombre de la sala
         </h1>
 
         <p>
-            Estado:
+            Estado de la sala:
             <strong class="status"
                     th:if="${sala.estado.name() == 'EN_ESPERA'}">
                 En espera
@@ -299,31 +301,35 @@
         </p>
 
         <ul id="lista-jugadores" th:unless="${#lists.isEmpty(sala.jugadores)}">
-            <li th:each="jugador : ${sala.jugadores}"
-                th:text="${jugador.usuario.username}">
-                Nombre del jugador
+            <li th:each="jugador : ${sala.jugadores}">
+                <span th:text="${jugador.usuario.username}">Nombre del jugador</span>
+
+                <!-- el host no tiene estado "listo" -->
+                <strong th:if="${jugador.usuario.id == sala.host.id}">(Host)</strong>
+
+                <strong th:if="${jugador.usuario.id != sala.host.id and jugador.listo}"
+                        class="status status-ok">
+                    Listo
+                </strong>
+
+                <strong th:if="${jugador.usuario.id != sala.host.id and !jugador.listo}"
+                        class="status status-wait">
+                    No listo
+                </strong>
             </li>
         </ul>
     </section>
 
+    <!-- UNIRSE: solo si no es host, no está unido, la sala espera y hay lugar -->
     <section class="card"
              aria-labelledby="join-title"
-             th:if="${sala.estado.name() == 'EN_ESPERA'
+             th:if="${!esHost and !yaUnido
+                     and sala.estado.name() == 'EN_ESPERA'
                      and #lists.size(sala.jugadores) < sala.maxJugadores}">
         <h2 id="join-title">Unirse a esta sala</h2>
 
         <form th:action="@{/salas/{codigo}/unirse(codigo=${sala.codigo})}"
               method="post">
-            <div class="form-field">
-                <label for="invitado">Tu nombre</label>
-                <input id="invitado"
-                       name="invitado"
-                       type="text"
-                       maxlength="30"
-                       autocomplete="nickname"
-                       required>
-            </div>
-
             <button type="submit" class="btn btn-primary">
                 Unirme
             </button>
@@ -331,23 +337,56 @@
     </section>
 
     <p class="notice"
-       th:if="${sala.estado.name() == 'EN_ESPERA'
+       th:if="${!esHost and !yaUnido
+               and sala.estado.name() == 'EN_ESPERA'
                and #lists.size(sala.jugadores) >= sala.maxJugadores}">
         La sala está completa.
     </p>
 
+    <!-- ESTOY LISTO: solo invitados que ya están en la sala -->
+    <section class="card"
+             th:if="${!esHost and yaUnido and sala.estado.name() == 'EN_ESPERA'}">
+        <h3>¿Listo para jugar?</h3>
+        <p>Cuando estés listo, el host podrá comenzar la partida.</p>
 
-    <div class="start-game">
+        <form th:action="@{/salas/{codigo}/listo(codigo=${sala.codigo})}"
+              method="post">
+            <button type="submit" class="btn btn-primary">
+                Estoy listo
+            </button>
+        </form>
+    </section>
+
+    <!-- COMENZAR PARTIDA: solo el host, habilitado cuando todos están listos -->
+    <div class="start-game"
+         th:if="${esHost and sala.estado.name() == 'EN_ESPERA'}">
         <h3>Comenzar partida</h3>
-        <p> Cuando todos estén listos, el host puede comenzar la partida. </p>
-        <form th:action="@{/partidas/{codigo}/iniciar(codigo=${sala.codigo})}" method="post">
-            <button type="submit" class="btn btn-primary"> Comenzar partida </button>
+
+        <p th:if="${todosListos}">
+            Todos los jugadores están listos.
+        </p>
+        <p th:unless="${todosListos}">
+            Esperando a que todos los jugadores estén listos.
+        </p>
+
+        <form th:action="@{/partidas/{codigo}/iniciar(codigo=${sala.codigo})}"
+              method="post">
+            <button type="submit"
+                    class="btn btn-primary"
+                    th:disabled="${!todosListos}">
+                Comenzar partida
+            </button>
         </form>
     </div>
 
     <p class="notice"
        th:if="${sala.estado.name() != 'EN_ESPERA'}">
         Esta sala ya no acepta jugadores.
+    </p>
+
+    <!-- aviso que se muestra al recibir PARTIDA_INICIADA -->
+    <p id="mensaje-inicio" class="notice" style="display: none;">
+        ¡La partida comienza! Redirigiendo...
     </p>
 
     <p class="error-message"
@@ -357,13 +396,15 @@
     </p>
 </main>
 
-<script  th:inline="javascript" src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
 <script th:inline="javascript">
 
     const codigoSala = /*[[${sala.codigo}]]*/ "";
+    const urlBase = /*[[@{/}]]*/ "/";
 
     const cliente = new StompJs.Client({
-        brokerURL: "ws://localhost:8080/spring/ws"
+        brokerURL: "ws://localhost:8080/spring/ws",
+        reconnectDelay: 3000
     });
 
     cliente.onConnect = function () {
@@ -377,6 +418,20 @@
                 const evento = JSON.parse(mensaje.body);
 
                 console.log("Evento recibido:", evento);
+
+                switch (evento.tipo) {
+                    case "JUGADOR_SE_UNIO":
+                    case "JUGADOR_LISTO":
+                        window.location.reload();
+                        break;
+
+                    case "PARTIDA_INICIADA":
+                        document.getElementById("mensaje-inicio").style.display = "block";
+                        setTimeout(function () {
+                            window.location.href = urlBase + "partida/" + evento.partidaId +"/votacion-categoria";
+                        }, 3000);
+                        break;
+                }
             }
         );
     };

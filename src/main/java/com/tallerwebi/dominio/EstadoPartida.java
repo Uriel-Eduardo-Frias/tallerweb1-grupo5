@@ -4,4 +4,5 @@ public enum EstadoPartida {
   INICIADA,
   EN_CURSO,
   FINALIZADA,
+  VOTACION_CATEGORIA,
 }

@@ -267,4 +267,23 @@ public class ServicioSalaIm implements ServicioSala {
       throw new UsuarioNoPerteneceASalaException("El nuevo host no pertenece a la sala");
     }
   }
+
+  @Transactional
+  @Override
+  public Sala marcarListo(String codigo, Long usuarioId) {
+    Sala sala = buscarPorCodigo(codigo);
+
+    if (sala.getEstado() != EstadoSala.EN_ESPERA) {
+      throw new IllegalStateException("La sala ya no está en espera");
+    }
+
+    for (SalaJugador salaJugador : sala.getJugadores()) {
+      if (salaJugador.getUsuario().getId().equals(usuarioId)) {
+        salaJugador.setListo(true);
+        return sala;
+      }
+    }
+
+    throw new IllegalStateException("El usuario no está en la sala");
+  }
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 public class NotificadorSala {
 
   private final SimpMessagingTemplate messagingTemplate;
+  private static final String TOPIC_SALA = "/topic/salas/";
 
   public NotificadorSala(SimpMessagingTemplate messagingTemplate) {
     this.messagingTemplate = messagingTemplate;
@@ -30,5 +31,32 @@ public class NotificadorSala {
     }
 
     return jugadores;
+  }
+
+  public void jugadorListo(Sala sala) {
+    List<String> jugadores = obtenerJugadores(sala);
+
+    EventoSala evento = new EventoSala("JUGADOR_LISTO", sala.getCodigo(), jugadores);
+
+    messagingTemplate.convertAndSend(TOPIC_SALA + sala.getCodigo(), evento);
+  }
+
+  public void partidaIniciada(String codigoSala, Long partidaId) {
+    EventoSala evento = new EventoSala("PARTIDA_INICIADA", codigoSala, new ArrayList<>());
+    evento.setPartidaId(partidaId);
+
+    messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
+  }
+
+  public void votacionCategoriaFinalizada(String codigoSala, Long partidaId) {
+    EventoSala evento = new EventoSala(
+      "VOTACION_CATEGORIA_FINALIZADA",
+      codigoSala,
+      new ArrayList<>()
+    );
+
+    evento.setPartidaId(partidaId);
+
+    messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
   }
 }
