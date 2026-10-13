@@ -11,9 +11,9 @@ import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -34,11 +34,11 @@ public class PartidaController {
   private final ServicioRespuestaJugador servicioRespuestaJugador;
 
   public PartidaController(
-    ServicioPartida servicioPartida,
-    ServicioUsuario servicioUsuario,
-    NotificadorSala notificadorSala,
-    ServicioPartidaPregunta servicioPartidaPregunta,
-    ServicioRespuestaJugador servicioRespuestaJugador
+          ServicioPartida servicioPartida,
+          ServicioUsuario servicioUsuario,
+          NotificadorSala notificadorSala,
+          ServicioPartidaPregunta servicioPartidaPregunta,
+          ServicioRespuestaJugador servicioRespuestaJugador
   ) {
     this.servicioPartida = servicioPartida;
     this.servicioUsuario = servicioUsuario;
@@ -47,13 +47,11 @@ public class PartidaController {
     this.servicioRespuestaJugador = servicioRespuestaJugador;
   }
 
-  // INICIO DE PARTIDA
-
-  @PostMapping("/partidas/{codigoSala}/iniciar")
+  @RequestMapping(value = "/partidas/{codigoSala}/iniciar", method = RequestMethod.POST)
   public ModelAndView iniciarPartida(
-    @PathVariable("codigoSala") String codigoSala,
-    HttpSession session,
-    RedirectAttributes redirectAttributes
+          @PathVariable("codigoSala") String codigoSala,
+          HttpSession session,
+          RedirectAttributes redirectAttributes
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -80,12 +78,10 @@ public class PartidaController {
     }
   }
 
-  // FINALIZACIÓN DE PARTIDA
-
-  @PostMapping("/partidas/{codigoSala}/finalizar")
+  @RequestMapping(value = "/partidas/{codigoSala}/finalizar", method = RequestMethod.POST)
   public ModelAndView finalizarPartida(
-    @PathVariable("codigoSala") String codigoSala,
-    HttpSession session
+          @PathVariable("codigoSala") String codigoSala,
+          HttpSession session
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -107,9 +103,7 @@ public class PartidaController {
     return new ModelAndView("resultado", modelo);
   }
 
-  // VOTACIÓN DE CATEGORÍAS
-
-  @GetMapping("/partida/{id}/votacion-categoria")
+  @RequestMapping(value = "/partida/{id}/votacion-categoria", method = RequestMethod.GET)
   public ModelAndView mostrarVotacionCategoria(@PathVariable("id") Long id, HttpSession session) {
     if (obtenerUsuarioId(session) == null) {
       return new ModelAndView(REDIRECT_LOGIN);
@@ -124,11 +118,11 @@ public class PartidaController {
     return new ModelAndView("partida-votacion", modelo);
   }
 
-  @PostMapping("/partida/{id}/votar-categoria")
+  @RequestMapping(value = "/partida/{id}/votar-categoria", method = RequestMethod.POST)
   public ModelAndView votarCategoria(
-    @PathVariable("id") Long partidaId,
-    @RequestParam("categoriaId") Long categoriaId,
-    HttpSession session
+          @PathVariable("id") Long partidaId,
+          @RequestParam("categoriaId") Long categoriaId,
+          HttpSession session
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -137,9 +131,9 @@ public class PartidaController {
     }
 
     boolean todosVotaron = servicioPartida.registrarVotoCategoria(
-      partidaId,
-      usuarioId,
-      categoriaId
+            partidaId,
+            usuarioId,
+            categoriaId
     );
 
     if (todosVotaron) {
@@ -149,10 +143,10 @@ public class PartidaController {
     return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_VOTACION_CATEGORIA);
   }
 
-  @PostMapping("/partida/{id}/resultado-votacion")
+  @RequestMapping(value = "/partida/{id}/resultado-votacion", method = RequestMethod.POST)
   public ModelAndView obtenerResultadoVotacion(
-    @PathVariable("id") Long partidaId,
-    HttpSession session
+          @PathVariable("id") Long partidaId,
+          HttpSession session
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -165,9 +159,7 @@ public class PartidaController {
     return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA);
   }
 
-  // ESTADO DEL JUGADOR
-
-  @PostMapping("/partida/{id}/listo")
+  @RequestMapping(value = "/partida/{id}/listo", method = RequestMethod.POST)
   public ModelAndView marcarListo(@PathVariable("id") Long id, HttpSession session) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -186,9 +178,7 @@ public class PartidaController {
     return new ModelAndView(REDIRECT_PARTIDA + id + "/ronda");
   }
 
-  // MOSTRAR PREGUNTA
-
-  @GetMapping("/partida/{id}/pregunta")
+  @RequestMapping(value = "/partida/{id}/pregunta", method = RequestMethod.GET)
   public ModelAndView mostrarPregunta(@PathVariable("id") Long partidaId, HttpSession session) {
     if (obtenerUsuarioId(session) == null) {
       return new ModelAndView(REDIRECT_LOGIN);
@@ -197,9 +187,9 @@ public class PartidaController {
     Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
 
     if (
-      partida == null ||
-      partida.obtenerRondaActual() == null ||
-      partida.obtenerRondaActual().getPregunta() == null
+            partida == null ||
+                    partida.obtenerRondaActual() == null ||
+                    partida.obtenerRondaActual().getPregunta() == null
     ) {
       return new ModelAndView("redirect:/salas");
     }
@@ -215,14 +205,12 @@ public class PartidaController {
     return new ModelAndView("partida-pregunta", modelo);
   }
 
-  // REGISTRAR RESPUESTA DEL JUGADOR
-
-  @PostMapping("/partida/{id}/responder")
+  @RequestMapping(value = "/partida/{id}/responder", method = RequestMethod.POST)
   public String responder(
-    @PathVariable("id") Long partidaId,
-    @RequestParam("opcionId") Long opcionId,
-    HttpSession session,
-    RedirectAttributes redirectAttributes
+          @PathVariable("id") Long partidaId,
+          @RequestParam("opcionId") Long opcionId,
+          HttpSession session,
+          RedirectAttributes redirectAttributes
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -276,9 +264,9 @@ public class PartidaController {
   }
 
   private void agregarResultadoRespuesta(
-    RedirectAttributes redirectAttributes,
-    boolean esCorrecta,
-    String textoCorrecto
+          RedirectAttributes redirectAttributes,
+          boolean esCorrecta,
+          String textoCorrecto
   ) {
     redirectAttributes.addFlashAttribute("esCorrecta", esCorrecta);
     redirectAttributes.addFlashAttribute("textoCorrecto", textoCorrecto);
@@ -296,7 +284,6 @@ public class PartidaController {
     Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
 
     if (partida.getEstado() == EstadoPartida.FINALIZADA) {
-      // Temporal: reemplazar por la ruta de resultados cuando exista.
       return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
     }
 
@@ -306,8 +293,6 @@ public class PartidaController {
 
     return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
   }
-
-  // OBTENER USUARIO DE LA SESIÓN
 
   private Long obtenerUsuarioId(HttpSession session) {
     return (Long) session.getAttribute(ID_USUARIO);
