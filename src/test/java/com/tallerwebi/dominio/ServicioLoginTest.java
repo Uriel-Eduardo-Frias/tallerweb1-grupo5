@@ -9,7 +9,7 @@ import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
 import com.tallerwebi.dominio.servicio.ServicioLogin;
-import com.tallerwebi.dominio.servicio.ServicioLoginImpl;
+import com.tallerwebi.dominio.servicio.impl.ServicioLoginImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

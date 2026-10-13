@@ -1,8 +1,7 @@
 package com.tallerwebi.dominio.servicio;
 
-import com.tallerwebi.dominio.modelo.Pregunta;
 import com.tallerwebi.dominio.modelo.Categoria;
-
+import com.tallerwebi.dominio.modelo.Pregunta;
 import java.util.Map;
 
 public interface ServicioPartidaPregunta {

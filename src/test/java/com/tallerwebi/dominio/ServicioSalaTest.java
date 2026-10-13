@@ -14,8 +14,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-
 import com.tallerwebi.dominio.enumeration.EstadoJugador;
 import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.excepcion.SalaLlenaException;
@@ -27,7 +25,8 @@ import com.tallerwebi.dominio.modelo.SalaJugador;
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
-import com.tallerwebi.dominio.servicio.ServicioSalaIm;
+import com.tallerwebi.dominio.servicio.impl.ServicioSalaIm;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

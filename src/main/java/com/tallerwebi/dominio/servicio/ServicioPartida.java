@@ -1,9 +1,9 @@
 package com.tallerwebi.dominio.servicio;
 
-import com.tallerwebi.dominio.modelo.PartidaJugadorComodin;
-import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
+import com.tallerwebi.dominio.modelo.PartidaJugadorComodin;
+import com.tallerwebi.dominio.modelo.Usuario;
 
 public interface ServicioPartida {
   Partida iniciarPartida(String codigoSala, Usuario solicitante);

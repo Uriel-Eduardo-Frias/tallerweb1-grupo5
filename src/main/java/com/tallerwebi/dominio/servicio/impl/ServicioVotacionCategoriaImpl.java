@@ -1,15 +1,16 @@
-package com.tallerwebi.dominio.servicio;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+package com.tallerwebi.dominio.servicio.impl;
 
 import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
 import com.tallerwebi.dominio.modelo.*;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
+import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
+import com.tallerwebi.dominio.servicio.ServicioVotacionCategoria;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

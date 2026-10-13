@@ -1,14 +1,14 @@
-package com.tallerwebi.dominio.servicio;
+package com.tallerwebi.dominio.servicio.impl;
 
+import com.tallerwebi.dominio.modelo.Categoria;
+import com.tallerwebi.dominio.modelo.Opcion;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.repositorio.RepositorioPartidaPregunta;
+import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.tallerwebi.dominio.modelo.Pregunta;
-import com.tallerwebi.dominio.modelo.Categoria;
-import com.tallerwebi.dominio.modelo.Opcion;
-import com.tallerwebi.dominio.repositorio.RepositorioPartidaPregunta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

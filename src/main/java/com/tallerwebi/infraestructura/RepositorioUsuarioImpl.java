@@ -1,8 +1,8 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
-import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioNoEncontrado;
+import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
 import java.util.List;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;

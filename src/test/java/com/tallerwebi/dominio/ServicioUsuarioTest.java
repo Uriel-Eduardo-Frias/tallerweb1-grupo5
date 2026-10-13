@@ -14,13 +14,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.tallerwebi.dominio.modelo.PerfilUsuario;
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
-import com.tallerwebi.dominio.servicio.ServicioUsuarioImpl;
+import com.tallerwebi.dominio.servicio.impl.ServicioUsuarioImpl;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

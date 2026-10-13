@@ -1,6 +1,4 @@
-package com.tallerwebi.dominio.servicio;
-
-import java.util.List;
+package com.tallerwebi.dominio.servicio.impl;
 
 import com.tallerwebi.dominio.enumeration.EstadoJugador;
 import com.tallerwebi.dominio.enumeration.EstadoPartida;
@@ -10,6 +8,10 @@ import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.dominio.modelo.*;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
+import com.tallerwebi.dominio.servicio.ServicioPartida;
+import com.tallerwebi.dominio.servicio.ServicioSala;
+import com.tallerwebi.dominio.servicio.ServicioVotacionCategoria;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,7 +1,7 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import com.tallerwebi.dominio.modelo.Sala;
+import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import java.util.List;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;

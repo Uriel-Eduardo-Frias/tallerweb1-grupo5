@@ -1,7 +1,7 @@
 package com.tallerwebi.dominio.modelo;
 
-import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.enumeration.EstadoPartida;
+import com.tallerwebi.dominio.enumeration.ModoJuego;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

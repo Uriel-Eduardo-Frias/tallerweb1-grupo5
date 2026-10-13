@@ -1,10 +1,9 @@
 package com.tallerwebi.dominio.repositorio;
 
+import com.tallerwebi.dominio.enumeration.TipoComodin;
 import com.tallerwebi.dominio.modelo.Comodin;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
-import com.tallerwebi.dominio.enumeration.TipoComodin;
-
 import java.util.List;
 
 public interface RepositorioPartida {

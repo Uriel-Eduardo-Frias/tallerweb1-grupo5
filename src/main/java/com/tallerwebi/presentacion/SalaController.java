@@ -9,7 +9,6 @@ import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.servicio.ServicioSala;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpSession;
-
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;

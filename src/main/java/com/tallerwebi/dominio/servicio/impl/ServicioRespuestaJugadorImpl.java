@@ -1,16 +1,17 @@
-package com.tallerwebi.dominio.servicio;
+package com.tallerwebi.dominio.servicio.impl;
 
-import java.time.LocalDateTime;
-
-import com.tallerwebi.dominio.modelo.PartidaRonda;
-import com.tallerwebi.dominio.modelo.Pregunta;
-import com.tallerwebi.dominio.modelo.RespuestaJugador;
 import com.tallerwebi.dominio.modelo.Opcion;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
+import com.tallerwebi.dominio.modelo.PartidaRonda;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.modelo.RespuestaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioOpcion;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioRespuestaJugador;
+import com.tallerwebi.dominio.servicio.ServicioPartida;
+import com.tallerwebi.dominio.servicio.ServicioRespuestaJugador;
+import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

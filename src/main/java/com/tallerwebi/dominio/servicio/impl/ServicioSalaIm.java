@@ -1,4 +1,4 @@
-package com.tallerwebi.dominio.servicio;
+package com.tallerwebi.dominio.servicio.impl;
 
 import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.enumeration.EstadoJugador;
@@ -13,6 +13,7 @@ import com.tallerwebi.dominio.modelo.SalaJugador;
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
+import com.tallerwebi.dominio.servicio.ServicioSala;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.stereotype.Service;

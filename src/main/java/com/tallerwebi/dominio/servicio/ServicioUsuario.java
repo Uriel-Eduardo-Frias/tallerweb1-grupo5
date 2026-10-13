@@ -1,7 +1,7 @@
 package com.tallerwebi.dominio.servicio;
 
-import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
+import com.tallerwebi.dominio.modelo.Usuario;
 import java.util.List;
 
 public interface ServicioUsuario {

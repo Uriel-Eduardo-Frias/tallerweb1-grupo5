@@ -1,13 +1,12 @@
-package com.tallerwebi.dominio.servicio;
+package com.tallerwebi.dominio.servicio.impl;
 
+import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.modelo.PerfilUsuario;
 import com.tallerwebi.dominio.modelo.Usuario;
-import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-
+import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
+import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import java.util.Collections;
 import java.util.List;
-
-import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

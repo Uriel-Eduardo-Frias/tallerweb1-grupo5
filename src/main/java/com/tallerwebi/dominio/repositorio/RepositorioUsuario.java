@@ -1,7 +1,6 @@
 package com.tallerwebi.dominio.repositorio;
 
 import com.tallerwebi.dominio.modelo.Usuario;
-
 import java.util.List;
 
 public interface RepositorioUsuario {
