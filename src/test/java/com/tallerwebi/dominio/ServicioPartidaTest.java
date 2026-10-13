@@ -1,4 +1,3 @@
-
 package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -50,14 +49,15 @@ public class ServicioPartidaTest {
     repositorioRespuestaJugador = mock(RepositorioRespuestaJugador.class);
     notificadorSala = mock(NotificadorSala.class);
 
-    servicioPartida = new ServicioPartidaImp(
-            servicioSala,
-            repositorioPartida,
-            servicioVotacionCategoria,
-            repositorioPartidaJugador,
-            repositorioRespuestaJugador,
-            notificadorSala
-    );
+    servicioPartida =
+      new ServicioPartidaImp(
+        servicioSala,
+        repositorioPartida,
+        servicioVotacionCategoria,
+        repositorioPartidaJugador,
+        repositorioRespuestaJugador,
+        notificadorSala
+      );
 
     host = givenUnUsuarioHost();
     sala = givenUnaSalaEnEsperaConUnJugador(host);
@@ -121,8 +121,7 @@ public class ServicioPartidaTest {
   public void dadoQueYaExisteUnaPartidaCuandoInicioNuevamenteObtengoLaExistente() {
     Partida partidaExistente = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartida.obtenerPorCodigoSala("ABC123"))
-            .thenReturn(partidaExistente);
+    when(repositorioPartida.obtenerPorCodigoSala("ABC123")).thenReturn(partidaExistente);
 
     Partida resultado = servicioPartida.iniciarPartida("ABC123", host);
 
@@ -140,8 +139,7 @@ public class ServicioPartidaTest {
   public void dadoQueHayUnaPartidaEnCursoCuandoLaFinalizoObtengoPartidaFinalizada() {
     Partida partida = servicioPartida.iniciarPartida("ABC123", host);
 
-    when(repositorioPartida.obtenerPorCodigoSala("ABC123"))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorCodigoSala("ABC123")).thenReturn(partida);
 
     Partida resultado = servicioPartida.finalizarPartida("ABC123", host);
 
@@ -155,8 +153,8 @@ public class ServicioPartidaTest {
   public void dadoQueNoExisteUnaPartidaCuandoIntentoFinalizarlaObtengoExcepcion() {
     when(repositorioPartida.obtenerPorCodigoSala("ABC123")).thenReturn(null);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.finalizarPartida("ABC123", host)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.finalizarPartida("ABC123", host)
     );
 
     assertThat(excepcion, instanceOf(PartidaNoEncontradaException.class));
@@ -166,11 +164,10 @@ public class ServicioPartidaTest {
   public void dadoQueLaPartidaNoEstaEnCursoCuandoIntentoFinalizarlaObtengoExcepcion() {
     Partida partida = new Partida(sala, EstadoPartida.FINALIZADA);
 
-    when(repositorioPartida.obtenerPorCodigoSala("ABC123"))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorCodigoSala("ABC123")).thenReturn(partida);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.finalizarPartida("ABC123", host)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.finalizarPartida("ABC123", host)
     );
 
     assertThat(excepcion, instanceOf(IllegalStateException.class));
@@ -181,11 +178,10 @@ public class ServicioPartidaTest {
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
     Usuario otroUsuario = givenUnUsuarioConId(2L);
 
-    when(repositorioPartida.obtenerPorCodigoSala("ABC123"))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorCodigoSala("ABC123")).thenReturn(partida);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.finalizarPartida("ABC123", otroUsuario)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.finalizarPartida("ABC123", otroUsuario)
     );
 
     assertThat(excepcion, instanceOf(UsuarioNoEsHostException.class));
@@ -199,8 +195,7 @@ public class ServicioPartidaTest {
   public void dadoQueExisteUnaPartidaCuandoLaBuscoPorCodigoObtengoLaPartida() {
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartida.obtenerPorCodigoSala("ABC123"))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorCodigoSala("ABC123")).thenReturn(partida);
 
     Partida resultado = servicioPartida.buscarPartidaPorCodigoSala("ABC123");
 
@@ -209,11 +204,10 @@ public class ServicioPartidaTest {
 
   @Test
   public void dadoQueNoExisteUnaPartidaPorCodigoCuandoLaBuscoObtengoExcepcion() {
-    when(repositorioPartida.obtenerPorCodigoSala("NO-EXISTE"))
-            .thenReturn(null);
+    when(repositorioPartida.obtenerPorCodigoSala("NO-EXISTE")).thenReturn(null);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.buscarPartidaPorCodigoSala("NO-EXISTE")
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.buscarPartidaPorCodigoSala("NO-EXISTE")
     );
 
     assertThat(excepcion, instanceOf(PartidaNoEncontradaException.class));
@@ -223,8 +217,7 @@ public class ServicioPartidaTest {
   public void dadoQueExisteUnaPartidaCuandoLaBuscoPorIdObtengoLaPartida() {
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartida.obtenerPorIdConRondas(10L))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
     Partida resultado = servicioPartida.buscarPartidaPorId(10L);
 
@@ -235,8 +228,8 @@ public class ServicioPartidaTest {
   public void dadoQueNoExisteUnaPartidaPorIdCuandoLaBuscoObtengoExcepcion() {
     when(repositorioPartida.obtenerPorIdConRondas(99L)).thenReturn(null);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.buscarPartidaPorId(99L)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.buscarPartidaPorId(99L)
     );
 
     assertThat(excepcion, instanceOf(PartidaNoEncontradaException.class));
@@ -250,8 +243,7 @@ public class ServicioPartidaTest {
   public void dadoQueUnJugadorPerteneceALaSalaCuandoSeMarcaListoObtengoEstadoListo() {
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartida.obtenerPorIdConRondas(10L))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
     servicioPartida.marcarJugadorListo(10L, host);
 
@@ -265,11 +257,10 @@ public class ServicioPartidaTest {
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
     Usuario ajeno = givenUnUsuarioConId(2L);
 
-    when(repositorioPartida.obtenerPorIdConRondas(10L))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.marcarJugadorListo(10L, ajeno)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.marcarJugadorListo(10L, ajeno)
     );
 
     assertThat(excepcion, instanceOf(JugadorInexistenteExeption.class));
@@ -280,8 +271,7 @@ public class ServicioPartidaTest {
     sala.getJugadores().get(0).setEstadoJugador(EstadoJugador.LISTO);
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartida.obtenerPorIdConRondas(10L))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
     assertTrue(servicioPartida.estanTodosListos(10L));
   }
@@ -291,8 +281,7 @@ public class ServicioPartidaTest {
     sala.setJugadores(new ArrayList<>());
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartida.obtenerPorIdConRondas(10L))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
     assertFalse(servicioPartida.estanTodosListos(10L));
   }
@@ -302,8 +291,7 @@ public class ServicioPartidaTest {
     sala.getJugadores().get(0).setEstadoJugador(EstadoJugador.CONECTADO);
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartida.obtenerPorIdConRondas(10L))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
     assertFalse(servicioPartida.estanTodosListos(10L));
   }
@@ -312,8 +300,8 @@ public class ServicioPartidaTest {
   public void dadoQueNoExisteUnaPartidaCuandoMarcoUnJugadorListoObtengoExcepcion() {
     when(repositorioPartida.obtenerPorIdConRondas(99L)).thenReturn(null);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.marcarJugadorListo(99L, host)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.marcarJugadorListo(99L, host)
     );
 
     assertThat(excepcion, instanceOf(PartidaNoEncontradaException.class));
@@ -327,8 +315,8 @@ public class ServicioPartidaTest {
   public void dadoQueNoExisteUnaPartidaCuandoIntentoFinalizarLaRondaObtengoExcepcion() {
     when(repositorioPartida.obtenerPorIdConRondas(99L)).thenReturn(null);
 
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.finalizarRondaSiTodosRespondieron(99L)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.finalizarRondaSiTodosRespondieron(99L)
     );
 
     assertThat(excepcion, instanceOf(PartidaNoEncontradaException.class));
@@ -343,12 +331,11 @@ public class ServicioPartidaTest {
     ronda.setEstado(EstadoRonda.PREGUNTA_EN_CURSO);
     partida.getRondas().add(ronda);
 
-    when(repositorioPartida.obtenerPorIdConRondas(10L))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
     assertThrows(
-            IllegalStateException.class,
-            () -> servicioPartida.finalizarRondaSiTodosRespondieron(10L)
+      IllegalStateException.class,
+      () -> servicioPartida.finalizarRondaSiTodosRespondieron(10L)
     );
 
     verify(repositorioPartidaJugador, never()).obtenerPorPartida(10L);
@@ -370,15 +357,13 @@ public class ServicioPartidaTest {
   public void dadoQueNoHayJugadoresCuandoIntentoFinalizarLaRondaObtengoFalse() {
     givenUnaPartidaConPreguntaActiva(10L, 2);
 
-    when(repositorioPartidaJugador.obtenerPorPartida(10L))
-            .thenReturn(List.of());
+    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of());
 
     boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
 
     assertFalse(resultado);
 
-    verify(repositorioRespuestaJugador, never())
-            .existeRespuesta(anyLong(), anyLong());
+    verify(repositorioRespuestaJugador, never()).existeRespuesta(anyLong(), anyLong());
   }
 
   @Test
@@ -386,23 +371,17 @@ public class ServicioPartidaTest {
     Partida partida = givenUnaPartidaConPreguntaActiva(10L, 2);
     PartidaJugador jugador = givenUnJugadorDePartida(partida, 100L);
 
-    when(repositorioPartidaJugador.obtenerPorPartida(10L))
-            .thenReturn(List.of(jugador));
+    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of(jugador));
 
-    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L))
-            .thenReturn(false);
+    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L)).thenReturn(false);
 
     boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
 
     assertFalse(resultado);
 
-    assertThat(
-            partida.obtenerRondaActual().getEstado(),
-            equalTo(EstadoRonda.PREGUNTA_EN_CURSO)
-    );
+    assertThat(partida.obtenerRondaActual().getEstado(), equalTo(EstadoRonda.PREGUNTA_EN_CURSO));
 
-    verify(notificadorSala, never())
-            .rondaActualizada(any(), any(), any());
+    verify(notificadorSala, never()).rondaActualizada(any(), any(), any());
   }
 
   @Test
@@ -410,11 +389,9 @@ public class ServicioPartidaTest {
     Partida partida = givenUnaPartidaConPreguntaActiva(10L, 2);
     PartidaJugador jugador = givenUnJugadorDePartida(partida, 100L);
 
-    when(repositorioPartidaJugador.obtenerPorPartida(10L))
-            .thenReturn(List.of(jugador));
+    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of(jugador));
 
-    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L))
-            .thenReturn(true);
+    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L)).thenReturn(true);
 
     boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
 
@@ -422,26 +399,13 @@ public class ServicioPartidaTest {
     assertThat(partida.getRondas().size(), equalTo(2));
     assertThat(partida.getRondaActual(), equalTo(2));
 
-    assertThat(
-            partida.getRondas().get(0).getEstado(),
-            equalTo(EstadoRonda.FINALIZADA)
-    );
+    assertThat(partida.getRondas().get(0).getEstado(), equalTo(EstadoRonda.FINALIZADA));
 
-    assertThat(
-            partida.getRondas().get(1).getEstado(),
-            equalTo(EstadoRonda.VOTACION_CATEGORIA)
-    );
+    assertThat(partida.getRondas().get(1).getEstado(), equalTo(EstadoRonda.VOTACION_CATEGORIA));
 
-    assertThat(
-            partida.getEstado(),
-            equalTo(EstadoPartida.VOTACION_CATEGORIA)
-    );
+    assertThat(partida.getEstado(), equalTo(EstadoPartida.VOTACION_CATEGORIA));
 
-    verify(notificadorSala).rondaActualizada(
-            "ABC123",
-            partida.getId(),
-            "NUEVA_VOTACION_CATEGORIA"
-    );
+    verify(notificadorSala).rondaActualizada("ABC123", partida.getId(), "NUEVA_VOTACION_CATEGORIA");
   }
 
   @Test
@@ -449,29 +413,20 @@ public class ServicioPartidaTest {
     Partida partida = givenUnaPartidaConPreguntaActiva(10L, 1);
     PartidaJugador jugador = givenUnJugadorDePartida(partida, 100L);
 
-    when(repositorioPartidaJugador.obtenerPorPartida(10L))
-            .thenReturn(List.of(jugador));
+    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of(jugador));
 
-    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L))
-            .thenReturn(true);
+    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L)).thenReturn(true);
 
     boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
 
     assertTrue(resultado);
 
-    assertThat(
-            partida.obtenerRondaActual().getEstado(),
-            equalTo(EstadoRonda.FINALIZADA)
-    );
+    assertThat(partida.obtenerRondaActual().getEstado(), equalTo(EstadoRonda.FINALIZADA));
 
     assertThat(partida.getEstado(), equalTo(EstadoPartida.FINALIZADA));
     assertThat(partida.getFechaFin(), is(notNullValue()));
 
-    verify(notificadorSala).rondaActualizada(
-            "ABC123",
-            partida.getId(),
-            "PARTIDA_FINALIZADA"
-    );
+    verify(notificadorSala).rondaActualizada("ABC123", partida.getId(), "PARTIDA_FINALIZADA");
   }
 
   // --------------------------------------------------
@@ -499,8 +454,7 @@ public class ServicioPartidaTest {
 
   @Test
   public void dadoUnJugadorNuloCuandoSumaPuntajeNoLanzaExcepcion() {
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.sumarPuntaje(null, 5)
+    Throwable excepcion = whenEjecutoCapturandoExcepcion(() -> servicioPartida.sumarPuntaje(null, 5)
     );
 
     assertThat(excepcion, is(nullValue()));
@@ -529,12 +483,12 @@ public class ServicioPartidaTest {
 
   @Test
   public void dadoUnJugadorNuloCuandoRegistraAciertoOFalloNoLanzaExcepcion() {
-    Throwable excepcionAcierto = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.registrarAcierto(null)
+    Throwable excepcionAcierto = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.registrarAcierto(null)
     );
 
-    Throwable excepcionFallo = whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.registrarFallo(null)
+    Throwable excepcionFallo = whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.registrarFallo(null)
     );
 
     assertThat(excepcionAcierto, is(nullValue()));
@@ -584,23 +538,20 @@ public class ServicioPartidaTest {
 
   @Test
   public void dadoUnVotoValidoCuandoRegistroLaCategoriaObtengoElResultadoDelServicio() {
-    when(servicioVotacionCategoria.registrarVotoCategoria(10L, 1L, 5L))
-            .thenReturn(true);
+    when(servicioVotacionCategoria.registrarVotoCategoria(10L, 1L, 5L)).thenReturn(true);
 
     boolean resultado = servicioPartida.registrarVotoCategoria(10L, 1L, 5L);
 
     assertTrue(resultado);
 
-    verify(servicioVotacionCategoria)
-            .registrarVotoCategoria(10L, 1L, 5L);
+    verify(servicioVotacionCategoria).registrarVotoCategoria(10L, 1L, 5L);
   }
 
   @Test
   public void dadoQueFinalizoLaVotacionCuandoInvocoElServicioSeDelegaLaOperacion() {
     servicioPartida.finalizarVotacionCategoria(10L, 1L);
 
-    verify(servicioVotacionCategoria)
-            .finalizarVotacionCategoria(10L, 1L);
+    verify(servicioVotacionCategoria).finalizarVotacionCategoria(10L, 1L);
   }
 
   // --------------------------------------------------
@@ -640,10 +591,7 @@ public class ServicioPartidaTest {
     return salaPreparada;
   }
 
-  private Partida givenUnaPartidaConPreguntaActiva(
-          Long idPartida,
-          int numeroRondas
-  ) {
+  private Partida givenUnaPartidaConPreguntaActiva(Long idPartida, int numeroRondas) {
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
     partida.setTotalRondas(numeroRondas);
     partida.setRondaActual(1);
@@ -657,16 +605,12 @@ public class ServicioPartidaTest {
 
     partida.getRondas().add(ronda);
 
-    when(repositorioPartida.obtenerPorIdConRondas(idPartida))
-            .thenReturn(partida);
+    when(repositorioPartida.obtenerPorIdConRondas(idPartida)).thenReturn(partida);
 
     return partida;
   }
 
-  private PartidaJugador givenUnJugadorDePartida(
-          Partida partida,
-          Long idJugador
-  ) {
+  private PartidaJugador givenUnJugadorDePartida(Partida partida, Long idJugador) {
     PartidaJugador jugador = new PartidaJugador(partida, host);
     jugador.setId(idJugador);
     return jugador;
@@ -678,34 +622,22 @@ public class ServicioPartidaTest {
     return jugador;
   }
 
-  private PartidaJugadorComodin givenUnComodinDisponibleParaJugador(
-          int cantidadInicial
-  ) {
+  private PartidaJugadorComodin givenUnComodinDisponibleParaJugador(int cantidadInicial) {
     PartidaJugador jugador = new PartidaJugador();
     Comodin comodin = new Comodin();
 
-    return new PartidaJugadorComodin(
-            jugador,
-            comodin,
-            cantidadInicial
-    );
+    return new PartidaJugadorComodin(jugador, comodin, cantidadInicial);
   }
 
   // --------------------------------------------------
   // HELPERS DE VALIDACIÓN
   // --------------------------------------------------
 
-  private void thenLaPartidaEstaEnEstado(
-          Partida partida,
-          EstadoPartida estadoEsperado
-  ) {
+  private void thenLaPartidaEstaEnEstado(Partida partida, EstadoPartida estadoEsperado) {
     assertThat(partida.getEstado(), equalTo(estadoEsperado));
   }
 
-  private void thenLaSalaEstaEnEstado(
-          Sala sala,
-          EstadoSala estadoEsperado
-  ) {
+  private void thenLaSalaEstaEnEstado(Sala sala, EstadoSala estadoEsperado) {
     assertThat(sala.getEstado(), equalTo(estadoEsperado));
   }
 
@@ -715,32 +647,20 @@ public class ServicioPartidaTest {
     PartidaRonda ronda = partida.getRondas().get(0);
 
     assertThat(ronda.getNumero(), equalTo(1));
-    assertThat(
-            ronda.getEstado(),
-            equalTo(EstadoRonda.VOTACION_CATEGORIA)
-    );
+    assertThat(ronda.getEstado(), equalTo(EstadoRonda.VOTACION_CATEGORIA));
   }
 
-  private void thenElPuntajeDelJugadorEs(
-          PartidaJugador jugador,
-          int puntajeEsperado
-  ) {
+  private void thenElPuntajeDelJugadorEs(PartidaJugador jugador, int puntajeEsperado) {
     assertThat(jugador.getPuntajeAcumulado(), equalTo(puntajeEsperado));
   }
 
-  private void thenElComodinFueConsumidoConExito(
-          boolean resultado,
-          PartidaJugadorComodin comodin
-  ) {
+  private void thenElComodinFueConsumidoConExito(boolean resultado, PartidaJugadorComodin comodin) {
     assertThat(resultado, equalTo(true));
     assertThat(comodin.getCantidadDisponible(), equalTo(0));
     assertThat(comodin.getVecesUsado(), equalTo(1));
   }
 
-  private void thenElComodinNoPudoConsumirse(
-          boolean resultado,
-          PartidaJugadorComodin comodin
-  ) {
+  private void thenElComodinNoPudoConsumirse(boolean resultado, PartidaJugadorComodin comodin) {
     assertThat(resultado, equalTo(false));
     assertThat(comodin.getCantidadDisponible(), equalTo(0));
     assertThat(comodin.getVecesUsado(), equalTo(0));
@@ -750,12 +670,9 @@ public class ServicioPartidaTest {
   // HELPER PARA CAPTURAR EXCEPCIONES
   // --------------------------------------------------
 
-  private Throwable whenIniciarCapturandoExcepcion(
-          String codigoSala,
-          Usuario solicitante
-  ) {
-    return whenEjecutoCapturandoExcepcion(
-            () -> servicioPartida.iniciarPartida(codigoSala, solicitante)
+  private Throwable whenIniciarCapturandoExcepcion(String codigoSala, Usuario solicitante) {
+    return whenEjecutoCapturandoExcepcion(() ->
+      servicioPartida.iniciarPartida(codigoSala, solicitante)
     );
   }
 

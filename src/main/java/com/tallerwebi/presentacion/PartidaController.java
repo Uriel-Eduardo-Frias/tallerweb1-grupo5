@@ -34,11 +34,11 @@ public class PartidaController {
   private final ServicioRespuestaJugador servicioRespuestaJugador;
 
   public PartidaController(
-          ServicioPartida servicioPartida,
-          ServicioUsuario servicioUsuario,
-          NotificadorSala notificadorSala,
-          ServicioPartidaPregunta servicioPartidaPregunta,
-          ServicioRespuestaJugador servicioRespuestaJugador
+    ServicioPartida servicioPartida,
+    ServicioUsuario servicioUsuario,
+    NotificadorSala notificadorSala,
+    ServicioPartidaPregunta servicioPartidaPregunta,
+    ServicioRespuestaJugador servicioRespuestaJugador
   ) {
     this.servicioPartida = servicioPartida;
     this.servicioUsuario = servicioUsuario;
@@ -49,9 +49,9 @@ public class PartidaController {
 
   @RequestMapping(value = "/partidas/{codigoSala}/iniciar", method = RequestMethod.POST)
   public ModelAndView iniciarPartida(
-          @PathVariable("codigoSala") String codigoSala,
-          HttpSession session,
-          RedirectAttributes redirectAttributes
+    @PathVariable("codigoSala") String codigoSala,
+    HttpSession session,
+    RedirectAttributes redirectAttributes
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -80,8 +80,8 @@ public class PartidaController {
 
   @RequestMapping(value = "/partidas/{codigoSala}/finalizar", method = RequestMethod.POST)
   public ModelAndView finalizarPartida(
-          @PathVariable("codigoSala") String codigoSala,
-          HttpSession session
+    @PathVariable("codigoSala") String codigoSala,
+    HttpSession session
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -120,9 +120,9 @@ public class PartidaController {
 
   @RequestMapping(value = "/partida/{id}/votar-categoria", method = RequestMethod.POST)
   public ModelAndView votarCategoria(
-          @PathVariable("id") Long partidaId,
-          @RequestParam("categoriaId") Long categoriaId,
-          HttpSession session
+    @PathVariable("id") Long partidaId,
+    @RequestParam("categoriaId") Long categoriaId,
+    HttpSession session
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -131,9 +131,9 @@ public class PartidaController {
     }
 
     boolean todosVotaron = servicioPartida.registrarVotoCategoria(
-            partidaId,
-            usuarioId,
-            categoriaId
+      partidaId,
+      usuarioId,
+      categoriaId
     );
 
     if (todosVotaron) {
@@ -145,8 +145,8 @@ public class PartidaController {
 
   @RequestMapping(value = "/partida/{id}/resultado-votacion", method = RequestMethod.POST)
   public ModelAndView obtenerResultadoVotacion(
-          @PathVariable("id") Long partidaId,
-          HttpSession session
+    @PathVariable("id") Long partidaId,
+    HttpSession session
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -187,9 +187,9 @@ public class PartidaController {
     Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
 
     if (
-            partida == null ||
-                    partida.obtenerRondaActual() == null ||
-                    partida.obtenerRondaActual().getPregunta() == null
+      partida == null ||
+      partida.obtenerRondaActual() == null ||
+      partida.obtenerRondaActual().getPregunta() == null
     ) {
       return new ModelAndView("redirect:/salas");
     }
@@ -207,10 +207,10 @@ public class PartidaController {
 
   @RequestMapping(value = "/partida/{id}/responder", method = RequestMethod.POST)
   public String responder(
-          @PathVariable("id") Long partidaId,
-          @RequestParam("opcionId") Long opcionId,
-          HttpSession session,
-          RedirectAttributes redirectAttributes
+    @PathVariable("id") Long partidaId,
+    @RequestParam("opcionId") Long opcionId,
+    HttpSession session,
+    RedirectAttributes redirectAttributes
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -264,9 +264,9 @@ public class PartidaController {
   }
 
   private void agregarResultadoRespuesta(
-          RedirectAttributes redirectAttributes,
-          boolean esCorrecta,
-          String textoCorrecto
+    RedirectAttributes redirectAttributes,
+    boolean esCorrecta,
+    String textoCorrecto
   ) {
     redirectAttributes.addFlashAttribute("esCorrecta", esCorrecta);
     redirectAttributes.addFlashAttribute("textoCorrecto", textoCorrecto);
