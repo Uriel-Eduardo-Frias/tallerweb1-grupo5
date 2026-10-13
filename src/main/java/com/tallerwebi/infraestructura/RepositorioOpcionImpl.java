@@ -1,7 +1,7 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.Opcion;
-import com.tallerwebi.dominio.RepositorioOpcion;
+import com.tallerwebi.dominio.modelo.Opcion;
+import com.tallerwebi.dominio.repositorio.RepositorioOpcion;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;

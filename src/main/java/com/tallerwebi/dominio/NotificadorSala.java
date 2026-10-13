@@ -2,6 +2,9 @@ package com.tallerwebi.dominio;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.tallerwebi.dominio.modelo.Sala;
+import com.tallerwebi.dominio.modelo.SalaJugador;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 

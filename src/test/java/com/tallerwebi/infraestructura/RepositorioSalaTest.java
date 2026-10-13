@@ -3,7 +3,12 @@ package com.tallerwebi.infraestructura;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import com.tallerwebi.dominio.*;
+import com.tallerwebi.dominio.enumeration.EstadoJugador;
+import com.tallerwebi.dominio.enumeration.EstadoSala;
+import com.tallerwebi.dominio.enumeration.ModoJuego;
+import com.tallerwebi.dominio.modelo.Sala;
+import com.tallerwebi.dominio.modelo.SalaJugador;
+import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;

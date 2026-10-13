@@ -42,7 +42,7 @@ public class PartidaControllerTest {
     Usuario usuario = givenUsuarioEnSesion(1L);
     Partida partida = new Partida(
       new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.EstadoPartida.EN_CURSO
+      com.tallerwebi.dominio.enumeration.EstadoPartida.EN_CURSO
     );
     partida.setId(10L);
 
@@ -75,7 +75,7 @@ public class PartidaControllerTest {
     Usuario usuario = givenUsuarioEnSesion(1L);
     Partida partida = new Partida(
       new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.EstadoPartida.FINALIZADA
+      com.tallerwebi.dominio.enumeration.EstadoPartida.FINALIZADA
     );
 
     when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);
@@ -107,7 +107,7 @@ public class PartidaControllerTest {
     Usuario usuario = givenUsuarioEnSesion(1L);
     Partida partida = new Partida(
       new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.EstadoPartida.EN_CURSO
+      com.tallerwebi.dominio.enumeration.EstadoPartida.EN_CURSO
     );
 
     when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);

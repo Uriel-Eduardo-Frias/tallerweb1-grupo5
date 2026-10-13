@@ -1,9 +1,9 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.Categoria;
-import com.tallerwebi.dominio.Opcion;
-import com.tallerwebi.dominio.Pregunta;
-import com.tallerwebi.dominio.RepositorioPartidaPregunta;
+import com.tallerwebi.dominio.modelo.Categoria;
+import com.tallerwebi.dominio.modelo.Opcion;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.repositorio.RepositorioPartidaPregunta;
 import java.util.List;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;

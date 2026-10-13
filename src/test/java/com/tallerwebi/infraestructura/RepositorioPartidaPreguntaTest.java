@@ -3,10 +3,10 @@ package com.tallerwebi.infraestructura;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import com.tallerwebi.dominio.Categoria;
-import com.tallerwebi.dominio.Opcion;
-import com.tallerwebi.dominio.Pregunta;
-import com.tallerwebi.dominio.RepositorioPartidaPregunta;
+import com.tallerwebi.dominio.modelo.Categoria;
+import com.tallerwebi.dominio.modelo.Opcion;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.repositorio.RepositorioPartidaPregunta;
 import com.tallerwebi.integracion.config.HibernateTestConfig;
 import com.tallerwebi.integracion.config.SpringWebTestConfig;
 import java.util.List;

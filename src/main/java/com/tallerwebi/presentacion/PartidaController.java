@@ -1,11 +1,14 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.NotificadorSala;
+import com.tallerwebi.dominio.modelo.*;
+import com.tallerwebi.dominio.servicio.ServicioPartida;
+import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
+import com.tallerwebi.dominio.servicio.ServicioRespuestaJugador;
+import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

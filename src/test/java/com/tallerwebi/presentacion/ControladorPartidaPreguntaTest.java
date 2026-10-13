@@ -4,9 +4,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.Categoria;
-import com.tallerwebi.dominio.Pregunta;
-import com.tallerwebi.dominio.ServicioPartidaPregunta;
+import com.tallerwebi.dominio.modelo.Categoria;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;

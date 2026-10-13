@@ -1,7 +1,13 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.*;
 import java.util.List;
+
+import com.tallerwebi.dominio.enumeration.TipoComodin;
+import com.tallerwebi.dominio.modelo.Comodin;
+import com.tallerwebi.dominio.modelo.Partida;
+import com.tallerwebi.dominio.modelo.PartidaJugador;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;

@@ -1,7 +1,7 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.PartidaJugador;
-import com.tallerwebi.dominio.RepositorioPartidaJugador;
+import com.tallerwebi.dominio.modelo.PartidaJugador;
+import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
