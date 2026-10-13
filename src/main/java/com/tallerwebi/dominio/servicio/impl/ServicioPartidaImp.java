@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.servicio.impl;
 
+<<<<<<< HEAD:src/main/java/com/tallerwebi/dominio/servicio/impl/ServicioPartidaImp.java
 import com.tallerwebi.dominio.enumeration.EstadoJugador;
 import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
@@ -11,6 +12,9 @@ import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.servicio.ServicioPartida;
 import com.tallerwebi.dominio.servicio.ServicioSala;
 import com.tallerwebi.dominio.servicio.ServicioVotacionCategoria;
+=======
+import java.time.LocalDateTime;
+>>>>>>> 3455d42 (se añaden nuevos cambios):src/main/java/com/tallerwebi/dominio/ServicioPartidaImp.java
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,17 +27,23 @@ public class ServicioPartidaImp implements ServicioPartida {
   private final RepositorioPartida repositorioPartida;
   private final ServicioVotacionCategoria servicioVotacionCategoria;
   private final RepositorioPartidaJugador repositorioPartidaJugador;
+  private final RepositorioRespuestaJugador repositorioRespuestaJugador;
+  private final NotificadorSala notificadorSala;
 
   public ServicioPartidaImp(
     ServicioSala servicioSala,
     RepositorioPartida repositorioPartida,
     ServicioVotacionCategoria servicioVotacionCategoria,
-    RepositorioPartidaJugador repositorioPartidaJugador
+    RepositorioPartidaJugador repositorioPartidaJugador,
+    RepositorioRespuestaJugador repositorioRespuestaJugador,
+    NotificadorSala notificadorSala
   ) {
     this.servicioSala = servicioSala;
     this.repositorioPartida = repositorioPartida;
     this.servicioVotacionCategoria = servicioVotacionCategoria;
     this.repositorioPartidaJugador = repositorioPartidaJugador;
+    this.repositorioRespuestaJugador = repositorioRespuestaJugador;
+    this.notificadorSala = notificadorSala;
   }
 
   private void crearJugadoresDePartida(Partida partida, Sala sala) {
@@ -44,6 +54,118 @@ public class ServicioPartidaImp implements ServicioPartida {
 
       repositorioPartidaJugador.guardar(jugadorPartida);
     }
+  }
+
+  @Override
+  public boolean finalizarRondaSiTodosRespondieron(Long partidaId) {
+    Partida partida = buscarPartidaValida(partidaId);
+
+    PartidaRonda ronda = obtenerRondaActiva(partida);
+
+    if (ronda.getEstado() != EstadoRonda.PREGUNTA_EN_CURSO) {
+      return false;
+    }
+
+    List<PartidaJugador> jugadores = repositorioPartidaJugador.obtenerPorPartida(partidaId);
+
+    if (!todosRespondieron(ronda, jugadores)) {
+      return false;
+    }
+
+    ronda.setEstado(EstadoRonda.FINALIZADA);
+
+    if (esUltimaRonda(partida)) {
+      finalizarPartida(partida);
+      return true;
+    }
+
+    avanzarARondaSiguiente(partida);
+
+    return true;
+  }
+
+  private Partida buscarPartidaValida(Long partidaId) {
+    Partida partida = buscarPartidaPorId(partidaId);
+
+    if (partida == null) {
+      throw new IllegalArgumentException("La partida no existe.");
+    }
+
+    return partida;
+  }
+
+  private PartidaRonda obtenerRondaActiva(Partida partida) {
+    PartidaRonda ronda = partida.obtenerRondaActual();
+
+    if (ronda == null || ronda.getPregunta() == null) {
+      throw new IllegalStateException("La partida no tiene una pregunta activa.");
+    }
+
+    return ronda;
+  }
+
+  private boolean todosRespondieron(PartidaRonda ronda, List<PartidaJugador> jugadores) {
+    if (jugadores.isEmpty()) {
+      return false;
+    }
+
+    Long preguntaId = ronda.getPregunta().getIdentificador();
+
+    for (PartidaJugador jugador : jugadores) {
+      boolean respondio = repositorioRespuestaJugador.existeRespuesta(preguntaId, jugador.getId());
+
+      if (!respondio) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private boolean esUltimaRonda(Partida partida) {
+    return partida.getRondaActual() >= partida.getTotalRondas();
+  }
+
+  private void finalizarPartida(Partida partida) {
+    partida.setEstado(EstadoPartida.FINALIZADA);
+    partida.setFechaFin(LocalDateTime.now());
+
+    notificadorSala.rondaActualizada(
+      partida.getSala().getCodigo(),
+      partida.getId(),
+      "PARTIDA_FINALIZADA"
+    );
+  }
+
+  private void avanzarARondaSiguiente(Partida partida) {
+    int numeroSiguiente = partida.getRondaActual() + 1;
+
+    PartidaRonda siguiente = new PartidaRonda(partida, numeroSiguiente);
+    siguiente.setEstado(EstadoRonda.VOTACION_CATEGORIA);
+
+    partida.getRondas().add(siguiente);
+    partida.setRondaActual(numeroSiguiente);
+
+    reiniciarVotacionCategoria(partida);
+
+    partida.setEstado(EstadoPartida.VOTACION_CATEGORIA);
+
+    notificadorSala.rondaActualizada(
+      partida.getSala().getCodigo(),
+      partida.getId(),
+      "NUEVA_VOTACION_CATEGORIA"
+    );
+  }
+
+  private void reiniciarVotacionCategoria(Partida partida) {
+    VotacionCategoria votacion = partida.getVotacionCategoria();
+
+    if (votacion == null) {
+      partida.iniciarVotacionCategoria();
+      return;
+    }
+
+    votacion.reiniciar();
   }
 
   // INICIO Y FINALIZACIÓN DE PARTIDAS

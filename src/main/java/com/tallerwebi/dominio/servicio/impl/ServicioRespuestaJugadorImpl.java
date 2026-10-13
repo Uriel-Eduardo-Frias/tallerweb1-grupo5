@@ -43,6 +43,15 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
     Opcion opcion = obtenerOpcionValida(opcionId, pregunta);
     PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
 
+    boolean yaRespondio = repositorioRespuestaJugador.existeRespuesta(
+      pregunta.getIdentificador(),
+      jugador.getId()
+    );
+
+    if (yaRespondio) {
+      throw new IllegalStateException("Ya respondiste esta pregunta.");
+    }
+
     boolean esCorrecta = opcion.getEsCorrecta();
 
     RespuestaJugador respuesta = new RespuestaJugador(
@@ -54,6 +63,15 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
     );
 
     repositorioRespuestaJugador.guardar(respuesta);
+
+    if (esCorrecta) {
+      servicioPartida.registrarAcierto(jugador);
+      servicioPartida.sumarPuntaje(jugador, 100);
+    } else {
+      servicioPartida.registrarFallo(jugador);
+    }
+
+    servicioPartida.finalizarRondaSiTodosRespondieron(partidaId);
 
     return esCorrecta;
   }

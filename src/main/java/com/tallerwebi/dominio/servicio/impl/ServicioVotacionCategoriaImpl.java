@@ -52,18 +52,19 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
 
     int cantidadJugadores = partida.getSala().getJugadores().size();
 
-    return votacion.todosVotaron(cantidadJugadores);
+    boolean todosVotaron = votacion.todosVotaron(cantidadJugadores);
+
+    if (todosVotaron) {
+      finalizarVotacion(partida);
+    }
+
+    return todosVotaron;
   }
 
-  @Override
-  public void finalizarVotacionCategoria(Long partidaId, Long usuarioId) {
-    Partida partida = buscarPartidaPorId(partidaId);
-
-    validarEsHost(partida, usuarioId);
-    validarVotacionAbierta(partida);
-
+  private void finalizarVotacion(Partida partida) {
     VotacionCategoria votacion = partida.getVotacionCategoria();
 
+    validarVotacionAbierta(partida);
     validarQueTodosHayanVotado(partida, votacion);
 
     Categoria categoriaGanadora = obtenerCategoriaGanadora(votacion);
@@ -75,6 +76,15 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
     actualizarRonda(ronda, pregunta, categoriaGanadora, votacion);
 
     notificarVotacionFinalizada(partida);
+  }
+
+  @Override
+  public void finalizarVotacionCategoria(Long partidaId, Long usuarioId) {
+    Partida partida = buscarPartidaPorId(partidaId);
+
+    validarEsHost(partida, usuarioId);
+
+    finalizarVotacion(partida);
   }
 
   private Partida buscarPartidaPorId(Long partidaId) {

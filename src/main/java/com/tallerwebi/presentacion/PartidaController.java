@@ -23,6 +23,8 @@ public class PartidaController {
   private static final String ID_USUARIO = "ID_USUARIO";
   private static final String REDIRECT_LOGIN = "redirect:/login";
   private static final String REDIRECT_PARTIDA = "redirect:/partida/";
+  private static final String SUFIJO_PREGUNTA = "/pregunta";
+  private static final String SUFIJO_VOTACION_CATEGORIA = "/votacion-categoria";
 
   private final ServicioPartida servicioPartida;
   private final ServicioUsuario servicioUsuario;
@@ -69,7 +71,7 @@ public class PartidaController {
 
       notificadorSala.partidaIniciada(codigoSala, partida.getId());
 
-      return new ModelAndView(REDIRECT_PARTIDA + partida.getId() + "/votacion-categoria");
+      return new ModelAndView(REDIRECT_PARTIDA + partida.getId() + SUFIJO_VOTACION_CATEGORIA);
     } catch (IllegalStateException e) {
       redirectAttributes.addFlashAttribute("error", e.getMessage());
 
@@ -133,9 +135,17 @@ public class PartidaController {
       return new ModelAndView(REDIRECT_LOGIN);
     }
 
-    servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId);
+    boolean todosVotaron = servicioPartida.registrarVotoCategoria(
+      partidaId,
+      usuarioId,
+      categoriaId
+    );
 
-    return new ModelAndView(REDIRECT_PARTIDA + partidaId + "/votacion-categoria");
+    if (todosVotaron) {
+      return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA);
+    }
+
+    return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_VOTACION_CATEGORIA);
   }
 
   @PostMapping("/partida/{id}/resultado-votacion")
@@ -151,7 +161,7 @@ public class PartidaController {
 
     servicioPartida.finalizarVotacionCategoria(partidaId, usuarioId);
 
-    return new ModelAndView(REDIRECT_PARTIDA + partidaId + "/pregunta");
+    return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA);
   }
 
   // ESTADO DEL JUGADOR
@@ -219,29 +229,81 @@ public class PartidaController {
       return REDIRECT_LOGIN;
     }
 
-    boolean esCorrecta = servicioRespuestaJugador.registrarRespuesta(
-      partidaId,
-      usuarioId,
-      opcionId
-    );
-
     Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
-    Pregunta pregunta = partida.obtenerRondaActual().getPregunta();
+    Pregunta pregunta = obtenerPreguntaActiva(partida);
+    String textoCorrecto = obtenerTextoCorrecto(pregunta);
 
-    String textoCorrecto = "";
+    boolean esCorrecta;
 
+    try {
+      esCorrecta = servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId);
+    } catch (IllegalStateException e) {
+      if (!"Ya respondiste esta pregunta.".equals(e.getMessage())) {
+        throw e;
+      }
+
+      return manejarRespuestaDuplicada(partidaId, redirectAttributes);
+    }
+
+    agregarResultadoRespuesta(redirectAttributes, esCorrecta, textoCorrecto);
+
+    return obtenerRedireccionPartida(partidaId);
+  }
+
+  private Pregunta obtenerPreguntaActiva(Partida partida) {
+    if (partida == null) {
+      throw new IllegalArgumentException("La partida no existe.");
+    }
+
+    PartidaRonda ronda = partida.obtenerRondaActual();
+
+    if (ronda == null || ronda.getPregunta() == null) {
+      throw new IllegalStateException("La partida no tiene una pregunta activa.");
+    }
+
+    return ronda.getPregunta();
+  }
+
+  private String obtenerTextoCorrecto(Pregunta pregunta) {
     for (Opcion opcion : pregunta.getOpciones()) {
-      if (opcion.getEsCorrecta()) {
-        textoCorrecto = opcion.getTexto();
-        break;
+      if (Boolean.TRUE.equals(opcion.getEsCorrecta())) {
+        return opcion.getTexto();
       }
     }
 
+    return "";
+  }
+
+  private void agregarResultadoRespuesta(
+    RedirectAttributes redirectAttributes,
+    boolean esCorrecta,
+    String textoCorrecto
+  ) {
     redirectAttributes.addFlashAttribute("esCorrecta", esCorrecta);
     redirectAttributes.addFlashAttribute("textoCorrecto", textoCorrecto);
     redirectAttributes.addFlashAttribute("mensaje", "Tu respuesta fue registrada.");
+  }
 
-    return REDIRECT_PARTIDA + partidaId + "/pregunta";
+  private String manejarRespuestaDuplicada(Long partidaId, RedirectAttributes redirectAttributes) {
+    redirectAttributes.addFlashAttribute("respuestaYaRegistrada", true);
+    redirectAttributes.addFlashAttribute("mensaje", "Tu respuesta ya fue registrada.");
+
+    return obtenerRedireccionPartida(partidaId);
+  }
+
+  private String obtenerRedireccionPartida(Long partidaId) {
+    Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
+
+    if (partida.getEstado() == EstadoPartida.FINALIZADA) {
+      // Temporal: reemplazar por la ruta de resultados cuando exista.
+      return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
+    }
+
+    if (partida.getEstado() == EstadoPartida.VOTACION_CATEGORIA) {
+      return REDIRECT_PARTIDA + partidaId + SUFIJO_VOTACION_CATEGORIA;
+    }
+
+    return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
   }
 
   // OBTENER USUARIO DE LA SESIÓN

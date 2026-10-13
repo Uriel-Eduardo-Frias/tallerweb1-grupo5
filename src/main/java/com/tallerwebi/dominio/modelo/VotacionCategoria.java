@@ -71,4 +71,10 @@ public class VotacionCategoria {
   public boolean todosVotaron(int cantidadJugadores) {
     return cantidadJugadores > 0 && votosCategoria.size() >= cantidadJugadores;
   }
+
+  @SuppressWarnings("PMD.NullAssignment")
+  public void reiniciar() {
+    votosCategoria.clear();
+    categoriaElegida = null;
+  }
 }

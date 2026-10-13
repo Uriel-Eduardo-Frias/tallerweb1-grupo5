@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -23,10 +24,39 @@
             <span th:text="${partida.totalRondas}">5</span>
         </h2>
 
+        <!-- Resultado de la respuesta anterior -->
+        <div th:if="${esCorrecta != null}" class="mb-4">
+
+            <h4 th:if="${esCorrecta}"
+                class="text-success fw-bold">
+                ¡Respuesta correcta!
+            </h4>
+
+            <h4 th:unless="${esCorrecta}"
+                class="text-danger fw-bold">
+                ¡Respuesta incorrecta!
+            </h4>
+
+            <p class="mt-2">
+                La respuesta correcta era:
+                <strong th:text="${textoCorrecto}">
+                    Respuesta correcta
+                </strong>
+            </p>
+
+            <p th:if="${mensaje != null}"
+               class="text-muted"
+               th:text="${mensaje}">
+            </p>
+
+            <hr>
+        </div>
+
         <h3 class="mb-3">Elegí una categoría</h3>
 
         <p class="text-muted">
             Cada jugador puede votar una sola vez.
+            Cuando todos hayan votado, comenzará la pregunta.
         </p>
 
         <!-- Registrar un voto -->
@@ -45,22 +75,14 @@
 
         </form>
 
-        <hr class="my-4">
-
-        <!-- Finalizar la votación -->
-        <form th:action="@{/partida/{id}/resultado-votacion(id=${partida.id})}"
-              method="POST">
-
-            <button type="submit" class="btn btn-success w-100">
-                Obtener categoría ganadora
-            </button>
-
-        </form>
+        <p id="estadoConexion" class="text-muted small mt-3">
+            Conectando con la partida...
+        </p>
 
     </div>
 </div>
 
-<!-- WebSocket: avisar a los jugadores que terminó la votación -->
+<!-- WebSocket -->
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
 
 <script th:inline="javascript">
@@ -70,22 +92,51 @@
     const urlPregunta =
         /*[[@{/partida/{id}/pregunta(id=${partida.id})}]]*/ "";
 
+    const urlVotacion =
+        /*[[@{/partida/{id}/votacion-categoria(id=${partida.id})}]]*/ "";
+
+    const estadoConexion = document.getElementById("estadoConexion");
+
     const cliente = new StompJs.Client({
         brokerURL: "ws://localhost:8080/spring/ws",
         reconnectDelay: 3000
     });
 
     cliente.onConnect = function () {
+        estadoConexion.textContent = "Conectado a la partida.";
+
         cliente.subscribe("/topic/salas/" + codigoSala, function (mensaje) {
             const evento = JSON.parse(mensaje.body);
 
-            if (
-                evento.tipo === "VOTACION_CATEGORIA_FINALIZADA" &&
-                String(evento.partidaId) === String(partidaId)
-            ) {
+            // Ignorar eventos de otras partidas.
+            if (String(evento.partidaId) !== String(partidaId)) {
+                return;
+            }
+
+            if (evento.tipo === "VOTACION_CATEGORIA_FINALIZADA") {
                 window.location.href = urlPregunta;
+                return;
+            }
+
+            if (evento.tipo === "NUEVA_VOTACION_CATEGORIA") {
+                window.location.href = urlVotacion;
+                return;
+            }
+
+            if (evento.tipo === "PARTIDA_FINALIZADA") {
+                estadoConexion.textContent = "¡La partida terminó!";
             }
         });
+    };
+
+    cliente.onStompError = function () {
+        estadoConexion.textContent =
+            "Error de comunicación con la partida.";
+    };
+
+    cliente.onWebSocketClose = function () {
+        estadoConexion.textContent =
+            "Conexión interrumpida. Intentando reconectar...";
     };
 
     cliente.activate();

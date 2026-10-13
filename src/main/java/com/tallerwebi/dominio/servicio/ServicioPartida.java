@@ -23,4 +23,5 @@ public interface ServicioPartida {
   boolean consumirComodin(PartidaJugadorComodin comodinJugador);
   void finalizarVotacionCategoria(Long partidaId, Long usuarioId);
   boolean registrarVotoCategoria(Long partidaId, Long usuarioId, Long categoriaId);
+  boolean finalizarRondaSiTodosRespondieron(Long partidaId);
 }

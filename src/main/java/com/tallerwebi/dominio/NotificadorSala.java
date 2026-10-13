@@ -61,4 +61,12 @@ public class NotificadorSala {
 
     messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
   }
+
+  public void rondaActualizada(String codigoSala, Long partidaId, String tipoEvento) {
+    EventoSala evento = new EventoSala(tipoEvento, codigoSala, new ArrayList<>());
+
+    evento.setPartidaId(partidaId);
+
+    messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
+  }
 }
