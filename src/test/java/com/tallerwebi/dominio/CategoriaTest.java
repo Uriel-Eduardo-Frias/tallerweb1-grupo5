@@ -1,35 +1,36 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.dominio.modelo.Categoria;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.tallerwebi.dominio.modelo.Categoria;
+import org.junit.jupiter.api.Test;
+
 public class CategoriaTest {
-    @Test
-    void dadoQueCreoUnaCategoriaCuandoIndicoNombreEntoncesLoAsigna() {
-        Categoria categoria = new Categoria("Geografía");
 
-        assertEquals("Geografía", categoria.getNombre());
-    }
+  @Test
+  void dadoQueCreoUnaCategoriaCuandoIndicoNombreEntoncesLoAsigna() {
+    Categoria categoria = new Categoria("Geografía");
 
-    @Test
-    void dadoQueCreoUnaCategoriaVaciaCuandoConsultoSusDatosEntoncesDevuelveValoresIniciales() {
-        Categoria categoria = new Categoria();
+    assertEquals("Geografía", categoria.getNombre());
+  }
 
-        assertNull(categoria.getId());
-        assertNull(categoria.getNombre());
-    }
+  @Test
+  void dadoQueCreoUnaCategoriaVaciaCuandoConsultoSusDatosEntoncesDevuelveValoresIniciales() {
+    Categoria categoria = new Categoria();
 
-    @Test
-    void dadoQueTengoUnaCategoriaCuandoModificoSusDatosEntoncesDevuelveLosValoresActualizados() {
-        Categoria categoria = new Categoria();
+    assertNull(categoria.getId());
+    assertNull(categoria.getNombre());
+  }
 
-        categoria.setId(4L);
-        categoria.setNombre("Deportes");
+  @Test
+  void dadoQueTengoUnaCategoriaCuandoModificoSusDatosEntoncesDevuelveLosValoresActualizados() {
+    Categoria categoria = new Categoria();
 
-        assertEquals(4L, categoria.getId());
-        assertEquals("Deportes", categoria.getNombre());
-    }
+    categoria.setId(4L);
+    categoria.setNombre("Deportes");
+
+    assertEquals(4L, categoria.getId());
+    assertEquals("Deportes", categoria.getNombre());
+  }
 }

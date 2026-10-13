@@ -12,14 +12,13 @@ import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
 import com.tallerwebi.dominio.servicio.ServicioRespuestaJugador;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpSession;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.Collections;
-import java.util.List;
 
 public class PartidaControllerTest {
 
@@ -38,13 +37,14 @@ public class PartidaControllerTest {
     servicioPartidaPregunta = mock(ServicioPartidaPregunta.class);
     servicioRespuestaJugador = mock(ServicioRespuestaJugador.class);
 
-    controlador = new PartidaController(
-            servicioPartida,
-            servicioUsuario,
-            notificadorSala,
-            servicioPartidaPregunta,
-            servicioRespuestaJugador
-    );
+    controlador =
+      new PartidaController(
+        servicioPartida,
+        servicioUsuario,
+        notificadorSala,
+        servicioPartidaPregunta,
+        servicioRespuestaJugador
+      );
   }
 
   @Test
@@ -55,7 +55,11 @@ public class PartidaControllerTest {
     RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
     // when
-    ModelAndView resultado = controlador.iniciarPartida(codigoSala, sessionInvalida, redirectAttributes);
+    ModelAndView resultado = controlador.iniciarPartida(
+      codigoSala,
+      sessionInvalida,
+      redirectAttributes
+    );
 
     // then
     assertThat(resultado.getViewName(), equalTo("redirect:/login"));
@@ -93,7 +97,8 @@ public class PartidaControllerTest {
     RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
     when(servicioUsuario.buscarUsuarioPorId(usuarioId)).thenReturn(usuario);
-    when(servicioPartida.iniciarPartida(codigoSala, usuario)).thenThrow(new IllegalStateException("Error de prueba"));
+    when(servicioPartida.iniciarPartida(codigoSala, usuario))
+      .thenThrow(new IllegalStateException("Error de prueba"));
 
     // when
     ModelAndView resultado = controlador.iniciarPartida(codigoSala, session, redirectAttributes);
@@ -150,7 +155,8 @@ public class PartidaControllerTest {
     Long categoriaId = 5L;
     HttpSession session = crearSession(usuarioId);
 
-    when(servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId)).thenReturn(false);
+    when(servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId))
+      .thenReturn(false);
 
     // when
     ModelAndView resultado = controlador.votarCategoria(partidaId, categoriaId, session);
@@ -167,7 +173,8 @@ public class PartidaControllerTest {
     Long categoriaId = 5L;
     HttpSession session = crearSession(usuarioId);
 
-    when(servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId)).thenReturn(true);
+    when(servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId))
+      .thenReturn(true);
 
     // when
     ModelAndView resultado = controlador.votarCategoria(partidaId, categoriaId, session);
@@ -254,7 +261,8 @@ public class PartidaControllerTest {
     when(opcion.getEsCorrecta()).thenReturn(true);
     when(opcion.getTexto()).thenReturn("Texto de prueba");
     when(partida.getEstado()).thenReturn(EstadoPartida.EN_CURSO);
-    when(servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId)).thenReturn(true);
+    when(servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId))
+      .thenReturn(true);
 
     // when
     String resultado = controlador.responder(partidaId, opcionId, session, redirectAttributes);
@@ -285,7 +293,7 @@ public class PartidaControllerTest {
     when(pregunta.getOpciones()).thenReturn(List.of(opcion));
     when(partida.getEstado()).thenReturn(EstadoPartida.EN_CURSO);
     when(servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId))
-            .thenThrow(new IllegalStateException("Ya respondiste esta pregunta."));
+      .thenThrow(new IllegalStateException("Ya respondiste esta pregunta."));
 
     // when
     String resultado = controlador.responder(partidaId, opcionId, session, redirectAttributes);
