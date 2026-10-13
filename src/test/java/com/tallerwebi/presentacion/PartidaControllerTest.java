@@ -4,171 +4,306 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.*;
+import com.tallerwebi.dominio.NotificadorSala;
+import com.tallerwebi.dominio.enumeration.EstadoPartida;
+import com.tallerwebi.dominio.modelo.*;
+import com.tallerwebi.dominio.servicio.ServicioPartida;
+import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
+import com.tallerwebi.dominio.servicio.ServicioRespuestaJugador;
+import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.servlet.ModelAndView;
-/*
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Collections;
+import java.util.List;
+
 public class PartidaControllerTest {
 
   private ServicioPartida servicioPartida;
   private ServicioUsuario servicioUsuario;
+  private NotificadorSala notificadorSala;
+  private ServicioPartidaPregunta servicioPartidaPregunta;
+  private ServicioRespuestaJugador servicioRespuestaJugador;
   private PartidaController controlador;
 
   @BeforeEach
   void inicializar() {
     servicioPartida = mock(ServicioPartida.class);
     servicioUsuario = mock(ServicioUsuario.class);
-    controlador = new PartidaController(servicioPartida, servicioUsuario);
-  }
+    notificadorSala = mock(NotificadorSala.class);
+    servicioPartidaPregunta = mock(ServicioPartidaPregunta.class);
+    servicioRespuestaJugador = mock(ServicioRespuestaJugador.class);
 
-  @Test
-  void deberiaRedirigirAlLoginSiNoHaySesionAlIniciar() {
-    // given
-    HttpSession session = givenSesionSinUsuario();
-
-    // when
-    ModelAndView resultado = controlador.iniciarPartida("TRV-1001", session);
-
-    // then
-    thenLaVistaEs(resultado, "redirect:/login");
-  }
-
-  @Test
-  void deberiaIniciarPartidaYRedirigirALaRonda() {
-    // given
-    Usuario usuario = givenUsuarioEnSesion(1L);
-    Partida partida = new Partida(
-      new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.enumeration.EstadoPartida.EN_CURSO
+    controlador = new PartidaController(
+            servicioPartida,
+            servicioUsuario,
+            notificadorSala,
+            servicioPartidaPregunta,
+            servicioRespuestaJugador
     );
-    partida.setId(10L);
-
-    when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);
-    when(servicioPartida.iniciarPartida("TRV-1001", usuario)).thenReturn(partida);
-
-    // when
-    ModelAndView resultado = controlador.iniciarPartida("TRV-1001", sessionDe(usuario));
-
-    // then
-    thenLaVistaEs(resultado, "redirect:/partida/10/ronda");
-    verify(servicioPartida).iniciarPartida("TRV-1001", usuario);
   }
 
   @Test
-  void deberiaRedirigirAlLoginSiNoHaySesionAlFinalizar() {
+  void deberiaRedirigirAlLoginSiNoHaySesionAlIniciarPartida() {
     // given
-    HttpSession session = givenSesionSinUsuario();
+    String codigoSala = "TRV-1001";
+    HttpSession sessionInvalida = new MockHttpSession();
+    RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
     // when
-    ModelAndView resultado = controlador.finalizarPartida("TRV-1001", session);
+    ModelAndView resultado = controlador.iniciarPartida(codigoSala, sessionInvalida, redirectAttributes);
 
     // then
-    thenLaVistaEs(resultado, "redirect:/login");
+    assertThat(resultado.getViewName(), equalTo("redirect:/login"));
+  }
+
+  @Test
+  void deberiaIniciarPartidaYRedirigirAVotacionCategoria() {
+    // given
+    Long usuarioId = 1L;
+    String codigoSala = "TRV-1001";
+    Usuario usuario = crearUsuario(usuarioId);
+    Partida partida = mock(Partida.class);
+    HttpSession session = crearSession(usuarioId);
+    RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+    when(servicioUsuario.buscarUsuarioPorId(usuarioId)).thenReturn(usuario);
+    when(partida.getId()).thenReturn(10L);
+    when(servicioPartida.iniciarPartida(codigoSala, usuario)).thenReturn(partida);
+
+    // when
+    ModelAndView resultado = controlador.iniciarPartida(codigoSala, session, redirectAttributes);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/partida/10/votacion-categoria"));
+    verify(notificadorSala).partidaIniciada(codigoSala, 10L);
+  }
+
+  @Test
+  void deberiaRedirigirASalaSiFallaIniciarPartida() {
+    // given
+    Long usuarioId = 1L;
+    String codigoSala = "TRV-1001";
+    Usuario usuario = crearUsuario(usuarioId);
+    HttpSession session = crearSession(usuarioId);
+    RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+    when(servicioUsuario.buscarUsuarioPorId(usuarioId)).thenReturn(usuario);
+    when(servicioPartida.iniciarPartida(codigoSala, usuario)).thenThrow(new IllegalStateException("Error de prueba"));
+
+    // when
+    ModelAndView resultado = controlador.iniciarPartida(codigoSala, session, redirectAttributes);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/salas/TRV-1001"));
+    verify(redirectAttributes).addFlashAttribute("error", "Error de prueba");
   }
 
   @Test
   void deberiaFinalizarPartidaYMostrarResultado() {
     // given
-    Usuario usuario = givenUsuarioEnSesion(1L);
-    Partida partida = new Partida(
-      new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.enumeration.EstadoPartida.FINALIZADA
-    );
+    Long usuarioId = 1L;
+    String codigoSala = "TRV-1001";
+    Usuario usuario = crearUsuario(usuarioId);
+    Partida partida = mock(Partida.class);
+    HttpSession session = crearSession(usuarioId);
 
-    when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);
-    when(servicioPartida.finalizarPartida("TRV-1001", usuario)).thenReturn(partida);
-
-    // when
-    ModelAndView resultado = controlador.finalizarPartida("TRV-1001", sessionDe(usuario));
-
-    // then
-    thenLaVistaEs(resultado, "resultado");
-    verify(servicioPartida).finalizarPartida("TRV-1001", usuario);
-  }
-
-  @Test
-  void deberiaRedirigirAlLoginSiNoHaySesionAlMostrarRonda() {
-    // given
-    HttpSession session = givenSesionSinUsuario();
+    when(servicioUsuario.buscarUsuarioPorId(usuarioId)).thenReturn(usuario);
+    when(servicioPartida.finalizarPartida(codigoSala, usuario)).thenReturn(partida);
 
     // when
-    ModelAndView resultado = controlador.mostrarRonda(10L, session);
+    ModelAndView resultado = controlador.finalizarPartida(codigoSala, session);
 
     // then
-    thenLaVistaEs(resultado, "redirect:/login");
-  }
-
-  @Test
-  void deberiaMostrarLaRondaConElEstadoDeLosJugadores() {
-    // given
-    Usuario usuario = givenUsuarioEnSesion(1L);
-    Partida partida = new Partida(
-      new Sala("TRV-1001", "Sala de prueba", usuario),
-      com.tallerwebi.dominio.enumeration.EstadoPartida.EN_CURSO
-    );
-
-    when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);
-    when(servicioPartida.buscarPartidaPorId(10L)).thenReturn(partida);
-    when(servicioPartida.estanTodosListos(10L)).thenReturn(true);
-
-    // when
-    ModelAndView resultado = controlador.mostrarRonda(10L, sessionDe(usuario));
-
-    // then
-    thenLaVistaEs(resultado, "partida-votacion");
+    assertThat(resultado.getViewName(), equalTo("resultado"));
     assertThat(resultado.getModel().get("partida"), equalTo(partida));
-    assertThat(resultado.getModel().get("usuarioActual"), equalTo(usuario));
-    assertThat(resultado.getModel().get("todosListos"), equalTo(true));
   }
 
   @Test
-  void deberiaRedirigirAlLoginSiNoHaySesionAlMarcarListo() {
+  void deberiaMostrarVotacionCategoria() {
     // given
-    HttpSession session = givenSesionSinUsuario();
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    Partida partida = mock(Partida.class);
+    HttpSession session = crearSession(usuarioId);
+
+    when(servicioPartida.buscarPartidaPorId(partidaId)).thenReturn(partida);
+    when(servicioPartidaPregunta.obtenerCategorias()).thenReturn(Collections.emptyMap());
 
     // when
-    ModelAndView resultado = controlador.marcarListo(10L, session);
+    ModelAndView resultado = controlador.mostrarVotacionCategoria(partidaId, session);
 
     // then
-    thenLaVistaEs(resultado, "redirect:/login");
+    assertThat(resultado.getViewName(), equalTo("partida-votacion"));
+    assertThat(resultado.getModel().get("partida"), equalTo(partida));
   }
 
   @Test
-  void deberiaMarcarListoYRedirigirALaRonda() {
+  void deberiaVotarCategoriaYRedirigirAVotacionSiFaltanVotos() {
     // given
-    Usuario usuario = givenUsuarioEnSesion(1L);
-    when(servicioUsuario.buscarUsuarioPorId(1L)).thenReturn(usuario);
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    Long categoriaId = 5L;
+    HttpSession session = crearSession(usuarioId);
+
+    when(servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId)).thenReturn(false);
 
     // when
-    ModelAndView resultado = controlador.marcarListo(10L, sessionDe(usuario));
+    ModelAndView resultado = controlador.votarCategoria(partidaId, categoriaId, session);
 
     // then
-    thenLaVistaEs(resultado, "redirect:/partida/10/ronda");
-    verify(servicioPartida).marcarJugadorListo(10L, usuario);
+    assertThat(resultado.getViewName(), equalTo("redirect:/partida/10/votacion-categoria"));
   }
 
-  private HttpSession givenSesionSinUsuario() {
-    return new MockHttpSession();
+  @Test
+  void deberiaVotarCategoriaYRedirigirAPreguntaSiTodosVotaron() {
+    // given
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    Long categoriaId = 5L;
+    HttpSession session = crearSession(usuarioId);
+
+    when(servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId)).thenReturn(true);
+
+    // when
+    ModelAndView resultado = controlador.votarCategoria(partidaId, categoriaId, session);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/partida/10/pregunta"));
   }
 
-  private Usuario givenUsuarioEnSesion(Long id) {
+  @Test
+  void deberiaObtenerResultadoVotacionYRedirigirAPregunta() {
+    // given
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    HttpSession session = crearSession(usuarioId);
+
+    // when
+    ModelAndView resultado = controlador.obtenerResultadoVotacion(partidaId, session);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/partida/10/pregunta"));
+    verify(servicioPartida).finalizarVotacionCategoria(partidaId, usuarioId);
+  }
+
+  @Test
+  void deberiaMarcarListoYRedirigirARonda() {
+    // given
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    Usuario usuario = crearUsuario(usuarioId);
+    HttpSession session = crearSession(usuarioId);
+
+    when(servicioUsuario.buscarUsuarioPorId(usuarioId)).thenReturn(usuario);
+
+    // when
+    ModelAndView resultado = controlador.marcarListo(partidaId, session);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("redirect:/partida/10/ronda"));
+    verify(servicioPartida).marcarJugadorListo(partidaId, usuario);
+  }
+
+  @Test
+  void deberiaMostrarPregunta() {
+    // given
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    Partida partida = mock(Partida.class);
+    PartidaRonda ronda = mock(PartidaRonda.class);
+    Pregunta pregunta = mock(Pregunta.class);
+    HttpSession session = crearSession(usuarioId);
+
+    when(servicioPartida.buscarPartidaPorId(partidaId)).thenReturn(partida);
+    when(partida.obtenerRondaActual()).thenReturn(ronda);
+    when(ronda.getPregunta()).thenReturn(pregunta);
+
+    // when
+    ModelAndView resultado = controlador.mostrarPregunta(partidaId, session);
+
+    // then
+    assertThat(resultado.getViewName(), equalTo("partida-pregunta"));
+    assertThat(resultado.getModel().get("partida"), equalTo(partida));
+    assertThat(resultado.getModel().get("ronda"), equalTo(ronda));
+    assertThat(resultado.getModel().get("pregunta"), equalTo(pregunta));
+  }
+
+  @Test
+  void deberiaResponderCorrectamente() {
+    // given
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    Long opcionId = 3L;
+    HttpSession session = crearSession(usuarioId);
+    RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+    Partida partida = mock(Partida.class);
+    PartidaRonda ronda = mock(PartidaRonda.class);
+    Pregunta pregunta = mock(Pregunta.class);
+    Opcion opcion = mock(Opcion.class);
+
+    when(servicioPartida.buscarPartidaPorId(partidaId)).thenReturn(partida);
+    when(partida.obtenerRondaActual()).thenReturn(ronda);
+    when(ronda.getPregunta()).thenReturn(pregunta);
+    when(pregunta.getOpciones()).thenReturn(List.of(opcion));
+    when(opcion.getEsCorrecta()).thenReturn(true);
+    when(opcion.getTexto()).thenReturn("Texto de prueba");
+    when(partida.getEstado()).thenReturn(EstadoPartida.EN_CURSO);
+    when(servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId)).thenReturn(true);
+
+    // when
+    String resultado = controlador.responder(partidaId, opcionId, session, redirectAttributes);
+
+    // then
+    assertThat(resultado, equalTo("redirect:/partida/10/pregunta"));
+    verify(redirectAttributes).addFlashAttribute("esCorrecta", true);
+    verify(redirectAttributes).addFlashAttribute("textoCorrecto", "Texto de prueba");
+  }
+
+  @Test
+  void deberiaManejarRespuestaDuplicada() {
+    // given
+    Long usuarioId = 1L;
+    Long partidaId = 10L;
+    Long opcionId = 3L;
+    HttpSession session = crearSession(usuarioId);
+    RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+    Partida partida = mock(Partida.class);
+    PartidaRonda ronda = mock(PartidaRonda.class);
+    Pregunta pregunta = mock(Pregunta.class);
+    Opcion opcion = mock(Opcion.class);
+
+    when(servicioPartida.buscarPartidaPorId(partidaId)).thenReturn(partida);
+    when(partida.obtenerRondaActual()).thenReturn(ronda);
+    when(ronda.getPregunta()).thenReturn(pregunta);
+    when(pregunta.getOpciones()).thenReturn(List.of(opcion));
+    when(partida.getEstado()).thenReturn(EstadoPartida.EN_CURSO);
+    when(servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId))
+            .thenThrow(new IllegalStateException("Ya respondiste esta pregunta."));
+
+    // when
+    String resultado = controlador.responder(partidaId, opcionId, session, redirectAttributes);
+
+    // then
+    assertThat(resultado, equalTo("redirect:/partida/10/pregunta"));
+    verify(redirectAttributes).addFlashAttribute("respuestaYaRegistrada", true);
+  }
+
+  private Usuario crearUsuario(Long id) {
     Usuario usuario = new Usuario();
     usuario.setId(id);
-    usuario.setUsername("Juan");
     return usuario;
   }
 
-  private HttpSession sessionDe(Usuario usuario) {
+  private HttpSession crearSession(Long usuarioId) {
     MockHttpSession session = new MockHttpSession();
-    session.setAttribute("ID_USUARIO", usuario.getId());
+    session.setAttribute("ID_USUARIO", usuarioId);
     return session;
   }
-
-  private void thenLaVistaEs(ModelAndView resultado, String vistaEsperada) {
-    assertThat(resultado.getViewName(), equalTo(vistaEsperada));
-  }
 }
-*/
