@@ -1,13 +1,8 @@
 package com.tallerwebi.infraestructura;
 
-<<<<<<< HEAD
 import com.tallerwebi.dominio.modelo.RespuestaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioRespuestaJugador;
-=======
-import com.tallerwebi.dominio.RepositorioRespuestaJugador;
-import com.tallerwebi.dominio.RespuestaJugador;
 import java.util.List;
->>>>>>> 3455d42 (se añaden nuevos cambios)
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;

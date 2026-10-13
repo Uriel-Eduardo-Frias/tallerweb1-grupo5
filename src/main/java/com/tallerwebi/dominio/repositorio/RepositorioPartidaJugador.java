@@ -1,7 +1,6 @@
 package com.tallerwebi.dominio.repositorio;
 
 import com.tallerwebi.dominio.modelo.PartidaJugador;
-
 import java.util.List;
 
 public interface RepositorioPartidaJugador {

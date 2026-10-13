@@ -1,7 +1,6 @@
 package com.tallerwebi.dominio.repositorio;
 
 import com.tallerwebi.dominio.modelo.RespuestaJugador;
-
 import java.util.List;
 
 public interface RepositorioRespuestaJugador {

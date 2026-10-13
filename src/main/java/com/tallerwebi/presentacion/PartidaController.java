@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.NotificadorSala;
+import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.modelo.*;
 import com.tallerwebi.dominio.servicio.ServicioPartida;
 import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
