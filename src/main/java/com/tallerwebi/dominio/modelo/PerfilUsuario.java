@@ -44,9 +44,11 @@ public class PerfilUsuario {
     return nivel;
   }
 
+  /*
   public void setNivel(Integer nivel) {
     this.nivel = nivel;
   }
+  */
 
   public Usuario getUsuario() {
     return usuario;
@@ -67,8 +69,9 @@ public class PerfilUsuario {
   public Integer getExperiencia() {
     return experiencia;
   }
-
+  /*
   public void setExperiencia(Integer experiencia) {
     this.experiencia = experiencia;
   }
+  */
 }

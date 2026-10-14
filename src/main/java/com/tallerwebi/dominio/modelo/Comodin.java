@@ -64,7 +64,7 @@ public class Comodin {
   public void setDescripcion(String descripcion) {
     this.descripcion = descripcion;
   }
-
+  /*
   public String getIcono() {
     return icono;
   }
@@ -72,4 +72,5 @@ public class Comodin {
   public void setIcono(String icono) {
     this.icono = icono;
   }
+  */
 }

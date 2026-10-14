@@ -85,10 +85,11 @@ public class Partida {
     return rondas;
   }
 
+  /*
   public void setRondas(List<PartidaRonda> rondas) {
     this.rondas = rondas;
   }
-
+*/
   public Integer getTotalRondas() {
     return totalRondas;
   }

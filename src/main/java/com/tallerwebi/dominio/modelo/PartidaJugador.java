@@ -122,7 +122,7 @@ public class PartidaJugador {
   public void setRachaRespuestasPartida(int rachaRespuestasPartida) {
     this.rachaRespuestasPartida = rachaRespuestasPartida;
   }
-
+  /*
   public String getEstadoJugadorPartida() {
     return estadoJugadorPartida;
   }
@@ -138,6 +138,7 @@ public class PartidaJugador {
   public void setDobleChanceRondaId(Long dobleChanceRondaId) {
     this.dobleChanceRondaId = dobleChanceRondaId;
   }
+  */
   //public List<PartidaJugadorComodin> getComodines() { return comodines; }
   //public void setComodines(List<PartidaJugadorComodin> comodines) { this.comodines = comodines; }
 }
