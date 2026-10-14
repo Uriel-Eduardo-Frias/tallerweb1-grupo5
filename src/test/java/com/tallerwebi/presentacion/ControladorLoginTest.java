@@ -22,7 +22,6 @@ public class ControladorLoginTest {
   private HttpServletRequest requestMock;
   private HttpSession sessionMock;
 
-  // Variable correcta
   private ServicioUsuario servicioUsuarioMock;
 
   @BeforeEach
@@ -33,7 +32,6 @@ public class ControladorLoginTest {
     requestMock = mock(HttpServletRequest.class);
     sessionMock = mock(HttpSession.class);
 
-    // Mockeamos el servicio correcto
     servicioUsuarioMock = mock(ServicioUsuario.class);
     controladorLogin = new ControladorLogin(servicioUsuarioMock);
   }
@@ -60,7 +58,7 @@ public class ControladorLoginTest {
     // preparacion
     Usuario usuarioEncontradoMock = mock(Usuario.class);
     when(usuarioEncontradoMock.getRol()).thenReturn("ADMIN");
-    when(usuarioEncontradoMock.getId()).thenReturn(1L); // Agregamos esto porque tu controlador lo guarda en sesión
+    when(usuarioEncontradoMock.getId()).thenReturn(1L);
 
     when(requestMock.getSession()).thenReturn(sessionMock);
     when(servicioUsuarioMock.autenticarUsuario(anyString(), anyString()))
@@ -83,7 +81,6 @@ public class ControladorLoginTest {
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
 
-    // Verificamos que llame al método registrarUsuario con los 4 parámetros
     verify(servicioUsuarioMock, times(1))
       .registrarUsuario(
         datosLoginMock.getUsername(),
@@ -96,7 +93,7 @@ public class ControladorLoginTest {
   @Test
   public void registrarmeSiUsuarioExisteDeberiaVolverAFormularioYMostrarError()
     throws UsuarioExistente {
-    // preparacion - le indicamos que simule tirar el error
+    // preparacion
     doThrow(UsuarioExistente.class)
       .when(servicioUsuarioMock)
       .registrarUsuario(anyString(), anyString(), anyString(), anyString());
@@ -104,7 +101,7 @@ public class ControladorLoginTest {
     // ejecucion
     ModelAndView modelAndView = controladorLogin.registrarme(datosLoginMock);
 
-    // validacion - comprobamos que vuelva a la vista 'registro'
+    // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("registro"));
     assertThat(
       modelAndView.getModel().get("error").toString(),
@@ -114,7 +111,6 @@ public class ControladorLoginTest {
 
   @Test
   public void errorEnRegistrarmeDeberiaVolverAFormularioYMostrarError() throws UsuarioExistente {
-    // preparacion - lanzamos un error general
     doThrow(RuntimeException.class)
       .when(servicioUsuarioMock)
       .registrarUsuario(anyString(), anyString(), anyString(), anyString());
@@ -148,6 +144,19 @@ public class ControladorLoginTest {
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("registro"));
     assertThat(modelAndView.getModel().get("datosLogin"), instanceOf(DatosLogin.class));
+  }
+
+  @Test
+  public void alHacerLogoutDeberiaInvalidarLaSesionYRedirigiraLogin() {
+    // preparacion
+    when(requestMock.getSession()).thenReturn(sessionMock);
+
+    // ejecucion
+    ModelAndView modelAndView = controladorLogin.logout(requestMock);
+
+    // validacion
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
+    verify(sessionMock, times(1)).invalidate();
   }
 }
 /*@Test

@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,16 +20,26 @@ public class ControladorBuscadorJugadoresTest {
   private ModelAndView mav;
   private String busqueda;
 
+  // 1. Agregamos las variables para simular la petición web
+  private HttpServletRequest requestMock;
+  private HttpSession sessionMock;
+
   @BeforeEach
   public void init() {
     this.servicioUsuarioMock = mock(ServicioUsuario.class);
     this.controladorBuscador = new ControladorBuscadorJugadores(servicioUsuarioMock);
+
+    // 2. Inicializamos los mocks
+    this.requestMock = mock(HttpServletRequest.class);
+    this.sessionMock = mock(HttpSession.class);
+    when(this.requestMock.getSession()).thenReturn(this.sessionMock);
   }
 
   @Test
   public void queCuandoElUsuarioElijaBuscarDevuelvaLaVistaBuscarJugadores() {
     // preparacion
     givenUnTerminoDeBusqueda("pepito");
+    givenUnUsuarioLogueado();
 
     // ejecucion
     whenElUsuarioBuscaJugadores();
@@ -44,9 +56,13 @@ public class ControladorBuscadorJugadoresTest {
       .thenReturn(new ArrayList<>());
   }
 
+  private void givenUnUsuarioLogueado() {
+    when(this.sessionMock.getAttribute("ROL")).thenReturn("USER");
+  }
+
   // when
   private void whenElUsuarioBuscaJugadores() {
-    this.mav = this.controladorBuscador.buscarJugadores(this.busqueda);
+    this.mav = this.controladorBuscador.buscarJugadores(this.busqueda, this.requestMock);
   }
 
   // then

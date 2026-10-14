@@ -11,8 +11,7 @@
             Encuentra rivales de tu nivel, busca amigos de la comunidad o examina perfiles para medir coincidencias y desafíos.
         </p>
 
-        <form th:action="@{/buscar-jugador}" method="GET" style="display: flex; gap: 0.8rem; max-width: 600px;">
-            <input type="text" name="q" class="join-form" style="flex: 1; border: 1px solid var(--border-color); padding: 0.8rem 1rem; border-radius: 10px;" placeholder="Escribe el nombre de usuario..." th:value="${terminoBusqueda}">
+        <form th:action="@{/buscar-jugadores}" method="GET" style="display: flex; gap: 0.8rem; max-width: 600px;">            <input type="text" name="q" class="join-form" style="flex: 1; border: 1px solid var(--border-color); padding: 0.8rem 1rem; border-radius: 10px;" placeholder="Escribe el nombre de usuario..." th:value="${terminoBusqueda}">
             <button type="submit" class="btn btn-primary">
                 <i class="fa-solid fa-magnifying-glass"></i> Buscar
             </button>

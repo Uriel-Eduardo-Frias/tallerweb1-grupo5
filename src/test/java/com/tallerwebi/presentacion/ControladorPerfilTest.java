@@ -58,6 +58,30 @@ public class ControladorPerfilTest {
     thenSeMuestraLaVista("redirect:/login");
   }
 
+  @Test
+  public void siElUsuarioBuscadoNoExisteDeberiaRedirigirAlBuscador() {
+    // preparacion
+    givenUnUsuarioQueNoExiste(99L);
+
+    // ejecucion
+    whenElUsuarioIntentaVerUnPerfilPublico(99L);
+
+    // validacion
+    thenSeMuestraLaVista("redirect:/buscar-jugadores");
+  }
+
+  @Test
+  public void siElUsuarioBuscadoExisteDeberiaMostrarSuPerfilPublico() {
+    // preparacion
+    givenUnUsuarioPublicoExistente(2L);
+
+    // ejecucion
+    whenElUsuarioIntentaVerUnPerfilPublico(2L);
+
+    // validacion
+    thenSeMuestraLaVista("perfil-publico");
+  }
+
   // given
   private void givenUnUsuarioLogueadoConId(Long id) {
     this.idUsuarioEnSesion = id;
@@ -73,9 +97,23 @@ public class ControladorPerfilTest {
     when(this.sessionMock.getAttribute("ID_USUARIO")).thenReturn(null);
   }
 
+  private void givenUnUsuarioQueNoExiste(Long idFalso) {
+    when(this.servicioUsuarioMock.buscarUsuarioPorId(idFalso)).thenReturn(null);
+  }
+
+  private void givenUnUsuarioPublicoExistente(Long idFalso) {
+    Usuario usuarioFalso = new Usuario();
+    usuarioFalso.setPerfil(new PerfilUsuario());
+    when(this.servicioUsuarioMock.buscarUsuarioPorId(idFalso)).thenReturn(usuarioFalso);
+  }
+
   // when
   private void whenElUsuarioIntentaVerSuPerfil() {
     this.mav = this.controladorPerfil.verMiPerfil(this.requestMock);
+  }
+
+  private void whenElUsuarioIntentaVerUnPerfilPublico(Long id) {
+    this.mav = this.controladorPerfil.verPerfilPublic(id);
   }
 
   // then

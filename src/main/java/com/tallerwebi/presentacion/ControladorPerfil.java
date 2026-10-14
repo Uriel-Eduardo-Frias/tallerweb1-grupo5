@@ -43,6 +43,10 @@ public class ControladorPerfil {
   public ModelAndView verPerfilPublic(@PathVariable("id") Long id) {
     Usuario usuarioBuscado = servicioUsuario.buscarUsuarioPorId(id);
 
+    if (usuarioBuscado == null) {
+      return new ModelAndView("redirect:/buscar-jugadores");
+    }
+
     Map<String, Object> modelo = new ModelMap();
     modelo.put("usuario", usuarioBuscado);
     modelo.put("perfil", usuarioBuscado.getPerfil());

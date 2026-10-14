@@ -27,6 +27,7 @@ import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
 import com.tallerwebi.dominio.servicio.impl.ServicioSalaIm;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -266,6 +267,151 @@ class ServicioSalaTest {
     thenSeGuardaLaSala(sala);
   }
 
+  @Test
+  public void deberiaUnirAUnUsuarioNueovExitosamente() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    Usuario ana = usuario(2L, "Ana");
+    givenUsuarioPersistido(ana);
+
+    // when
+    Sala resultado = whenUsuarioSeUne(sala.getCodigo(), ana.getId());
+
+    // then
+    thenLaCantidadDeJugadoresEs(resultado, 2);
+    thenElJugadorEstaEnLaSala(resultado, ana);
+    thenSeGuardaLaSala(resultado);
+  }
+
+  @Test
+  public void deberiaCrearseUnaSalaConUnNombrePorDefectoSiElNombreEsNulo() {
+    // given
+    Usuario host = usuario(1L, "Juan");
+    givenUsuarioPersistido(host);
+    givenCodigoDeSalaDisponible();
+
+    // when
+    Sala salaCreada = whenCrearSala(null, host);
+
+    // then
+    thenElNombreDeLaSalaEs(salaCreada, "Sala de Juan");
+    thenSeGuardaLaSala(salaCreada);
+  }
+
+  @Test
+  public void deberiaListarTodasLasSalasDisponibles() {
+    // given
+    List<Sala> salasEsperadas = givenSalasDisponibles();
+
+    // when
+    List<Sala> resultado = whenListarSalas();
+
+    // then
+    thenSeObtieneLaListaDeSalasDisponibles(resultado, salasEsperadas);
+  }
+
+  @Test
+  public void deberiaMarcarAUnUsuarioComoListo() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+
+    // when
+    Sala resultado = whenMarcarListo(sala.getCodigo(), sala.getHost().getId());
+
+    // then
+    thenELJugadorEstaListo(resultado, sala.getHost());
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlSalirSiLaSalaEsNula() {
+    // given
+    Usuario usuario = usuario(1L, "Juan");
+
+    // when
+    Throwable excepcion = whenSalirCapturandoExcepcion(null, usuario);
+
+    // then
+    thenSeLanza(excepcion, IllegalArgumentException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlSalirSiElUsuarioEsNulo() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+
+    // when
+    Throwable excepcion = whenSalirCapturandoExcepcion(sala, null);
+
+    // then
+    thenSeLanza(excepcion, IllegalArgumentException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlCambarhostSiLaSalaEsNula() {
+    // given
+    Usuario solicitante = usuario(1L, "Juan");
+    Usuario nuevoHost = usuario(2L, "Ana");
+
+    // when
+    Throwable excepcion = whenCambiarHostCapturandoExcepcion(null, solicitante, nuevoHost);
+
+    // then
+    thenSeLanza(excepcion, IllegalArgumentException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlCambarhostSiElSolicitantteEsNulo() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    Usuario nuevoHost = usuario(2L, "Ana");
+
+    // when
+    Throwable excepcion = whenCambiarHostCapturandoExcepcion(sala, null, nuevoHost);
+
+    // then
+    thenSeLanza(excepcion, UsuarioNoEsHostException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlCambiarHostSiElNuevoHostEsNulo() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    Usuario solicitante = sala.getHost();
+
+    // when
+    Throwable excepcion = whenCambiarHostCapturandoExcepcion(sala, solicitante, null);
+
+    // then
+    thenSeLanza(excepcion, UsuarioNoPerteneceASalaException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlCrearSalaSiElHostEsNulo() {
+    // when
+    Throwable excepcion = whenCrearSalaCapturandoExcepcion("Mi Sala", null);
+
+    // then
+    thenSeLanza(excepcion, IllegalArgumentException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlMarcarListosSiElUsuarioNoEstaEnLaSala() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+
+    // when
+    Throwable excepcion = whenMarcarListoCapturandoExcepcion(sala.getCodigo(), 99L);
+
+    // then
+    thenSeLanza(excepcion, IllegalStateException.class);
+  }
+
   // Given: preparación
 
   private Sala givenUnaSalaLlena() {
@@ -329,6 +475,17 @@ class ServicioSalaTest {
     when(repositorioUsuario.buscarPorId(usuario.getId())).thenReturn(usuario);
   }
 
+  private void givenCodigoDeSalaDisponible() {
+    when(repositorioSala.obtenerSalaPorCodigo(anyString())).thenReturn(null);
+  }
+
+  private List<Sala> givenSalasDisponibles() {
+    List<Sala> salasDisponibles = new ArrayList<>();
+    salasDisponibles.add(new Sala());
+    when(repositorioSala.listarSalas()).thenReturn(salasDisponibles);
+    return salasDisponibles;
+  }
+
   // When: ejecución
 
   private Throwable whenUnirseCapturandoExcepcion(String codigo, Long usuarioId) {
@@ -369,6 +526,40 @@ class ServicioSalaTest {
   ) {
     try {
       servicioSala.cambiarHost(sala, solicitante, nuevoHost);
+      return null;
+    } catch (RuntimeException excepcion) {
+      return excepcion;
+    }
+  }
+
+  private Sala whenUsuarioSeUne(String codigo, Long usuarioId) {
+    return servicioSala.unirse(codigo, usuarioId);
+  }
+
+  private Sala whenCrearSala(String nombre, Usuario host) {
+    return servicioSala.crearSala(nombre, host, 4, 5, ModoJuego.TURNO_TODOS, false);
+  }
+
+  private List<Sala> whenListarSalas() {
+    return servicioSala.listarSalas();
+  }
+
+  private Sala whenMarcarListo(String codigo, Long usuarioId) {
+    return servicioSala.marcarListo(codigo, usuarioId);
+  }
+
+  private Throwable whenCrearSalaCapturandoExcepcion(String nombre, Usuario host) {
+    try {
+      servicioSala.crearSala(nombre, host, 4, 5, ModoJuego.TURNO_TODOS, false);
+      return null;
+    } catch (RuntimeException excepcion) {
+      return excepcion;
+    }
+  }
+
+  private Throwable whenMarcarListoCapturandoExcepcion(String codigo, Long usuarioId) {
+    try {
+      servicioSala.marcarListo(codigo, usuarioId);
       return null;
     } catch (RuntimeException excepcion) {
       return excepcion;
@@ -428,5 +619,26 @@ class ServicioSalaTest {
     usuario.setId(id);
     usuario.setUsername(username);
     return usuario;
+  }
+
+  private void thenElJugadorEstaEnLaSala(Sala sala, Usuario usuario) {
+    SalaJugador participacion = buscarParticipacion(sala, usuario);
+    assertThat(participacion, notNullValue());
+    assertThat(participacion.getUsuario(), equalTo(usuario));
+  }
+
+  private void thenElNombreDeLaSalaEs(Sala sala, String nombreEsperado) {
+    assertThat(sala.getNombre(), equalTo(nombreEsperado));
+  }
+
+  private void thenSeObtieneLaListaDeSalasDisponibles(List<Sala> resultado, List<Sala> esperadas) {
+    assertThat(resultado, equalTo(esperadas));
+    verify(repositorioSala).listarSalas();
+  }
+
+  private void thenELJugadorEstaListo(Sala sala, Usuario usuario) {
+    SalaJugador participacion = buscarParticipacion(sala, usuario);
+    assertThat(participacion, notNullValue());
+    assertThat(participacion.isListo(), is(true));
   }
 }

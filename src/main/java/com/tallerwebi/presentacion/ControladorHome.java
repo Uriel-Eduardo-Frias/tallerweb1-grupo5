@@ -1,5 +1,6 @@
 package com.tallerwebi.presentacion;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -12,7 +13,7 @@ public class ControladorHome {
   // Pagina principal
   @RequestMapping(path = "/", method = RequestMethod.GET)
   public ModelAndView inicio() {
-    return new ModelAndView("redirect:/login");
+    return new ModelAndView("redirect:/home");
   }
 
   // Ir al home
@@ -24,7 +25,7 @@ public class ControladorHome {
 
   // Ir a la pagina de buscar jugadores
   @RequestMapping(path = "/buscar-jugadores", method = RequestMethod.GET)
-  public ModelAndView buscarJugadores() {
+  public ModelAndView buscarJugadores(HttpServletRequest requestMock) {
     Map<String, Object> modelo = new ModelMap();
     return new ModelAndView("buscar-jugadores", modelo);
   }

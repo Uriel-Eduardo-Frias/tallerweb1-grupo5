@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +25,17 @@ public class ControladorBuscadorJugadores {
 
   @RequestMapping(path = "/buscar-jugador", method = RequestMethod.GET)
   public ModelAndView buscarJugadores(
-    @RequestParam(name = "q", required = false) String terminoBusqueda
+    @RequestParam(name = "q", required = false) String terminoBusqueda,
+    HttpServletRequest request
   ) {
-    Map<String, Object> modelo = new ModelMap();
+    String rolUsuario = (String) request.getSession().getAttribute("ROL");
+    if (rolUsuario == null) {
+      return new ModelAndView("redirect:/login");
+    }
 
+    Map<String, Object> modelo = new ModelMap();
     List<Usuario> resultados = servicioUsuario.buscarUsuariosPorNombre(terminoBusqueda);
+
     modelo.put("jugadores", resultados);
     modelo.put("terminoBusqueda", terminoBusqueda != null ? terminoBusqueda : "");
 
