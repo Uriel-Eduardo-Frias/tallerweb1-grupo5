@@ -205,7 +205,6 @@ public class PartidaController {
     return new ModelAndView("partida-pregunta", modelo);
   }
 
-
   @RequestMapping(value = "/partida/{id}/responder", method = RequestMethod.POST)
   public String responder(
     @PathVariable("id") Long partidaId,
