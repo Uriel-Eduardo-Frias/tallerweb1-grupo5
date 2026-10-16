@@ -4,8 +4,10 @@ import com.tallerwebi.dominio.modelo.Categoria;
 import com.tallerwebi.dominio.modelo.Opcion;
 import com.tallerwebi.dominio.modelo.Pregunta;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaPregunta;
+import java.util.Collection;
 import java.util.List;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -60,5 +62,31 @@ public class RepositorioPartidaPreguntaImpl implements RepositorioPartidaPregunt
       .createQuery(hql, Pregunta.class)
       .setParameter("opcionId", opcionId)
       .uniqueResult();
+  }
+
+  @Override
+  public Pregunta buscarPreguntaPorCategoriaExcluyendo(
+    Long categoriaId,
+    Collection<Long> idsExcluidos
+  ) {
+    String hql = "FROM Pregunta p WHERE p.categoria.id = :categoriaId";
+
+    if (idsExcluidos != null && !idsExcluidos.isEmpty()) {
+      hql += " AND p.id NOT IN (:excluidos)";
+    }
+
+    hql += " ORDER BY rand()";
+
+    Query<Pregunta> query = sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, Pregunta.class)
+      .setParameter("categoriaId", categoriaId)
+      .setMaxResults(1);
+
+    if (idsExcluidos != null && !idsExcluidos.isEmpty()) {
+      query.setParameterList("excluidos", idsExcluidos);
+    }
+
+    return query.uniqueResult();
   }
 }

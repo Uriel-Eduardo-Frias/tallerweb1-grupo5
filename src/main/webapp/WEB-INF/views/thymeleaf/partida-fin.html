@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Resultado final - TRIVIA</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light p-4">
+
+<!-- NUEVO: pantalla final. Todo sale de ${resultado} (ResultadoPartida), leído desde la base. -->
+<div class="container text-center" style="max-width: 720px;">
+    <div class="card p-4 shadow-sm">
+
+        <h1 class="mb-3">TRIVIA</h1>
+        <h2 class="mb-4">Resultado final</h2>
+
+        <!-- Ganador o empate -->
+        <div class="alert alert-success mb-4">
+            <div th:if="${!resultado.hayEmpate}">
+                <h3 class="mb-1">🏆 ¡Ganó <strong th:text="${resultado.nombresGanadores}">Jugador</strong>!</h3>
+            </div>
+            <div th:if="${resultado.hayEmpate}">
+                <h3 class="mb-1">🤝 ¡Empate!</h3>
+                <p class="mb-0">
+                    Comparten el primer puesto:
+                    <strong th:text="${resultado.nombresGanadores}">Jugadores</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- Ranking -->
+        <div class="table-responsive mb-4">
+            <table class="table table-striped align-middle">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th class="text-start">Jugador</th>
+                    <th>Puntaje</th>
+                    <th>Aciertos</th>
+                    <th>Errores</th>
+                    <th>Mejor racha</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="jugador : ${resultado.jugadores}"
+                    th:classappend="${jugador.esUsuarioActual} ? 'table-primary fw-bold'">
+                    <td>
+                        <span th:if="${jugador.posicion == 1}">🥇</span>
+                        <span th:if="${jugador.posicion == 2}">🥈</span>
+                        <span th:if="${jugador.posicion == 3}">🥉</span>
+                        <span th:if="${jugador.posicion > 3}" th:text="${jugador.posicion}">4</span>
+                    </td>
+                    <td class="text-start">
+                        <span th:text="${jugador.nombre}">Jugador</span>
+                        <span th:if="${jugador.esUsuarioActual}" class="badge bg-primary ms-1">Vos</span>
+                    </td>
+                    <td th:text="${jugador.puntaje}">0</td>
+                    <td th:text="${jugador.aciertos}">0</td>
+                    <td th:text="${jugador.errores}">0</td>
+                    <td th:text="${jugador.mejorRacha}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mis estadísticas -->
+        <div th:if="${resultado.miResultado != null}" class="mb-4">
+            <h4 class="mb-3">Tu partida</h4>
+            <p class="mb-1">
+                Terminaste en el puesto
+                <strong th:text="${resultado.miResultado.posicion}">1</strong>
+                con <strong th:text="${resultado.miResultado.puntaje}">0</strong> puntos.
+            </p>
+            <p class="text-muted mb-0">
+                <span th:text="${resultado.miResultado.aciertos}">0</span> aciertos,
+                <span th:text="${resultado.miResultado.errores}">0</span> errores,
+                mejor racha de
+                <span th:text="${resultado.miResultado.mejorRacha}">0</span>.
+            </p>
+        </div>
+
+        <!-- Datos de la partida -->
+        <p class="text-muted small">
+            Rondas jugadas:
+            <span th:text="${resultado.rondasJugadas}">5</span>
+            /
+            <span th:text="${resultado.totalRondas}">5</span>
+            · Duración:
+            <span th:text="${resultado.duracion}">0 min 0 s</span>
+        </p>
+
+        <a th:href="@{/salas}" class="btn btn-primary mt-2">Volver a las salas</a>
+    </div>
+</div>
+
+</body>
+</html>

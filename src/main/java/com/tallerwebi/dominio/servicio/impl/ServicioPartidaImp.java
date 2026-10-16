@@ -1,6 +1,5 @@
 package com.tallerwebi.dominio.servicio.impl;
 
-import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.EstadoJugador;
 import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
@@ -9,11 +8,11 @@ import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.dominio.modelo.*;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
-import com.tallerwebi.dominio.repositorio.RepositorioRespuestaJugador;
 import com.tallerwebi.dominio.servicio.ServicioPartida;
+import com.tallerwebi.dominio.servicio.ServicioResultadoPartida;
+import com.tallerwebi.dominio.servicio.ServicioRonda;
 import com.tallerwebi.dominio.servicio.ServicioSala;
 import com.tallerwebi.dominio.servicio.ServicioVotacionCategoria;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,23 +25,23 @@ public class ServicioPartidaImp implements ServicioPartida {
   private final RepositorioPartida repositorioPartida;
   private final ServicioVotacionCategoria servicioVotacionCategoria;
   private final RepositorioPartidaJugador repositorioPartidaJugador;
-  private final RepositorioRespuestaJugador repositorioRespuestaJugador;
-  private final NotificadorSala notificadorSala;
+  private final ServicioRonda servicioRonda;
+  private final ServicioResultadoPartida servicioResultadoPartida;
 
   public ServicioPartidaImp(
     ServicioSala servicioSala,
     RepositorioPartida repositorioPartida,
     ServicioVotacionCategoria servicioVotacionCategoria,
     RepositorioPartidaJugador repositorioPartidaJugador,
-    RepositorioRespuestaJugador repositorioRespuestaJugador,
-    NotificadorSala notificadorSala
+    ServicioRonda servicioRonda,
+    ServicioResultadoPartida servicioResultadoPartida
   ) {
     this.servicioSala = servicioSala;
     this.repositorioPartida = repositorioPartida;
     this.servicioVotacionCategoria = servicioVotacionCategoria;
     this.repositorioPartidaJugador = repositorioPartidaJugador;
-    this.repositorioRespuestaJugador = repositorioRespuestaJugador;
-    this.notificadorSala = notificadorSala;
+    this.servicioRonda = servicioRonda;
+    this.servicioResultadoPartida = servicioResultadoPartida;
   }
 
   private void crearJugadoresDePartida(Partida partida, Sala sala) {
@@ -53,118 +52,6 @@ public class ServicioPartidaImp implements ServicioPartida {
 
       repositorioPartidaJugador.guardar(jugadorPartida);
     }
-  }
-
-  @Override
-  public boolean finalizarRondaSiTodosRespondieron(Long partidaId) {
-    Partida partida = buscarPartidaValida(partidaId);
-
-    PartidaRonda ronda = obtenerRondaActiva(partida);
-
-    if (ronda.getEstado() != EstadoRonda.PREGUNTA_EN_CURSO) {
-      return false;
-    }
-
-    List<PartidaJugador> jugadores = repositorioPartidaJugador.obtenerPorPartida(partidaId);
-
-    if (!todosRespondieron(ronda, jugadores)) {
-      return false;
-    }
-
-    ronda.setEstado(EstadoRonda.FINALIZADA);
-
-    if (esUltimaRonda(partida)) {
-      finalizarPartida(partida);
-      return true;
-    }
-
-    avanzarARondaSiguiente(partida);
-
-    return true;
-  }
-
-  private Partida buscarPartidaValida(Long partidaId) {
-    Partida partida = buscarPartidaPorId(partidaId);
-
-    if (partida == null) {
-      throw new IllegalArgumentException("La partida no existe.");
-    }
-
-    return partida;
-  }
-
-  private PartidaRonda obtenerRondaActiva(Partida partida) {
-    PartidaRonda ronda = partida.obtenerRondaActual();
-
-    if (ronda == null || ronda.getPregunta() == null) {
-      throw new IllegalStateException("La partida no tiene una pregunta activa.");
-    }
-
-    return ronda;
-  }
-
-  private boolean todosRespondieron(PartidaRonda ronda, List<PartidaJugador> jugadores) {
-    if (jugadores.isEmpty()) {
-      return false;
-    }
-
-    Long preguntaId = ronda.getPregunta().getIdentificador();
-
-    for (PartidaJugador jugador : jugadores) {
-      boolean respondio = repositorioRespuestaJugador.existeRespuesta(preguntaId, jugador.getId());
-
-      if (!respondio) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private boolean esUltimaRonda(Partida partida) {
-    return partida.getRondaActual() >= partida.getTotalRondas();
-  }
-
-  private void finalizarPartida(Partida partida) {
-    partida.setEstado(EstadoPartida.FINALIZADA);
-    partida.setFechaFin(LocalDateTime.now());
-
-    notificadorSala.rondaActualizada(
-      partida.getSala().getCodigo(),
-      partida.getId(),
-      "PARTIDA_FINALIZADA"
-    );
-  }
-
-  private void avanzarARondaSiguiente(Partida partida) {
-    int numeroSiguiente = partida.getRondaActual() + 1;
-
-    PartidaRonda siguiente = new PartidaRonda(partida, numeroSiguiente);
-    siguiente.setEstado(EstadoRonda.VOTACION_CATEGORIA);
-
-    partida.getRondas().add(siguiente);
-    partida.setRondaActual(numeroSiguiente);
-
-    reiniciarVotacionCategoria(partida);
-
-    partida.setEstado(EstadoPartida.VOTACION_CATEGORIA);
-
-    notificadorSala.rondaActualizada(
-      partida.getSala().getCodigo(),
-      partida.getId(),
-      "NUEVA_VOTACION_CATEGORIA"
-    );
-  }
-
-  private void reiniciarVotacionCategoria(Partida partida) {
-    VotacionCategoria votacion = partida.getVotacionCategoria();
-
-    if (votacion == null) {
-      partida.iniciarVotacionCategoria();
-      return;
-    }
-
-    votacion.reiniciar();
   }
 
   // INICIO Y FINALIZACIÓN DE PARTIDAS
@@ -203,10 +90,7 @@ public class ServicioPartidaImp implements ServicioPartida {
     validarPartidaPuedeFinalizar(partida);
     validarEsHost(partida.getSala(), solicitante);
 
-    cambiarEstadoPartida(partida);
-    cambiarSalaAFinalizada(partida.getSala());
-
-    repositorioPartida.guardar(partida);
+    servicioResultadoPartida.cerrarPartida(partida.getId());
 
     return partida;
   }
@@ -229,16 +113,8 @@ public class ServicioPartidaImp implements ServicioPartida {
     partida.getRondas().add(ronda);
   }
 
-  private void cambiarEstadoPartida(Partida partida) {
-    partida.setEstado(EstadoPartida.FINALIZADA);
-  }
-
   private void cambiarSalaAEnCurso(Sala sala) {
     sala.setEstado(EstadoSala.EN_CURSO);
-  }
-
-  private void cambiarSalaAFinalizada(Sala sala) {
-    sala.setEstado(EstadoSala.FINALIZADA);
   }
 
   // BÚSQUEDAS
@@ -356,24 +232,21 @@ public class ServicioPartidaImp implements ServicioPartida {
   @Override
   public void sumarPuntaje(PartidaJugador jugador, int puntos) {
     if (jugador != null && puntos > 0) {
-      jugador.setPuntajeAcumulado(jugador.getPuntajeAcumulado() + puntos);
+      jugador.getEstadisticas().sumarPuntaje(puntos);
     }
   }
 
   @Override
   public void registrarAcierto(PartidaJugador jugador) {
     if (jugador != null) {
-      jugador.setAciertos(jugador.getAciertos() + 1);
-
-      jugador.setRachaRespuestasPartida(jugador.getRachaRespuestasPartida() + 1);
+      jugador.getEstadisticas().registrarAcierto();
     }
   }
 
   @Override
   public void registrarFallo(PartidaJugador jugador) {
     if (jugador != null) {
-      jugador.setErrores(jugador.getErrores() + 1);
-      jugador.setRachaRespuestasPartida(0);
+      jugador.getEstadisticas().registrarFallo();
     }
   }
 
@@ -395,6 +268,34 @@ public class ServicioPartidaImp implements ServicioPartida {
     comodinJugador.setVecesUsado(comodinJugador.getVecesUsado() + 1);
 
     return true;
+  }
+
+  // RONDAS: DELEGACIÓN
+
+  @Override
+  public boolean finalizarRondaSiTodosRespondieron(Long partidaId) {
+    return servicioRonda.finalizarRondaSiTodosRespondieron(partidaId);
+  }
+
+  @Override
+  public void avanzarRonda(Long partidaId, Long usuarioId) {
+    servicioRonda.avanzarRonda(partidaId, usuarioId);
+  }
+
+  // CONSULTAS PARA LA VISTA (se resuelven dentro de la transacción del servicio)
+
+  @Override
+  public boolean usuarioYaVoto(Long partidaId, Long usuarioId) {
+    VotacionCategoria votacion = buscarPartidaPorId(partidaId).getVotacionCategoria();
+
+    return votacion != null && votacion.yaVoto(usuarioId);
+  }
+
+  @Override
+  public boolean esHost(Long partidaId, Long usuarioId) {
+    Sala sala = buscarPartidaPorId(partidaId).getSala();
+
+    return sala.getHost() != null && sala.getHost().getId().equals(usuarioId);
   }
 
   // VOTACIÓN DE CATEGORÍAS: DELEGACIÓN

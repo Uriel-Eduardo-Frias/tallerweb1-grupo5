@@ -43,6 +43,44 @@ public class RepositorioRespuestaJugadorImpl implements RepositorioRespuestaJuga
   }
 
   @Override
+  public boolean existeRespuestaEnRonda(Long rondaId, Long partidaJugadorId) {
+    String hql =
+      """
+      SELECT COUNT(r)
+      FROM RespuestaJugador r
+      WHERE r.ronda.id = :rondaId
+        AND r.partidaJugador.id = :partidaJugadorId
+      """;
+
+    Long cantidad = sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, Long.class)
+      .setParameter("rondaId", rondaId)
+      .setParameter("partidaJugadorId", partidaJugadorId)
+      .uniqueResult();
+
+    return cantidad != null && cantidad > 0;
+  }
+
+  @Override
+  public RespuestaJugador buscarRespuestaEnRonda(Long rondaId, Long partidaJugadorId) {
+    String hql =
+      """
+      SELECT r
+      FROM RespuestaJugador r
+      WHERE r.ronda.id = :rondaId
+        AND r.partidaJugador.id = :partidaJugadorId
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, RespuestaJugador.class)
+      .setParameter("rondaId", rondaId)
+      .setParameter("partidaJugadorId", partidaJugadorId)
+      .uniqueResult();
+  }
+
+  @Override
   public List<RespuestaJugador> obtenerPorPregunta(Long preguntaId) {
     String hql =
       """

@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.modelo.Opcion;
 import com.tallerwebi.dominio.modelo.Pregunta;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaPregunta;
 import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,11 +45,41 @@ public class ServicioPartidaPreguntaImpl implements ServicioPartidaPregunta {
     if (identificadorCategoria == null) {
       return null;
     }
+
+    return mezclarOpciones(
+      this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(identificadorCategoria)
+    );
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Pregunta obtenerPreguntaPorCategoria(
+    Long identificadorCategoria,
+    Collection<Long> idsPreguntasUsadas
+  ) {
+    if (identificadorCategoria == null) {
+      return null;
+    }
+
     Pregunta pregunta =
-      this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(identificadorCategoria);
+      this.repositorioPartidaPregunta.buscarPreguntaPorCategoriaExcluyendo(
+          identificadorCategoria,
+          idsPreguntasUsadas
+        );
+
+    if (pregunta == null) {
+      // La categoría agotó sus preguntas: se permite repetir antes que dejar la partida trabada.
+      pregunta = this.repositorioPartidaPregunta.buscarPreguntaPorCategoria(identificadorCategoria);
+    }
+
+    return mezclarOpciones(pregunta);
+  }
+
+  private Pregunta mezclarOpciones(Pregunta pregunta) {
     if (pregunta != null && pregunta.getOpciones() != null) {
       Collections.shuffle(pregunta.getOpciones());
     }
+
     return pregunta;
   }
 

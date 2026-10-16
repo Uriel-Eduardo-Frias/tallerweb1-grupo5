@@ -16,6 +16,10 @@ public class RespuestaJugador {
   private PartidaJugador partidaJugador;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "ronda_id")
+  private PartidaRonda ronda;
+
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "pregunta_id", nullable = false)
   private Pregunta pregunta;
 
@@ -43,6 +47,26 @@ public class RespuestaJugador {
     this.opcionElegida = opcionElegida;
     this.esCorrecta = esCorrecta;
     this.fechaRespuesta = fechaRespuesta;
+  }
+
+  public RespuestaJugador(
+    PartidaJugador partidaJugador,
+    PartidaRonda ronda,
+    Pregunta pregunta,
+    Opcion opcionElegida,
+    boolean esCorrecta,
+    LocalDateTime fechaRespuesta
+  ) {
+    this(partidaJugador, pregunta, opcionElegida, esCorrecta, fechaRespuesta);
+    this.ronda = ronda;
+  }
+
+  public PartidaRonda getRonda() {
+    return ronda;
+  }
+
+  public void setRonda(PartidaRonda ronda) {
+    this.ronda = ronda;
   }
 
   public Long getId() {

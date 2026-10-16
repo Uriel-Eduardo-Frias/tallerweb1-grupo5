@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.servicio.impl;
 
+import com.tallerwebi.dominio.excepcion.RespuestaDuplicadaException;
 import com.tallerwebi.dominio.modelo.Opcion;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
@@ -39,23 +40,25 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
   @Override
   public boolean registrarRespuesta(Long partidaId, Long usuarioId, Long opcionId) {
     Partida partida = obtenerPartidaValida(partidaId);
-    Pregunta pregunta = obtenerPreguntaActual(partida);
+    PartidaRonda ronda = obtenerRondaActual(partida);
+    Pregunta pregunta = ronda.getPregunta();
     Opcion opcion = obtenerOpcionValida(opcionId, pregunta);
     PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
 
-    boolean yaRespondio = repositorioRespuestaJugador.existeRespuesta(
-      pregunta.getIdentificador(),
+    boolean yaRespondio = repositorioRespuestaJugador.existeRespuestaEnRonda(
+      ronda.getId(),
       jugador.getId()
     );
 
     if (yaRespondio) {
-      throw new IllegalStateException("Ya respondiste esta pregunta.");
+      throw new RespuestaDuplicadaException();
     }
 
     boolean esCorrecta = opcion.getEsCorrecta();
 
     RespuestaJugador respuesta = new RespuestaJugador(
       jugador,
+      ronda,
       pregunta,
       opcion,
       esCorrecta,
@@ -76,6 +79,29 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
     return esCorrecta;
   }
 
+  @Override
+  public boolean yaRespondio(Long partidaId, Long usuarioId) {
+    Partida partida = obtenerPartidaValida(partidaId);
+    PartidaRonda ronda = obtenerRondaActual(partida);
+    PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
+
+    return repositorioRespuestaJugador.existeRespuestaEnRonda(ronda.getId(), jugador.getId());
+  }
+
+  @Override
+  public Boolean obtenerResultado(Long partidaId, Long usuarioId) {
+    Partida partida = obtenerPartidaValida(partidaId);
+    PartidaRonda ronda = obtenerRondaActual(partida);
+    PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
+
+    RespuestaJugador respuesta = repositorioRespuestaJugador.buscarRespuestaEnRonda(
+      ronda.getId(),
+      jugador.getId()
+    );
+
+    return respuesta == null ? null : respuesta.getEsCorrecta();
+  }
+
   private Partida obtenerPartidaValida(Long partidaId) {
     Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
 
@@ -86,14 +112,14 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
     return partida;
   }
 
-  private Pregunta obtenerPreguntaActual(Partida partida) {
+  private PartidaRonda obtenerRondaActual(Partida partida) {
     PartidaRonda ronda = partida.obtenerRondaActual();
 
     if (ronda == null || ronda.getPregunta() == null) {
       throw new IllegalStateException("La partida no tiene una pregunta activa.");
     }
 
-    return ronda.getPregunta();
+    return ronda;
   }
 
   private Opcion obtenerOpcionValida(Long opcionId, Pregunta pregunta) {

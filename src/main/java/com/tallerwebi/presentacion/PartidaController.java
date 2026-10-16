@@ -2,10 +2,13 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.EstadoPartida;
+import com.tallerwebi.dominio.enumeration.EstadoRonda;
+import com.tallerwebi.dominio.excepcion.RespuestaDuplicadaException;
 import com.tallerwebi.dominio.modelo.*;
 import com.tallerwebi.dominio.servicio.ServicioPartida;
 import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
 import com.tallerwebi.dominio.servicio.ServicioRespuestaJugador;
+import com.tallerwebi.dominio.servicio.ServicioResultadoPartida;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
@@ -21,31 +24,45 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class PartidaController {
 
+  private static final String MODELO_PARTIDA = "partida";
+  private static final String MODELO_RESULTADO = "resultado";
+  private static final String VISTA_FIN = "partida-fin";
   private static final String ID_USUARIO = "ID_USUARIO";
   private static final String REDIRECT_LOGIN = "redirect:/login";
+  private static final String REDIRECT_SALAS = "redirect:/salas";
   private static final String REDIRECT_PARTIDA = "redirect:/partida/";
+  private static final String SUFIJO_IR = "/ir";
   private static final String SUFIJO_PREGUNTA = "/pregunta";
   private static final String SUFIJO_VOTACION_CATEGORIA = "/votacion-categoria";
+  private static final String SUFIJO_RESULTADO = "/resultado";
+  private static final String SUFIJO_FIN = "/fin";
 
   private final ServicioPartida servicioPartida;
   private final ServicioUsuario servicioUsuario;
   private final NotificadorSala notificadorSala;
   private final ServicioPartidaPregunta servicioPartidaPregunta;
   private final ServicioRespuestaJugador servicioRespuestaJugador;
+  private final ServicioResultadoPartida servicioResultadoPartida;
 
   public PartidaController(
     ServicioPartida servicioPartida,
     ServicioUsuario servicioUsuario,
     NotificadorSala notificadorSala,
     ServicioPartidaPregunta servicioPartidaPregunta,
-    ServicioRespuestaJugador servicioRespuestaJugador
+    ServicioRespuestaJugador servicioRespuestaJugador,
+    ServicioResultadoPartida servicioResultadoPartida
   ) {
     this.servicioPartida = servicioPartida;
     this.servicioUsuario = servicioUsuario;
     this.notificadorSala = notificadorSala;
     this.servicioPartidaPregunta = servicioPartidaPregunta;
     this.servicioRespuestaJugador = servicioRespuestaJugador;
+    this.servicioResultadoPartida = servicioResultadoPartida;
   }
+
+  // ---------------------------------------------------------------------
+  // INICIO / FIN DE PARTIDA
+  // ---------------------------------------------------------------------
 
   @RequestMapping(value = "/partidas/{codigoSala}/iniciar", method = RequestMethod.POST)
   public ModelAndView iniciarPartida(
@@ -53,13 +70,7 @@ public class PartidaController {
     HttpSession session,
     RedirectAttributes redirectAttributes
   ) {
-    Long usuarioId = obtenerUsuarioId(session);
-
-    if (usuarioId == null) {
-      return new ModelAndView(REDIRECT_LOGIN);
-    }
-
-    Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
+    Usuario usuario = obtenerUsuario(session);
 
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
@@ -70,7 +81,7 @@ public class PartidaController {
 
       notificadorSala.partidaIniciada(codigoSala, partida.getId());
 
-      return new ModelAndView(REDIRECT_PARTIDA + partida.getId() + SUFIJO_VOTACION_CATEGORIA);
+      return new ModelAndView(REDIRECT_PARTIDA + partida.getId() + SUFIJO_IR);
     } catch (IllegalStateException e) {
       redirectAttributes.addFlashAttribute("error", e.getMessage());
 
@@ -83,13 +94,7 @@ public class PartidaController {
     @PathVariable("codigoSala") String codigoSala,
     HttpSession session
   ) {
-    Long usuarioId = obtenerUsuarioId(session);
-
-    if (usuarioId == null) {
-      return new ModelAndView(REDIRECT_LOGIN);
-    }
-
-    Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
+    Usuario usuario = obtenerUsuario(session);
 
     if (usuario == null) {
       return new ModelAndView(REDIRECT_LOGIN);
@@ -97,23 +102,89 @@ public class PartidaController {
 
     Partida partida = servicioPartida.finalizarPartida(codigoSala, usuario);
 
-    Map<String, Object> modelo = new ModelMap();
-    modelo.put("partida", partida);
-
-    return new ModelAndView("resultado", modelo);
+    return new ModelAndView(REDIRECT_PARTIDA + partida.getId() + SUFIJO_FIN);
   }
+
+  @RequestMapping(value = "/partida/{id}/fin", method = RequestMethod.GET)
+  public ModelAndView mostrarFin(@PathVariable("id") Long id, HttpSession session) {
+    Long usuarioId = obtenerUsuarioId(session);
+
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    try {
+      ResultadoPartida resultado = servicioResultadoPartida.obtenerResultado(id, usuarioId);
+
+      Map<String, Object> modelo = new ModelMap();
+      modelo.put(MODELO_RESULTADO, resultado);
+
+      return new ModelAndView(VISTA_FIN, modelo);
+    } catch (IllegalStateException e) {
+      // La partida todavía no finalizó: el router ubica al jugador.
+      return new ModelAndView(REDIRECT_PARTIDA + id + SUFIJO_IR);
+    } catch (IllegalArgumentException e) {
+      // El usuario no participó en esta partida.
+      return new ModelAndView(REDIRECT_SALAS);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // ROUTER: decide la pantalla según EstadoRonda (única fuente de verdad)
+  // ---------------------------------------------------------------------
+
+  @RequestMapping(value = "/partida/{id}/ir", method = RequestMethod.GET)
+  public String irSegunEstado(@PathVariable("id") Long id, HttpSession session) {
+    if (obtenerUsuarioId(session) == null) {
+      return REDIRECT_LOGIN;
+    }
+
+    Partida partida = servicioPartida.buscarPartidaPorId(id);
+
+    if (partida.getEstado() == EstadoPartida.FINALIZADA) {
+      return REDIRECT_PARTIDA + id + SUFIJO_FIN;
+    }
+
+    PartidaRonda ronda = partida.obtenerRondaActual();
+
+    if (ronda == null) {
+      return REDIRECT_SALAS;
+    }
+
+    switch (ronda.getEstado()) {
+      case VOTACION_CATEGORIA:
+        return REDIRECT_PARTIDA + id + SUFIJO_VOTACION_CATEGORIA;
+      case PREGUNTA_EN_CURSO:
+        return REDIRECT_PARTIDA + id + SUFIJO_PREGUNTA;
+      case RESULTADO_PREGUNTA:
+        return REDIRECT_PARTIDA + id + SUFIJO_RESULTADO;
+      default:
+        return REDIRECT_SALAS;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // VOTACIÓN DE CATEGORÍA
+  // ---------------------------------------------------------------------
 
   @RequestMapping(value = "/partida/{id}/votacion-categoria", method = RequestMethod.GET)
   public ModelAndView mostrarVotacionCategoria(@PathVariable("id") Long id, HttpSession session) {
-    if (obtenerUsuarioId(session) == null) {
+    Long usuarioId = obtenerUsuarioId(session);
+
+    if (usuarioId == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
 
     Partida partida = servicioPartida.buscarPartidaPorId(id);
 
+    if (!estaEnEstado(partida, EstadoRonda.VOTACION_CATEGORIA)) {
+      return new ModelAndView(REDIRECT_PARTIDA + id + SUFIJO_IR);
+    }
+
     Map<String, Object> modelo = new ModelMap();
-    modelo.put("partida", partida);
+    modelo.put(MODELO_PARTIDA, partida);
     modelo.put("mapaDeCategorias", servicioPartidaPregunta.obtenerCategorias());
+    modelo.put("yaVoto", servicioPartida.usuarioYaVoto(id, usuarioId));
 
     return new ModelAndView("partida-votacion", modelo);
   }
@@ -130,24 +201,17 @@ public class PartidaController {
       return new ModelAndView(REDIRECT_LOGIN);
     }
 
-    boolean todosVotaron = servicioPartida.registrarVotoCategoria(
-      partidaId,
-      usuarioId,
-      categoriaId
-    );
-
-    if (todosVotaron) {
-      return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA);
+    try {
+      servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId);
+    } catch (IllegalStateException ignored) {
+      // Voto duplicado o votación ya cerrada: el router ubica al jugador.
     }
 
-    return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_VOTACION_CATEGORIA);
+    return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_IR);
   }
 
   @RequestMapping(value = "/partida/{id}/resultado-votacion", method = RequestMethod.POST)
-  public ModelAndView obtenerResultadoVotacion(
-    @PathVariable("id") Long partidaId,
-    HttpSession session
-  ) {
+  public ModelAndView finalizarVotacion(@PathVariable("id") Long partidaId, HttpSession session) {
     Long usuarioId = obtenerUsuarioId(session);
 
     if (usuarioId == null) {
@@ -156,51 +220,34 @@ public class PartidaController {
 
     servicioPartida.finalizarVotacionCategoria(partidaId, usuarioId);
 
-    return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA);
+    return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_IR);
   }
 
-  @RequestMapping(value = "/partida/{id}/listo", method = RequestMethod.POST)
-  public ModelAndView marcarListo(@PathVariable("id") Long id, HttpSession session) {
+  // ---------------------------------------------------------------------
+  // PREGUNTA Y RESPUESTA
+  // ---------------------------------------------------------------------
+
+  @RequestMapping(value = "/partida/{id}/pregunta", method = RequestMethod.GET)
+  public ModelAndView mostrarPregunta(@PathVariable("id") Long partidaId, HttpSession session) {
     Long usuarioId = obtenerUsuarioId(session);
 
     if (usuarioId == null) {
       return new ModelAndView(REDIRECT_LOGIN);
     }
 
-    Usuario usuario = servicioUsuario.buscarUsuarioPorId(usuarioId);
-
-    if (usuario == null) {
-      return new ModelAndView(REDIRECT_LOGIN);
-    }
-
-    servicioPartida.marcarJugadorListo(id, usuario);
-
-    return new ModelAndView(REDIRECT_PARTIDA + id + "/ronda");
-  }
-
-  @RequestMapping(value = "/partida/{id}/pregunta", method = RequestMethod.GET)
-  public ModelAndView mostrarPregunta(@PathVariable("id") Long partidaId, HttpSession session) {
-    if (obtenerUsuarioId(session) == null) {
-      return new ModelAndView(REDIRECT_LOGIN);
-    }
-
     Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
 
-    if (
-      partida == null ||
-      partida.obtenerRondaActual() == null ||
-      partida.obtenerRondaActual().getPregunta() == null
-    ) {
-      return new ModelAndView("redirect:/salas");
+    if (!estaEnEstado(partida, EstadoRonda.PREGUNTA_EN_CURSO)) {
+      return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_IR);
     }
 
     PartidaRonda ronda = partida.obtenerRondaActual();
-    Pregunta pregunta = ronda.getPregunta();
 
     Map<String, Object> modelo = new ModelMap();
-    modelo.put("partida", partida);
+    modelo.put(MODELO_PARTIDA, partida);
     modelo.put("ronda", ronda);
-    modelo.put("pregunta", pregunta);
+    modelo.put("pregunta", ronda.getPregunta());
+    modelo.put("yaRespondio", servicioRespuestaJugador.yaRespondio(partidaId, usuarioId));
 
     return new ModelAndView("partida-pregunta", modelo);
   }
@@ -209,8 +256,7 @@ public class PartidaController {
   public String responder(
     @PathVariable("id") Long partidaId,
     @RequestParam("opcionId") Long opcionId,
-    HttpSession session,
-    RedirectAttributes redirectAttributes
+    HttpSession session
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -218,39 +264,68 @@ public class PartidaController {
       return REDIRECT_LOGIN;
     }
 
-    Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
-    Pregunta pregunta = obtenerPreguntaActiva(partida);
-    String textoCorrecto = obtenerTextoCorrecto(pregunta);
-
-    boolean esCorrecta;
-
     try {
-      esCorrecta = servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId);
-    } catch (IllegalStateException e) {
-      if (!"Ya respondiste esta pregunta.".equals(e.getMessage())) {
-        throw e;
-      }
-
-      return manejarRespuestaDuplicada(partidaId, redirectAttributes);
+      servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId);
+    } catch (RespuestaDuplicadaException ignored) {
+      // Ya respondió: no es un error, el router lo ubica.
     }
 
-    agregarResultadoRespuesta(redirectAttributes, esCorrecta, textoCorrecto);
-
-    return obtenerRedireccionPartida(partidaId);
+    return REDIRECT_PARTIDA + partidaId + SUFIJO_IR;
   }
 
-  private Pregunta obtenerPreguntaActiva(Partida partida) {
-    if (partida == null) {
-      throw new IllegalArgumentException("La partida no existe.");
+  // ---------------------------------------------------------------------
+  // RESULTADO DE LA PREGUNTA Y AVANCE DE RONDA
+  // ---------------------------------------------------------------------
+
+  @RequestMapping(value = "/partida/{id}/resultado", method = RequestMethod.GET)
+  public ModelAndView mostrarResultado(@PathVariable("id") Long id, HttpSession session) {
+    Long usuarioId = obtenerUsuarioId(session);
+
+    if (usuarioId == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    Partida partida = servicioPartida.buscarPartidaPorId(id);
+
+    if (!estaEnEstado(partida, EstadoRonda.RESULTADO_PREGUNTA)) {
+      return new ModelAndView(REDIRECT_PARTIDA + id + SUFIJO_IR);
     }
 
     PartidaRonda ronda = partida.obtenerRondaActual();
+    Boolean esCorrecta = servicioRespuestaJugador.obtenerResultado(id, usuarioId);
+    boolean esHost = servicioPartida.esHost(id, usuarioId);
 
-    if (ronda == null || ronda.getPregunta() == null) {
-      throw new IllegalStateException("La partida no tiene una pregunta activa.");
+    Map<String, Object> modelo = new ModelMap();
+    modelo.put(MODELO_PARTIDA, partida);
+    modelo.put("esCorrecta", Boolean.TRUE.equals(esCorrecta));
+    modelo.put("textoCorrecto", obtenerTextoCorrecto(ronda.getPregunta()));
+    modelo.put("esHost", esHost);
+    modelo.put("esUltimaRonda", partida.getRondaActual() >= partida.getTotalRondas());
+
+    return new ModelAndView("partida-resultado", modelo);
+  }
+
+  @RequestMapping(value = "/partida/{id}/siguiente", method = RequestMethod.POST)
+  public String siguienteRonda(@PathVariable("id") Long id, HttpSession session) {
+    Long usuarioId = obtenerUsuarioId(session);
+
+    if (usuarioId == null) {
+      return REDIRECT_LOGIN;
     }
 
-    return ronda.getPregunta();
+    servicioPartida.avanzarRonda(id, usuarioId);
+
+    return REDIRECT_PARTIDA + id + SUFIJO_IR;
+  }
+
+  // ---------------------------------------------------------------------
+  // AUXILIARES
+  // ---------------------------------------------------------------------
+
+  private boolean estaEnEstado(Partida partida, EstadoRonda estadoEsperado) {
+    PartidaRonda ronda = partida.obtenerRondaActual();
+
+    return ronda != null && ronda.getEstado() == estadoEsperado;
   }
 
   private String obtenerTextoCorrecto(Pregunta pregunta) {
@@ -263,35 +338,10 @@ public class PartidaController {
     return "";
   }
 
-  private void agregarResultadoRespuesta(
-    RedirectAttributes redirectAttributes,
-    boolean esCorrecta,
-    String textoCorrecto
-  ) {
-    redirectAttributes.addFlashAttribute("esCorrecta", esCorrecta);
-    redirectAttributes.addFlashAttribute("textoCorrecto", textoCorrecto);
-    redirectAttributes.addFlashAttribute("mensaje", "Tu respuesta fue registrada.");
-  }
+  private Usuario obtenerUsuario(HttpSession session) {
+    Long usuarioId = obtenerUsuarioId(session);
 
-  private String manejarRespuestaDuplicada(Long partidaId, RedirectAttributes redirectAttributes) {
-    redirectAttributes.addFlashAttribute("respuestaYaRegistrada", true);
-    redirectAttributes.addFlashAttribute("mensaje", "Tu respuesta ya fue registrada.");
-
-    return obtenerRedireccionPartida(partidaId);
-  }
-
-  private String obtenerRedireccionPartida(Long partidaId) {
-    Partida partida = servicioPartida.buscarPartidaPorId(partidaId);
-
-    if (partida.getEstado() == EstadoPartida.FINALIZADA) {
-      return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
-    }
-
-    if (partida.getEstado() == EstadoPartida.VOTACION_CATEGORIA) {
-      return REDIRECT_PARTIDA + partidaId + SUFIJO_VOTACION_CATEGORIA;
-    }
-
-    return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
+    return usuarioId == null ? null : servicioUsuario.buscarUsuarioPorId(usuarioId);
   }
 
   private Long obtenerUsuarioId(HttpSession session) {

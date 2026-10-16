@@ -18,40 +18,21 @@ public class PartidaJugador {
   @JoinColumn(name = "usuario_id", nullable = false)
   private Usuario usuario;
 
-  @Column(name = "puntaje_acumulado", nullable = false)
-  private int puntajeAcumulado;
+  @Embedded
+  private EstadisticasJugador estadisticas = new EstadisticasJugador();
 
   @Column(name = "posicion_final")
   private Integer posicionFinal;
 
-  @Column(nullable = false)
-  private int aciertos;
-
-  @Column(nullable = false)
-  private int errores;
-
-  @Column(name = "racha_respuestas_partida", nullable = false)
-  private int rachaRespuestasPartida;
-
   @Column(name = "estado_jugador_partida", length = 30)
-  private String estadoJugadorPartida;
+  private String estadoJugadorPartida = "JUGANDO";
 
   // Ronda en la que el jugador habilitó su segundo intento. Se persiste para
   // que el comodín siga funcionando entre solicitudes HTTP independientes.
   @Column(name = "doble_chance_ronda_id")
   private Long dobleChanceRondaId;
 
-  //@OneToMany(mappedBy = "partidaJugador", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  //private List<PartidaJugadorComodin> comodines;
-
-  public PartidaJugador() {
-    this.puntajeAcumulado = 0;
-    this.aciertos = 0;
-    this.errores = 0;
-    this.rachaRespuestasPartida = 0;
-    this.estadoJugadorPartida = "JUGANDO";
-    //this.comodines = new ArrayList<PartidaJugadorComodin>();
-  }
+  public PartidaJugador() {}
 
   public PartidaJugador(Partida partida, Usuario usuario) {
     this();
@@ -83,12 +64,8 @@ public class PartidaJugador {
     this.usuario = usuario;
   }
 
-  public int getPuntajeAcumulado() {
-    return puntajeAcumulado;
-  }
-
-  public void setPuntajeAcumulado(int puntajeAcumulado) {
-    this.puntajeAcumulado = puntajeAcumulado;
+  public EstadisticasJugador getEstadisticas() {
+    return estadisticas;
   }
 
   public Integer getPosicionFinal() {
@@ -99,30 +76,6 @@ public class PartidaJugador {
     this.posicionFinal = posicionFinal;
   }
 
-  public int getAciertos() {
-    return aciertos;
-  }
-
-  public void setAciertos(int aciertos) {
-    this.aciertos = aciertos;
-  }
-
-  public int getErrores() {
-    return errores;
-  }
-
-  public void setErrores(int errores) {
-    this.errores = errores;
-  }
-
-  public int getRachaRespuestasPartida() {
-    return rachaRespuestasPartida;
-  }
-
-  public void setRachaRespuestasPartida(int rachaRespuestasPartida) {
-    this.rachaRespuestasPartida = rachaRespuestasPartida;
-  }
-  /*
   public String getEstadoJugadorPartida() {
     return estadoJugadorPartida;
   }
@@ -138,7 +91,46 @@ public class PartidaJugador {
   public void setDobleChanceRondaId(Long dobleChanceRondaId) {
     this.dobleChanceRondaId = dobleChanceRondaId;
   }
-  */
-  //public List<PartidaJugadorComodin> getComodines() { return comodines; }
-  //public void setComodines(List<PartidaJugadorComodin> comodines) { this.comodines = comodines; }
+
+  // Delegados: mantienen la API anterior para no romper código existente
+
+  public int getPuntajeAcumulado() {
+    return estadisticas.getPuntajeAcumulado();
+  }
+
+  public void setPuntajeAcumulado(int puntajeAcumulado) {
+    estadisticas.setPuntajeAcumulado(puntajeAcumulado);
+  }
+
+  public int getAciertos() {
+    return estadisticas.getAciertos();
+  }
+
+  public void setAciertos(int aciertos) {
+    estadisticas.setAciertos(aciertos);
+  }
+
+  public int getErrores() {
+    return estadisticas.getErrores();
+  }
+
+  public void setErrores(int errores) {
+    estadisticas.setErrores(errores);
+  }
+
+  public int getRachaRespuestasPartida() {
+    return estadisticas.getRachaRespuestasPartida();
+  }
+
+  public void setRachaRespuestasPartida(int rachaRespuestasPartida) {
+    estadisticas.setRachaRespuestasPartida(rachaRespuestasPartida);
+  }
+
+  public int getMejorRachaPartida() {
+    return estadisticas.getMejorRachaPartida();
+  }
+
+  public void setMejorRachaPartida(int mejorRachaPartida) {
+    estadisticas.setMejorRachaPartida(mejorRachaPartida);
+  }
 }

@@ -1,6 +1,6 @@
 package com.tallerwebi.dominio.servicio.impl;
 
-import com.tallerwebi.dominio.*;
+import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
 import com.tallerwebi.dominio.modelo.*;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
@@ -39,19 +39,14 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
     validarVotacionAbierta(partida);
 
     SalaJugador jugador = buscarJugadorPorIdEnSala(partida.getSala(), usuarioId);
-
     Categoria categoria = buscarCategoriaPorId(categoriaId);
-
     VotacionCategoria votacion = partida.getVotacionCategoria();
 
     validarQueNoHayaVotado(votacion, usuarioId);
 
-    VotoCategoria voto = new VotoCategoria(jugador.getUsuario(), categoria);
-
-    votacion.agregarVoto(voto);
+    votacion.agregarVoto(new VotoCategoria(jugador.getUsuario(), categoria));
 
     int cantidadJugadores = partida.getSala().getJugadores().size();
-
     boolean todosVotaron = votacion.todosVotaron(cantidadJugadores);
 
     if (todosVotaron) {
@@ -68,9 +63,7 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
     validarQueTodosHayanVotado(partida, votacion);
 
     Categoria categoriaGanadora = obtenerCategoriaGanadora(votacion);
-
-    Pregunta pregunta = obtenerPreguntaDeCategoria(categoriaGanadora);
-
+    Pregunta pregunta = obtenerPreguntaDeCategoria(categoriaGanadora, partida);
     PartidaRonda ronda = buscarRondaActual(partida);
 
     actualizarRonda(ronda, pregunta, categoriaGanadora, votacion);
@@ -120,9 +113,7 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
   }
 
   private Categoria buscarCategoriaPorId(Long categoriaId) {
-    Map<Long, Categoria> categorias = servicioPartidaPregunta.obtenerCategorias();
-
-    Categoria categoria = categorias.get(categoriaId);
+    Categoria categoria = servicioPartidaPregunta.obtenerCategorias().get(categoriaId);
 
     if (categoria == null) {
       throw new IllegalArgumentException("No existe la categoría indicada");
@@ -184,10 +175,7 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
       Long categoriaId = categoria.getId();
 
       categoriasPorId.put(categoriaId, categoria);
-
-      int cantidadActual = cantidadVotosPorCategoria.getOrDefault(categoriaId, 0);
-
-      cantidadVotosPorCategoria.put(categoriaId, cantidadActual + 1);
+      cantidadVotosPorCategoria.merge(categoriaId, 1, Integer::sum);
     }
   }
 
@@ -200,9 +188,7 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
 
     for (Map.Entry<Long, Integer> entrada : cantidadVotosPorCategoria.entrySet()) {
       if (entrada.getValue() == maximoVotos) {
-        Categoria categoria = categoriasPorId.get(entrada.getKey());
-
-        categoriasEmpatadas.add(categoria);
+        categoriasEmpatadas.add(categoriasPorId.get(entrada.getKey()));
       }
     }
 
@@ -215,14 +201,29 @@ public class ServicioVotacionCategoriaImpl implements ServicioVotacionCategoria 
     return categoriasEmpatadas.get(0);
   }
 
-  private Pregunta obtenerPreguntaDeCategoria(Categoria categoria) {
-    Pregunta pregunta = servicioPartidaPregunta.obtenerPreguntaPorCategoria(categoria.getId());
+  private Pregunta obtenerPreguntaDeCategoria(Categoria categoria, Partida partida) {
+    Pregunta pregunta = servicioPartidaPregunta.obtenerPreguntaPorCategoria(
+      categoria.getId(),
+      obtenerIdsPreguntasUsadas(partida)
+    );
 
     if (pregunta == null) {
       throw new IllegalStateException("No hay preguntas disponibles para la categoría elegida");
     }
 
     return pregunta;
+  }
+
+  private List<Long> obtenerIdsPreguntasUsadas(Partida partida) {
+    List<Long> ids = new ArrayList<>();
+
+    for (PartidaRonda ronda : partida.getRondas()) {
+      if (ronda.getPregunta() != null) {
+        ids.add(ronda.getPregunta().getIdentificador());
+      }
+    }
+
+    return ids;
   }
 
   private PartidaRonda buscarRondaActual(Partida partida) {

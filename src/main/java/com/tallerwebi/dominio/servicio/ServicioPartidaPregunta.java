@@ -2,12 +2,18 @@ package com.tallerwebi.dominio.servicio;
 
 import com.tallerwebi.dominio.modelo.Categoria;
 import com.tallerwebi.dominio.modelo.Pregunta;
+import java.util.Collection;
 import java.util.Map;
 
 public interface ServicioPartidaPregunta {
   Map<Long, Categoria> obtenerCategorias();
 
   Pregunta obtenerPreguntaPorCategoria(Long identificadorCategoria);
+
+  Pregunta obtenerPreguntaPorCategoria(
+    Long identificadorCategoria,
+    Collection<Long> idsPreguntasUsadas
+  );
 
   Boolean verificarRespuesta(Long opcionId);
 
