@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.servicio.impl;
 
+import com.tallerwebi.dominio.excepcion.PrimerIntentoFallidoDobleChanceException;
 import com.tallerwebi.dominio.excepcion.RespuestaDuplicadaException;
 import com.tallerwebi.dominio.modelo.Opcion;
 import com.tallerwebi.dominio.modelo.Partida;
@@ -45,17 +46,52 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
     Opcion opcion = obtenerOpcionValida(opcionId, pregunta);
     PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
 
-    boolean yaRespondio = repositorioRespuestaJugador.existeRespuestaEnRonda(
-      ronda.getId(),
-      jugador.getId()
-    );
+    validarQueNoHayaRespondido(ronda.getId(), jugador.getId());
 
+    boolean esCorrecta = Boolean.TRUE.equals(opcion.getEsCorrecta());
+
+    evaluarDobleChance(jugador, ronda.getId(), opcion.getId(), esCorrecta);
+
+    guardarRespuestaDefinitiva(jugador, ronda, pregunta, opcion, esCorrecta, partidaId);
+
+    return esCorrecta;
+  }
+
+  private void evaluarDobleChance(
+    PartidaJugador jugador,
+    Long rondaId,
+    Long opcionId,
+    boolean esCorrecta
+  ) {
+    boolean tieneDobleChance = rondaId.equals(jugador.getDobleChanceRondaId());
+
+    if (!tieneDobleChance) {
+      return;
+    }
+
+    jugador.setDobleChanceRondaId(null);
+    repositorioPartidaJugador.guardar(jugador);
+
+    if (!esCorrecta) {
+      throw new PrimerIntentoFallidoDobleChanceException(opcionId);
+    }
+  }
+
+  private void validarQueNoHayaRespondido(Long rondaId, Long jugadorId) {
+    boolean yaRespondio = repositorioRespuestaJugador.existeRespuestaEnRonda(rondaId, jugadorId);
     if (yaRespondio) {
       throw new RespuestaDuplicadaException();
     }
+  }
 
-    boolean esCorrecta = opcion.getEsCorrecta();
-
+  private void guardarRespuestaDefinitiva(
+    PartidaJugador jugador,
+    PartidaRonda ronda,
+    Pregunta pregunta,
+    Opcion opcion,
+    boolean esCorrecta,
+    Long partidaId
+  ) {
     RespuestaJugador respuesta = new RespuestaJugador(
       jugador,
       ronda,
@@ -75,8 +111,6 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
     }
 
     servicioPartida.finalizarRondaSiTodosRespondieron(partidaId);
-
-    return esCorrecta;
   }
 
   @Override

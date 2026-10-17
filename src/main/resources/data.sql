@@ -270,9 +270,5 @@ INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
     ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
 
 INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
-    (3, 'PASAR_PREGUNTA', 'Pasar Pregunta', 'Cambia la pregunta actual por otra de la misma categoría')
-    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
-
-INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
     (4, 'DOBLE_CHANCE', 'Doble Chance', 'Te da un segundo intento si fallas tu respuesta')
     ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);

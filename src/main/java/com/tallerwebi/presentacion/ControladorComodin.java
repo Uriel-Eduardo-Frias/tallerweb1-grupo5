@@ -17,82 +17,63 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/partida/{id}/comodin")
 public class ControladorComodin {
 
-    private static final String ID_USUARIO = "ID_USUARIO";
-    private static final String REDIRECT_LOGIN = "redirect:/login";
-    private static final String REDIRECT_PARTIDA = "redirect:/partida/";
-    private static final String SUFIJO_PREGUNTA = "/pregunta";
-    private static final String CLAVE_SEGUNDOS_EXTRA = "segundosExtra";
-    private static final String CLAVE_ACTIVADO = "activado";
+  private static final String ID_USUARIO = "ID_USUARIO";
+  private static final String CLAVE_SEGUNDOS_EXTRA = "segundosExtra";
+  private static final String CLAVE_ACTIVADO = "activado";
 
-    private final ServicioComodin servicioComodin;
+  private final ServicioComodin servicioComodin;
 
-    @Autowired
-    public ControladorComodin(ServicioComodin servicioComodin) {
-        this.servicioComodin = servicioComodin;
+  @Autowired
+  public ControladorComodin(ServicioComodin servicioComodin) {
+    this.servicioComodin = servicioComodin;
+  }
+
+  @PostMapping("/tiempo-extra")
+  @ResponseBody
+  public ResponseEntity<Map<String, Integer>> tiempoExtra(
+    @PathVariable("id") Long partidaId,
+    HttpSession session
+  ) {
+    Long usuarioId = obtenerUsuarioId(session);
+    if (usuarioId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @PostMapping("/tiempo-extra")
-    @ResponseBody
-    public ResponseEntity<Map<String, Integer>> tiempoExtra(
-            @PathVariable("id") Long partidaId,
-            HttpSession session
-    ) {
-        Long usuarioId = obtenerUsuarioId(session);
-        if (usuarioId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    int segundos = servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
+    return ResponseEntity.ok(Map.of(CLAVE_SEGUNDOS_EXTRA, segundos));
+  }
 
-        int segundos = servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
-        return ResponseEntity.ok(Map.of(CLAVE_SEGUNDOS_EXTRA, segundos));
+  @PostMapping("/50-50")
+  @ResponseBody
+  public ResponseEntity<Comodin5050DTO> cincuentaCincuenta(
+    @PathVariable("id") Long partidaId,
+    HttpSession session
+  ) {
+    Long usuarioId = obtenerUsuarioId(session);
+    if (usuarioId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @PostMapping("/50-50")
-    @ResponseBody
-    public ResponseEntity<Comodin5050DTO> cincuentaCincuenta(
-            @PathVariable("id") Long partidaId,
-            HttpSession session
-    ) {
-        Long usuarioId = obtenerUsuarioId(session);
-        if (usuarioId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    Comodin5050DTO resultado = servicioComodin.aplicarCincuentaCincuenta(partidaId, usuarioId);
+    return ResponseEntity.ok(resultado);
+  }
 
-        Comodin5050DTO resultado = servicioComodin.aplicarCincuentaCincuenta(partidaId, usuarioId);
-        return ResponseEntity.ok(resultado);
+  @PostMapping("/doble-chance")
+  @ResponseBody
+  public ResponseEntity<Map<String, Boolean>> dobleChance(
+    @PathVariable("id") Long partidaId,
+    HttpSession session
+  ) {
+    Long usuarioId = obtenerUsuarioId(session);
+    if (usuarioId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @PostMapping("/pasar-pregunta")
-    public String pasarPregunta(
-            @PathVariable("id") Long partidaId,
-            HttpSession session
-    ) {
-        Long usuarioId = obtenerUsuarioId(session);
-        if (usuarioId == null) {
-            return REDIRECT_LOGIN;
-        }
+    servicioComodin.activarDobleChance(partidaId, usuarioId);
+    return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
+  }
 
-        servicioComodin.aplicarPasarPregunta(partidaId, usuarioId);
-        return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
-    }
-
-    @PostMapping("/doble-chance")
-    @ResponseBody
-    public ResponseEntity<Map<String, Boolean>> dobleChance(
-            @PathVariable("id") Long partidaId,
-            HttpSession session
-    ) {
-        Long usuarioId = obtenerUsuarioId(session);
-        if (usuarioId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        servicioComodin.activarDobleChance(partidaId, usuarioId);
-        return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
-    }
-
-
-
-    private Long obtenerUsuarioId(HttpSession session) {
-        return (Long) session.getAttribute(ID_USUARIO);
-    }
+  private Long obtenerUsuarioId(HttpSession session) {
+    return (Long) session.getAttribute(ID_USUARIO);
+  }
 }
