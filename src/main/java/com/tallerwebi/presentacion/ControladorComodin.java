@@ -5,6 +5,7 @@ import com.tallerwebi.presentacion.dto.Comodin5050DTO;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/partida/{id}/comodin")
 public class ControladorComodin {
 
+    private static final String ID_USUARIO = "ID_USUARIO";
+    private static final String REDIRECT_LOGIN = "redirect:/login";
+    private static final String REDIRECT_PARTIDA = "redirect:/partida/";
+    private static final String SUFIJO_PREGUNTA = "/pregunta";
+    private static final String CLAVE_SEGUNDOS_EXTRA = "segundosExtra";
+    private static final String CLAVE_ACTIVADO = "activado";
+
     private final ServicioComodin servicioComodin;
 
     @Autowired
@@ -25,14 +33,17 @@ public class ControladorComodin {
 
     @PostMapping("/tiempo-extra")
     @ResponseBody
-    public ResponseEntity<?> tiempoExtra(@PathVariable("id") Long partidaId, HttpSession session) {
-        Long usuarioId = (Long) session.getAttribute("ID_USUARIO");
+    public ResponseEntity<Map<String, Integer>> tiempoExtra(
+            @PathVariable("id") Long partidaId,
+            HttpSession session
+    ) {
+        Long usuarioId = obtenerUsuarioId(session);
         if (usuarioId == null) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         int segundos = servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
-        return ResponseEntity.ok(Map.of("segundosExtra", segundos));
+        return ResponseEntity.ok(Map.of(CLAVE_SEGUNDOS_EXTRA, segundos));
     }
 
     @PostMapping("/50-50")
@@ -41,9 +52,9 @@ public class ControladorComodin {
             @PathVariable("id") Long partidaId,
             HttpSession session
     ) {
-        Long usuarioId = (Long) session.getAttribute("ID_USUARIO");
+        Long usuarioId = obtenerUsuarioId(session);
         if (usuarioId == null) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         Comodin5050DTO resultado = servicioComodin.aplicarCincuentaCincuenta(partidaId, usuarioId);
@@ -51,25 +62,37 @@ public class ControladorComodin {
     }
 
     @PostMapping("/pasar-pregunta")
-    public String pasarPregunta(@PathVariable("id") Long partidaId, HttpSession session) {
-        Long usuarioId = (Long) session.getAttribute("ID_USUARIO");
+    public String pasarPregunta(
+            @PathVariable("id") Long partidaId,
+            HttpSession session
+    ) {
+        Long usuarioId = obtenerUsuarioId(session);
         if (usuarioId == null) {
-            return "redirect:/login";
+            return REDIRECT_LOGIN;
         }
 
         servicioComodin.aplicarPasarPregunta(partidaId, usuarioId);
-        return "redirect:/partida/" + partidaId + "/pregunta";
+        return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
     }
 
     @PostMapping("/doble-chance")
     @ResponseBody
-    public ResponseEntity<?> dobleChance(@PathVariable("id") Long partidaId, HttpSession session) {
-        Long usuarioId = (Long) session.getAttribute("ID_USUARIO");
+    public ResponseEntity<Map<String, Boolean>> dobleChance(
+            @PathVariable("id") Long partidaId,
+            HttpSession session
+    ) {
+        Long usuarioId = obtenerUsuarioId(session);
         if (usuarioId == null) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         servicioComodin.activarDobleChance(partidaId, usuarioId);
-        return ResponseEntity.ok(Map.of("activado", true));
+        return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
+    }
+
+
+
+    private Long obtenerUsuarioId(HttpSession session) {
+        return (Long) session.getAttribute(ID_USUARIO);
     }
 }
