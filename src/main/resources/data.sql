@@ -261,3 +261,18 @@ INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (48, 'Mario', fal
     texto = VALUES(texto),
     esCorrecta = VALUES(esCorrecta),
     pregunta_id = VALUES(pregunta_id);
+INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
+    (1, 'CINCUENTA_CINCUENTA', '50/50', 'Elimina 2 opciones incorrectas con penalización de tiempo')
+    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
+    (2, 'TIEMPO_EXTRA', 'Más Tiempo', 'Agrega 10 segundos al temporizador')
+    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
+    (3, 'PASAR_PREGUNTA', 'Pasar Pregunta', 'Cambia la pregunta actual por otra de la misma categoría')
+    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
+    (4, 'DOBLE_CHANCE', 'Doble Chance', 'Te da un segundo intento si fallas tu respuesta')
+    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
