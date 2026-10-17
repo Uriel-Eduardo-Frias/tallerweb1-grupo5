@@ -22,11 +22,4 @@ public class ControladorHome {
     Map<String, Object> modelo = new ModelMap();
     return new ModelAndView("home", modelo);
   }
-
-  // Ir a la pagina de buscar jugadores
-  @RequestMapping(path = "/buscar-jugadores", method = RequestMethod.GET)
-  public ModelAndView buscarJugadores(HttpServletRequest requestMock) {
-    Map<String, Object> modelo = new ModelMap();
-    return new ModelAndView("buscar-jugadores", modelo);
-  }
 }

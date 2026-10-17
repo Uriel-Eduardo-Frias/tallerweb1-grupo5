@@ -9,9 +9,12 @@
         <div class="card">
             <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 2rem;">
 
-                <img th:if="${perfil.avatarUrl != null}" th:src="${perfil.avatarUrl}" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); background: #FFF; object-fit: cover;">
+                <img th:if="${perfil != null and perfil.avatarUrl != null and !perfil.avatarUrl.isEmpty()}"
+                     th:src="${perfil.avatarUrl}" alt="Avatar"
+                     style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); background: #FFF; object-fit: cover;">
 
-                <div th:unless="${perfil.avatarUrl != null}" style="width: 90px; height: 90px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 3px solid var(--primary);">
+                <div th:unless="${perfil != null and perfil.avatarUrl != null and !perfil.avatarUrl.isEmpty()}"
+                     style="width: 90px; height: 90px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 3px solid var(--primary);">
                     <i class="fa-solid fa-user-astronaut"></i>
                 </div>
 

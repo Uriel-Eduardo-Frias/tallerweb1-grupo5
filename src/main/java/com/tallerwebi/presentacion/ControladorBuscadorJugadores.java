@@ -23,13 +23,13 @@ public class ControladorBuscadorJugadores {
     this.servicioUsuario = servicioUsuario;
   }
 
-  @RequestMapping(path = "/buscar-jugador", method = RequestMethod.GET)
+  @RequestMapping(path = "/buscar-jugadores", method = RequestMethod.GET)
   public ModelAndView buscarJugadores(
     @RequestParam(name = "q", required = false) String terminoBusqueda,
     HttpServletRequest request
   ) {
-    String rolUsuario = (String) request.getSession().getAttribute("ROL");
-    if (rolUsuario == null) {
+    Long idUsuario = (Long) request.getSession().getAttribute("ID_USUARIO");
+    if (idUsuario == null) {
       return new ModelAndView("redirect:/login");
     }
 

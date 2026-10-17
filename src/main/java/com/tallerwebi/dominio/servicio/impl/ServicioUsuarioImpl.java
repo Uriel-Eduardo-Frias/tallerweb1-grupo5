@@ -40,6 +40,7 @@ public class ServicioUsuarioImpl implements ServicioUsuario {
     usuario.setEmail(email);
     usuario.setPassword(password);
     usuario.setNombreCompleto(nombreCompleto);
+    usuario.setRol("COMUN");
 
     PerfilUsuario perfil = new PerfilUsuario();
     perfil.setUsuario(usuario);
@@ -65,7 +66,10 @@ public class ServicioUsuarioImpl implements ServicioUsuario {
       return null;
     }
 
-    return repositorioUsuario.buscarPorId(id);
+    Usuario usuario = repositorioUsuario.buscarPorId(id);
+    usuario = asegurarPerfil(usuario);
+
+    return usuario;
   }
 
   @Override
@@ -89,19 +93,33 @@ public class ServicioUsuarioImpl implements ServicioUsuario {
   @Override
   public void actualizarPerfil(Long idUsuario, String biografia, String avatarUrl) {
     Usuario usuario = repositorioUsuario.buscarPorId(idUsuario);
+    usuario = asegurarPerfil(usuario);
 
-    if (usuario == null || usuario.getPerfil() == null) {
+    if (usuario == null) {
       return;
     }
 
-    usuario.getPerfil().setBiografia(biografia);
+    PerfilUsuario perfil = usuario.getPerfil();
+    perfil.setBiografia(biografia);
 
     if (avatarUrl == null || avatarUrl.isBlank()) {
-      usuario.getPerfil().setAvatarUrl(null);
+      perfil.setAvatarUrl(null);
     } else {
-      usuario.getPerfil().setAvatarUrl(avatarUrl);
+      perfil.setAvatarUrl(avatarUrl);
     }
-    // El usuario está gestionado dentro de la transacción; Hibernate
-    // persiste los cambios al confirmarla.
+  }
+
+  private Usuario asegurarPerfil(Usuario usuario) {
+    if (usuario == null) {
+      return null;
+    }
+
+    if (usuario.getPerfil() == null) {
+      PerfilUsuario perfilNuevo = new PerfilUsuario();
+      perfilNuevo.setUsuario(usuario);
+      usuario.setPerfil(perfilNuevo);
+    }
+
+    return usuario;
   }
 }
