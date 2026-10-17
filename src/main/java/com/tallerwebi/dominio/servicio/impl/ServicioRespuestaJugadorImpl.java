@@ -39,6 +39,7 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
   }
 
   @Override
+  @Transactional(noRollbackFor = PrimerIntentoFallidoDobleChanceException.class)
   public boolean registrarRespuesta(Long partidaId, Long usuarioId, Long opcionId) {
     Partida partida = obtenerPartidaValida(partidaId);
     PartidaRonda ronda = obtenerRondaActual(partida);
@@ -184,5 +185,48 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
     }
 
     return jugador;
+  }
+
+  @Override
+  public void registrarTiempoAgotado(Long partidaId, Long usuarioId) {
+    Partida partida = obtenerPartidaValida(partidaId);
+    PartidaRonda ronda = obtenerRondaActual(partida);
+    Pregunta pregunta = ronda.getPregunta();
+    PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
+
+    validarQueNoHayaRespondido(ronda.getId(), jugador.getId());
+
+    if (ronda.getId().equals(jugador.getDobleChanceRondaId())) {
+      jugador.setDobleChanceRondaId(null);
+      repositorioPartidaJugador.guardar(jugador);
+    }
+
+    RespuestaJugador respuesta = new RespuestaJugador();
+    respuesta.setPartidaJugador(jugador);
+    respuesta.setRonda(ronda);
+    respuesta.setPregunta(pregunta);
+    respuesta.setOpcionElegida(null);
+    respuesta.setEsCorrecta(false);
+    respuesta.setFuePorTiempo(true);
+    respuesta.setFechaRespuesta(LocalDateTime.now());
+
+    repositorioRespuestaJugador.guardar(respuesta);
+
+    servicioPartida.registrarFallo(jugador);
+    servicioPartida.finalizarRondaSiTodosRespondieron(partidaId);
+  }
+
+  @Override
+  public boolean fuePorTiempo(Long partidaId, Long usuarioId) {
+    Partida partida = obtenerPartidaValida(partidaId);
+    PartidaRonda ronda = obtenerRondaActual(partida);
+    PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
+
+    RespuestaJugador respuesta = repositorioRespuestaJugador.buscarRespuestaEnRonda(
+      ronda.getId(),
+      jugador.getId()
+    );
+
+    return respuesta != null && respuesta.isFuePorTiempo();
   }
 }

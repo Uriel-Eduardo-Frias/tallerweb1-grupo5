@@ -295,9 +295,20 @@ public class PartidaController {
       redirectAttributes.addFlashAttribute("falloPrimerIntentoDobleChance", Boolean.TRUE);
       redirectAttributes.addFlashAttribute("opcionFalladaId", excepcion.getOpcionIncorrectaId());
       return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
-    } catch (RespuestaDuplicadaException ignored) { //
-      // Ya respondió en esta ronda: el router lo ubica.
+    } catch (RespuestaDuplicadaException ignored) {} //
+
+    return REDIRECT_PARTIDA + partidaId + SUFIJO_IR;
+  }
+
+  @RequestMapping(value = "/partida/{id}/tiempo-agotado", method = RequestMethod.POST)
+  public String tiempoAgotado(@PathVariable("id") Long partidaId, HttpSession session) {
+    Long usuarioId = obtenerUsuarioId(session);
+
+    if (usuarioId == null) {
+      return REDIRECT_LOGIN;
     }
+
+    servicioRespuestaJugador.registrarTiempoAgotado(partidaId, usuarioId);
 
     return REDIRECT_PARTIDA + partidaId + SUFIJO_IR;
   }
@@ -322,11 +333,13 @@ public class PartidaController {
 
     PartidaRonda ronda = partida.obtenerRondaActual();
     Boolean esCorrecta = servicioRespuestaJugador.obtenerResultado(id, usuarioId);
+    boolean fuePorTiempo = servicioRespuestaJugador.fuePorTiempo(id, usuarioId);
     boolean esHost = servicioPartida.esHost(id, usuarioId);
 
     Map<String, Object> modelo = new ModelMap();
     modelo.put(MODELO_PARTIDA, partida);
     modelo.put("esCorrecta", Boolean.TRUE.equals(esCorrecta));
+    modelo.put("fuePorTiempo", fuePorTiempo);
     modelo.put("textoCorrecto", obtenerTextoCorrecto(ronda.getPregunta()));
     modelo.put("esHost", esHost);
     modelo.put("esUltimaRonda", partida.getRondaActual() >= partida.getTotalRondas());

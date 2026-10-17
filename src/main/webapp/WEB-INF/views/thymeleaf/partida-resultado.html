@@ -22,6 +22,10 @@
         <h3 th:if="${esCorrecta}" class="text-success fw-bold">¡Respuesta correcta!</h3>
         <h3 th:unless="${esCorrecta}" class="text-danger fw-bold">¡Respuesta incorrecta!</h3>
 
+        <div th:if="${fuePorTiempo}" class="alert alert-warning my-3 py-2 fw-semibold">
+            ⏰ Te quedaste sin tiempo para responder
+        </div>
+
         <p class="mt-3">
             La respuesta correcta era:
             <strong th:text="${textoCorrecto}">Respuesta correcta</strong>
@@ -29,6 +33,7 @@
 
         <hr>
 
+        <!-- Botón de avance para el anfitrión -->
         <form th:if="${esHost}"
               th:action="@{/partida/{id}/siguiente(id=${partida.id})}"
               method="POST">

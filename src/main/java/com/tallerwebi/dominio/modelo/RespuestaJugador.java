@@ -24,7 +24,7 @@ public class RespuestaJugador {
   private Pregunta pregunta;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "opcion_elegida_id", nullable = false)
+  @JoinColumn(name = "opcion_elegida_id", nullable = true)
   private Opcion opcionElegida;
 
   @Column(name = "es_correcta", nullable = false)
@@ -32,6 +32,9 @@ public class RespuestaJugador {
 
   @Column(name = "fecha_respuesta", nullable = false)
   private LocalDateTime fechaRespuesta;
+
+  @Column(name = "fue_por_tiempo")
+  private boolean fuePorTiempo = false;
 
   public RespuestaJugador() {}
 
@@ -115,5 +118,13 @@ public class RespuestaJugador {
 
   public void setFechaRespuesta(LocalDateTime fechaRespuesta) {
     this.fechaRespuesta = fechaRespuesta;
+  }
+
+  public boolean isFuePorTiempo() {
+    return fuePorTiempo;
+  }
+
+  public void setFuePorTiempo(boolean fuePorTiempo) {
+    this.fuePorTiempo = fuePorTiempo;
   }
 }

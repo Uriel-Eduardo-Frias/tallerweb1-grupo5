@@ -19,7 +19,6 @@
             / <span th:text="${partida.totalRondas}">5</span>
         </h5>
 
-
         <div class="mb-3" th:if="${!yaRespondio}">
             <div class="d-flex justify-content-between mb-1 small fw-bold">
                 <span>Tiempo restante</span>
@@ -33,19 +32,15 @@
             </div>
         </div>
 
-
         <div class="text-end mb-3" th:if="${pregunta.categoria != null}">
             <span class="badge bg-info text-dark fs-6" th:text="${pregunta.categoria.nombre}">Categoría</span>
         </div>
 
-
         <h2 class="mb-4" th:text="${pregunta.descripcion}">Enunciado de la pregunta</h2>
-
 
         <div class="card bg-white p-3 mb-4 border" th:if="${!yaRespondio}">
             <p class="text-muted small mb-2 fw-bold text-center">COMODINES DE LA PARTIDA</p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
-
 
                 <button type="button"
                         id="btn5050"
@@ -57,7 +52,6 @@
                     <span th:if="${!puede5050}" class="badge bg-dark ms-1">Usado</span>
                 </button>
 
-
                 <button type="button"
                         id="btnTiempoExtra"
                         th:disabled="${!puedeTiempo}"
@@ -67,7 +61,6 @@
                     +10s
                     <span th:if="${!puedeTiempo}" class="badge bg-dark ms-1">Usado</span>
                 </button>
-
 
                 <button type="button"
                         id="btnDobleChance"
@@ -82,10 +75,10 @@
             <div id="alertaComodin" class="alert alert-info py-1 px-2 mt-3 mb-0 small text-center d-none"></div>
         </div>
 
-
         <div th:if="${falloPrimerIntentoDobleChance}" class="alert alert-warning text-center fw-bold mb-3">
             ⚠️ ¡Respuesta incorrecta! Pero gracias a tu <strong>Doble Chance</strong> tienes un segundo intento. ¡Elige otra opción!
         </div>
+
         <!-- FORMULARIO DE RESPUESTAS -->
         <form id="formRespuesta"
               th:if="${!yaRespondio}"
@@ -105,6 +98,14 @@
             </button>
         </form>
 
+        <form id="formTiempoAgotado"
+              th:if="${!yaRespondio}"
+              th:action="@{/partida/{id}/tiempo-agotado(id=${partida.id})}"
+              method="POST"
+              style="display: none;">
+        </form>
+
+        <!-- MENSAJE DE ESPERA SI YA RESPODIÓ -->
         <div th:if="${yaRespondio}" class="alert alert-info text-center">
             Respuesta registrada. Esperando a los demás jugadores...
         </div>
@@ -120,7 +121,6 @@
     const urlIr = /*[[@{/partida/{id}/ir(id=${partida.id})}]]*/ "";
     const urlWs = /*[[@{/ws}]]*/ "/ws";
     const yaRespondio = /*[[${yaRespondio}]]*/ false;
-
 
     let tiempoRestante = 15;
     const tiempoMaximoBase = 15;
@@ -152,9 +152,10 @@
                 clearInterval(intervalReloj);
                 mostrarMensajeComodin("¡Tiempo agotado!");
                 document.querySelectorAll(".boton-opcion").forEach(b => b.disabled = true);
-                const primeraOpcion = document.querySelector(".boton-opcion");
-                if (primeraOpcion) {
-                    primeraOpcion.click();
+
+                const formTiempo = document.getElementById("formTiempoAgotado");
+                if (formTiempo) {
+                    formTiempo.submit();
                 }
             }
         }, 1000);
@@ -175,8 +176,6 @@
         btn.classList.add("btn-secondary", "opacity-50", "pe-none");
         btn.innerHTML += ' <span class="badge bg-dark ms-1">Usado</span>';
     }
-
-
 
     function usar5050() {
         const url = /*[[@{/partida/{id}/comodin/50-50(id=${partida.id})}]]*/ "";
@@ -218,7 +217,6 @@
                 mostrarMensajeComodin("Doble Chance activa: tendrás un intento extra si fallas");
             });
     }
-
 
     const eventosTransicion = [
         "VOTACION_CATEGORIA_FINALIZADA",
