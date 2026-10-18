@@ -329,7 +329,7 @@ INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (52, '1929', fals
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (53, 'José de San Martín', true, 114) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (54, 'Manuel Belgrano', false, 114) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (55, 'Cornelio Saavedra', false, 114) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
-INSERT INTO Opcion (id, texto, esCorrecta, persona_id) VALUES (56, 'Juan Manuel de Rosas', false, 114) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
+INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (56, 'Juan Manuel de Rosas', false, 114) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
 
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (57, 'Inca', true, 115) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (58, 'Maya', false, 115) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
@@ -388,7 +388,7 @@ INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (100, 'Auguste Ro
 
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (101, 'Vincent van Gogh', true, 126) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (102, 'Claude Monet', false, 126) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
-INSERT INTO Opcion (id, texto, esCorrecta, persona_id) VALUES (103, 'Paul Cézanne', false, 126) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
+INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (103, 'Paul Cézanne', false, 126) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (104, 'Edvard Munch', false, 126) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);
 
 INSERT INTO Opcion (id, texto, esCorrecta, pregunta_id) VALUES (105, 'Museo del Louvre', true, 127) ON DUPLICATE KEY UPDATE texto = VALUES(texto), esCorrecta = VALUES(esCorrecta), pregunta_id = VALUES(pregunta_id);

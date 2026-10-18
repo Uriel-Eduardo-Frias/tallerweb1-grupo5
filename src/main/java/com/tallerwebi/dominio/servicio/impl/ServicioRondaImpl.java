@@ -49,9 +49,13 @@ public class ServicioRondaImpl implements ServicioRonda {
   @Override
   public boolean finalizarRondaSiTodosRespondieron(Long partidaId) {
     Partida partida = buscarPartidaValida(partidaId);
-    PartidaRonda ronda = obtenerRondaActiva(partida);
+    PartidaRonda ronda = partida.obtenerRondaActual();
 
-    if (ronda.getEstado() != EstadoRonda.PREGUNTA_EN_CURSO) {
+    if (
+      ronda == null ||
+      ronda.getEstado() != EstadoRonda.PREGUNTA_EN_CURSO ||
+      ronda.getPregunta() == null
+    ) {
       return false;
     }
 

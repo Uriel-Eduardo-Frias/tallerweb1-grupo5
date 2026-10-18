@@ -162,6 +162,12 @@ public class PartidaController {
       return REDIRECT_SALAS;
     }
 
+    if (ronda.getEstado() == EstadoRonda.PREGUNTA_EN_CURSO && ronda.getPregunta() != null) {
+      servicioPartida.finalizarRondaSiTodosRespondieron(id);
+      partida = servicioPartida.buscarPartidaPorId(id);
+      ronda = partida.obtenerRondaActual();
+    }
+
     switch (ronda.getEstado()) {
       case VOTACION_CATEGORIA:
         return REDIRECT_PARTIDA + id + SUFIJO_VOTACION_CATEGORIA;
@@ -252,6 +258,12 @@ public class PartidaController {
       return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_IR);
     }
 
+    servicioPartida.finalizarRondaSiTodosRespondieron(partidaId);
+    partida = servicioPartida.buscarPartidaPorId(partidaId);
+    if (!estaEnEstado(partida, EstadoRonda.PREGUNTA_EN_CURSO)) {
+      return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_IR);
+    }
+
     PartidaRonda ronda = partida.obtenerRondaActual();
 
     Map<String, Object> modelo = new ModelMap();
@@ -308,7 +320,9 @@ public class PartidaController {
       return REDIRECT_LOGIN;
     }
 
-    servicioRespuestaJugador.registrarTiempoAgotado(partidaId, usuarioId);
+    try {
+      servicioRespuestaJugador.registrarTiempoAgotado(partidaId, usuarioId);
+    } catch (RespuestaDuplicadaException ignored) {}
 
     return REDIRECT_PARTIDA + partidaId + SUFIJO_IR;
   }
