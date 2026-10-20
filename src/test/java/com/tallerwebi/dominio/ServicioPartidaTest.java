@@ -1,18 +1,14 @@
-/*
 package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.enumeration.*;
@@ -22,7 +18,6 @@ import com.tallerwebi.dominio.repositorio.*;
 import com.tallerwebi.dominio.servicio.*;
 import com.tallerwebi.dominio.servicio.impl.ServicioPartidaImp;
 import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,11 +26,11 @@ public class ServicioPartidaTest {
   private ServicioPartida servicioPartida;
   private ServicioSala servicioSala;
   private ServicioVotacionCategoria servicioVotacionCategoria;
+  private ServicioRonda servicioRonda;
+  private ServicioResultadoPartida servicioResultadoPartida;
 
   private RepositorioPartida repositorioPartida;
   private RepositorioPartidaJugador repositorioPartidaJugador;
-  private RepositorioRespuestaJugador repositorioRespuestaJugador;
-  private NotificadorSala notificadorSala;
 
   private Sala sala;
   private Usuario host;
@@ -44,11 +39,11 @@ public class ServicioPartidaTest {
   public void inicializar() {
     servicioSala = mock(ServicioSala.class);
     servicioVotacionCategoria = mock(ServicioVotacionCategoria.class);
+    servicioRonda = mock(ServicioRonda.class);
+    servicioResultadoPartida = mock(ServicioResultadoPartida.class);
 
     repositorioPartida = mock(RepositorioPartida.class);
     repositorioPartidaJugador = mock(RepositorioPartidaJugador.class);
-    repositorioRespuestaJugador = mock(RepositorioRespuestaJugador.class);
-    notificadorSala = mock(NotificadorSala.class);
 
     servicioPartida =
       new ServicioPartidaImp(
@@ -56,8 +51,8 @@ public class ServicioPartidaTest {
         repositorioPartida,
         servicioVotacionCategoria,
         repositorioPartidaJugador,
-        repositorioRespuestaJugador,
-        notificadorSala
+        servicioRonda,
+        servicioResultadoPartida
       );
 
     host = givenUnUsuarioHost();
@@ -137,17 +132,16 @@ public class ServicioPartidaTest {
   // --------------------------------------------------
 
   @Test
-  public void dadoQueHayUnaPartidaEnCursoCuandoLaFinalizoObtengoPartidaFinalizada() {
-    Partida partida = servicioPartida.iniciarPartida("ABC123", host);
+  public void dadoQueHayUnaPartidaEnCursoCuandoLaFinalizoSeDelegaElCierreAlServicioDeResultados() {
+    Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
     when(repositorioPartida.obtenerPorCodigoSala("ABC123")).thenReturn(partida);
 
     Partida resultado = servicioPartida.finalizarPartida("ABC123", host);
 
-    thenLaPartidaEstaEnEstado(resultado, EstadoPartida.FINALIZADA);
-    thenLaSalaEstaEnEstado(sala, EstadoSala.FINALIZADA);
+    assertThat(resultado, sameInstance(partida));
 
-    verify(repositorioPartida, times(2)).guardar(partida);
+    verify(servicioResultadoPartida).cerrarPartida(partida.getId());
   }
 
   @Test
@@ -159,6 +153,7 @@ public class ServicioPartidaTest {
     );
 
     assertThat(excepcion, instanceOf(PartidaNoEncontradaException.class));
+    verify(servicioResultadoPartida, never()).cerrarPartida(any());
   }
 
   @Test
@@ -172,6 +167,7 @@ public class ServicioPartidaTest {
     );
 
     assertThat(excepcion, instanceOf(IllegalStateException.class));
+    verify(servicioResultadoPartida, never()).cerrarPartida(any());
   }
 
   @Test
@@ -186,6 +182,7 @@ public class ServicioPartidaTest {
     );
 
     assertThat(excepcion, instanceOf(UsuarioNoEsHostException.class));
+    verify(servicioResultadoPartida, never()).cerrarPartida(any());
   }
 
   // --------------------------------------------------
@@ -309,125 +306,35 @@ public class ServicioPartidaTest {
   }
 
   // --------------------------------------------------
-  // FINALIZAR RONDA AUTOMÁTICAMENTE
+  // CONSULTAS PARA LA VISTA
   // --------------------------------------------------
 
   @Test
-  public void dadoQueNoExisteUnaPartidaCuandoIntentoFinalizarLaRondaObtengoExcepcion() {
-    when(repositorioPartida.obtenerPorIdConRondas(99L)).thenReturn(null);
-
-    Throwable excepcion = whenEjecutoCapturandoExcepcion(() ->
-      servicioPartida.finalizarRondaSiTodosRespondieron(99L)
-    );
-
-    assertThat(excepcion, instanceOf(PartidaNoEncontradaException.class));
-  }
-
-  @Test
-  public void dadoQueLaRondaNoTienePreguntaCuandoIntentoFinalizarlaObtengoExcepcion() {
+  public void dadoQueElUsuarioEsElHostCuandoConsultoSiEsHostObtengoTrue() {
     Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
-    partida.setRondaActual(1);
-
-    PartidaRonda ronda = new PartidaRonda(partida, 1);
-    ronda.setEstado(EstadoRonda.PREGUNTA_EN_CURSO);
-    partida.getRondas().add(ronda);
 
     when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
-    assertThrows(
-      IllegalStateException.class,
-      () -> servicioPartida.finalizarRondaSiTodosRespondieron(10L)
-    );
-
-    verify(repositorioPartidaJugador, never()).obtenerPorPartida(10L);
+    assertTrue(servicioPartida.esHost(10L, 1L));
   }
 
   @Test
-  public void dadoQueLaRondaNoEstaEnCursoCuandoIntentoFinalizarlaObtengoFalse() {
-    Partida partida = givenUnaPartidaConPreguntaActiva(10L, 2);
+  public void dadoQueElUsuarioNoEsElHostCuandoConsultoSiEsHostObtengoFalse() {
+    Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    partida.obtenerRondaActual().setEstado(EstadoRonda.VOTACION_CATEGORIA);
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
-    boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
-
-    assertFalse(resultado);
-    verify(repositorioPartidaJugador, never()).obtenerPorPartida(10L);
+    assertFalse(servicioPartida.esHost(10L, 2L));
   }
 
   @Test
-  public void dadoQueNoHayJugadoresCuandoIntentoFinalizarLaRondaObtengoFalse() {
-    givenUnaPartidaConPreguntaActiva(10L, 2);
+  public void dadoQueLaSalaNoTieneHostCuandoConsultoSiEsHostObtengoFalse() {
+    sala.setHost(null);
+    Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
 
-    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of());
+    when(repositorioPartida.obtenerPorIdConRondas(10L)).thenReturn(partida);
 
-    boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
-
-    assertFalse(resultado);
-
-    verify(repositorioRespuestaJugador, never()).existeRespuesta(anyLong(), anyLong());
-  }
-
-  @Test
-  public void dadoQueUnJugadorNoRespondioCuandoIntentoFinalizarLaRondaObtengoFalse() {
-    Partida partida = givenUnaPartidaConPreguntaActiva(10L, 2);
-    PartidaJugador jugador = givenUnJugadorDePartida(partida, 100L);
-
-    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of(jugador));
-
-    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L)).thenReturn(false);
-
-    boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
-
-    assertFalse(resultado);
-
-    assertThat(partida.obtenerRondaActual().getEstado(), equalTo(EstadoRonda.PREGUNTA_EN_CURSO));
-
-    verify(notificadorSala, never()).rondaActualizada(any(), any(), any());
-  }
-
-  @Test
-  public void dadoQueTodosRespondieronYQuedanRondasCuandoFinalizoLaRondaCreoLaSiguiente() {
-    Partida partida = givenUnaPartidaConPreguntaActiva(10L, 2);
-    PartidaJugador jugador = givenUnJugadorDePartida(partida, 100L);
-
-    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of(jugador));
-
-    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L)).thenReturn(true);
-
-    boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
-
-    assertTrue(resultado);
-    assertThat(partida.getRondas().size(), equalTo(2));
-    assertThat(partida.getRondaActual(), equalTo(2));
-
-    assertThat(partida.getRondas().get(0).getEstado(), equalTo(EstadoRonda.FINALIZADA));
-
-    assertThat(partida.getRondas().get(1).getEstado(), equalTo(EstadoRonda.VOTACION_CATEGORIA));
-
-    assertThat(partida.getEstado(), equalTo(EstadoPartida.VOTACION_CATEGORIA));
-
-    verify(notificadorSala).rondaActualizada("ABC123", partida.getId(), "NUEVA_VOTACION_CATEGORIA");
-  }
-
-  @Test
-  public void dadoQueTodosRespondieronEnLaUltimaRondaCuandoFinalizoLaRondaFinalizoLaPartida() {
-    Partida partida = givenUnaPartidaConPreguntaActiva(10L, 1);
-    PartidaJugador jugador = givenUnJugadorDePartida(partida, 100L);
-
-    when(repositorioPartidaJugador.obtenerPorPartida(10L)).thenReturn(List.of(jugador));
-
-    when(repositorioRespuestaJugador.existeRespuesta(50L, 100L)).thenReturn(true);
-
-    boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
-
-    assertTrue(resultado);
-
-    assertThat(partida.obtenerRondaActual().getEstado(), equalTo(EstadoRonda.FINALIZADA));
-
-    assertThat(partida.getEstado(), equalTo(EstadoPartida.FINALIZADA));
-    assertThat(partida.getFechaFin(), is(notNullValue()));
-
-    verify(notificadorSala).rondaActualizada("ABC123", partida.getId(), "PARTIDA_FINALIZADA");
+    assertFalse(servicioPartida.esHost(10L, 1L));
   }
 
   // --------------------------------------------------
@@ -534,6 +441,37 @@ public class ServicioPartidaTest {
   }
 
   // --------------------------------------------------
+  // DELEGACIÓN DE RONDAS
+  // --------------------------------------------------
+
+  @Test
+  public void dadoQueTodosRespondieronCuandoFinalizoLaRondaObtengoElResultadoDelServicioDeRondas() {
+    when(servicioRonda.finalizarRondaSiTodosRespondieron(10L)).thenReturn(true);
+
+    boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
+
+    assertTrue(resultado);
+
+    verify(servicioRonda).finalizarRondaSiTodosRespondieron(10L);
+  }
+
+  @Test
+  public void dadoQueFaltanRespuestasCuandoFinalizoLaRondaObtengoFalse() {
+    when(servicioRonda.finalizarRondaSiTodosRespondieron(10L)).thenReturn(false);
+
+    boolean resultado = servicioPartida.finalizarRondaSiTodosRespondieron(10L);
+
+    assertFalse(resultado);
+  }
+
+  @Test
+  public void dadoQueAvanzoLaRondaSeDelegaLaOperacionAlServicioDeRondas() {
+    servicioPartida.avanzarRonda(10L, 1L);
+
+    verify(servicioRonda).avanzarRonda(10L, 1L);
+  }
+
+  // --------------------------------------------------
   // DELEGACIÓN DE VOTACIÓN DE CATEGORÍAS
   // --------------------------------------------------
 
@@ -590,31 +528,6 @@ public class ServicioPartidaTest {
     salaPreparada.getJugadores().add(jugador);
 
     return salaPreparada;
-  }
-
-  private Partida givenUnaPartidaConPreguntaActiva(Long idPartida, int numeroRondas) {
-    Partida partida = new Partida(sala, EstadoPartida.EN_CURSO);
-    partida.setTotalRondas(numeroRondas);
-    partida.setRondaActual(1);
-
-    PartidaRonda ronda = new PartidaRonda(partida, 1);
-    ronda.setEstado(EstadoRonda.PREGUNTA_EN_CURSO);
-
-    Pregunta pregunta = new Pregunta();
-    pregunta.setIdentificador(50L);
-    ronda.setPregunta(pregunta);
-
-    partida.getRondas().add(ronda);
-
-    when(repositorioPartida.obtenerPorIdConRondas(idPartida)).thenReturn(partida);
-
-    return partida;
-  }
-
-  private PartidaJugador givenUnJugadorDePartida(Partida partida, Long idJugador) {
-    PartidaJugador jugador = new PartidaJugador(partida, host);
-    jugador.setId(idJugador);
-    return jugador;
   }
 
   private PartidaJugador givenUnJugadorConPuntaje(int puntajeInicial) {
@@ -686,4 +599,3 @@ public class ServicioPartidaTest {
     }
   }
 }
-*/
