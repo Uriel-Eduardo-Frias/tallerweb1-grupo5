@@ -56,6 +56,10 @@ public class Partida {
   }
 
   public PartidaRonda obtenerRondaActual() {
+    if (rondaActual == null) {
+      return null;
+    }
+
     for (PartidaRonda ronda : rondas) {
       if (ronda.getNumero() == rondaActual) {
         return ronda;

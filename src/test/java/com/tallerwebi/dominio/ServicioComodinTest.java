@@ -177,6 +177,7 @@ public class ServicioComodinTest {
 
     partida = new Partida();
     partida.setId(PARTIDA_ID);
+    partida.setRondaActual(1);
 
     ronda = new PartidaRonda(partida, 1);
     ronda.setId(RONDA_ID);
