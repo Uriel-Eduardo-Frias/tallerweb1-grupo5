@@ -69,7 +69,8 @@ public class ServicioVotacionCategoriaImplTest {
     when(categoria.getId()).thenReturn(5L);
     when(servicioPartidaPregunta.obtenerCategorias())
       .thenReturn(Collections.singletonMap(5L, categoria));
-    when(servicioPartidaPregunta.obtenerPreguntaPorCategoria(5L)).thenReturn(pregunta);
+    when(servicioPartidaPregunta.obtenerPreguntaPorCategoria(eq(5L), anyCollection()))
+      .thenReturn(pregunta);
   }
 
   @Test
@@ -150,6 +151,20 @@ public class ServicioVotacionCategoriaImplTest {
   }
 
   @Test
+  public void dadoQueYaSeUsaronPreguntasCuandoSeFinalizaLaVotacionSeExcluyenEsasPreguntas() {
+    PartidaRonda rondaAnterior = mock(PartidaRonda.class);
+    Pregunta preguntaUsada = mock(Pregunta.class);
+
+    when(preguntaUsada.getIdentificador()).thenReturn(7L);
+    when(rondaAnterior.getPregunta()).thenReturn(preguntaUsada);
+    when(partida.getRondas()).thenReturn(new ArrayList<>(Arrays.asList(rondaAnterior, ronda)));
+
+    servicio.registrarVotoCategoria(1L, 2L, 5L);
+
+    verify(servicioPartidaPregunta).obtenerPreguntaPorCategoria(5L, Collections.singletonList(7L));
+  }
+
+  @Test
   public void dadoQueElSolicitanteNoEsHostCuandoFinalizaLaVotacionObtengoExcepcion() {
     Usuario host = mock(Usuario.class);
 
@@ -183,11 +198,13 @@ public class ServicioVotacionCategoriaImplTest {
     when(host.getId()).thenReturn(2L);
     when(sala.getHost()).thenReturn(host);
 
-    when(servicioPartidaPregunta.obtenerPreguntaPorCategoria(5L)).thenReturn(null);
+    when(servicioPartidaPregunta.obtenerPreguntaPorCategoria(eq(5L), anyCollection()))
+      .thenReturn(null);
 
     votacion.agregarVoto(new VotoCategoria(usuario, categoria));
 
     assertThrows(IllegalStateException.class, () -> servicio.finalizarVotacionCategoria(1L, 2L));
+    verify(ronda, never()).setEstado(EstadoRonda.PREGUNTA_EN_CURSO);
   }
 
   @Test
