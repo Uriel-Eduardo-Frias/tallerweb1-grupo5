@@ -53,10 +53,13 @@
 
         <div class="card">
             <h2 class="card-title"><i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i> Resumen de Juego</h2>
-            <div th:if="${estadistica != null}" style="display: flex; flex-direction: column; gap: 1.2rem;">
-            </div>
+
+            <th:block th:if="${estadistica != null}">
+                <div th:replace="~{estadisticas-fragmento :: resumen(${estadistica})}"></div>
+            </th:block>
+
             <div th:unless="${estadistica != null}" style="color: var(--text-muted); font-size: 0.9rem;">
-                Las estadísticas aún no están disponibles. (Pendiente de implementación).
+                Las estadísticas aún no están disponibles.
             </div>
         </div>
     </div>

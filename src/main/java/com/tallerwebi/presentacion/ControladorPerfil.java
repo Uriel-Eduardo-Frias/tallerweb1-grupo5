@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -17,10 +18,15 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorPerfil {
 
   private ServicioUsuario servicioUsuario;
+  private ServicioEstadistica servicioEstadistica;
 
   @Autowired
-  public ControladorPerfil(ServicioUsuario servicioUsuario) {
+  public ControladorPerfil(
+    ServicioUsuario servicioUsuario,
+    ServicioEstadistica servicioEstadistica
+  ) {
     this.servicioUsuario = servicioUsuario;
+    this.servicioEstadistica = servicioEstadistica;
   }
 
   @RequestMapping(path = "/perfil", method = RequestMethod.GET)
@@ -35,6 +41,7 @@ public class ControladorPerfil {
     Map<String, Object> modelo = new ModelMap();
     modelo.put("usuario", usuario);
     modelo.put("perfil", usuario.getPerfil());
+    modelo.put("estadistica", servicioEstadistica.obtenerEstadisticaUsuario(idUsuario));
 
     return new ModelAndView("perfil", modelo);
   }
@@ -50,6 +57,7 @@ public class ControladorPerfil {
     Map<String, Object> modelo = new ModelMap();
     modelo.put("usuario", usuarioBuscado);
     modelo.put("perfil", usuarioBuscado.getPerfil());
+    modelo.put("estadistica", servicioEstadistica.obtenerEstadisticaUsuario(id));
 
     return new ModelAndView("perfil-publico", modelo);
   }

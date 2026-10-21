@@ -56,6 +56,12 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
   }
 
   @Override
+  public List<Usuario> buscarTodos() {
+    String hql = "FROM Usuario u ORDER BY u.username";
+    return sessionFactory.getCurrentSession().createQuery(hql, Usuario.class).getResultList();
+  }
+
+  @Override
   public Usuario buscarPorUsername(String username) {
     String hql = "FROM Usuario u WHERE u.username = :username";
 

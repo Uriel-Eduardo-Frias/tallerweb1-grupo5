@@ -84,7 +84,7 @@ public class ServicioUsuarioImpl implements ServicioUsuario {
   @Override
   public List<Usuario> buscarUsuariosPorNombre(String terminoBusqueda) {
     if (terminoBusqueda == null || terminoBusqueda.isBlank()) {
-      return Collections.emptyList();
+      return repositorioUsuario.buscarTodos();
     }
 
     return repositorioUsuario.buscarUsuariosPorNombre(terminoBusqueda.trim());

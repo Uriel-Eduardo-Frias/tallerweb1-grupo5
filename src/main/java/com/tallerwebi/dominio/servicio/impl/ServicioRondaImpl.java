@@ -1,9 +1,7 @@
 package com.tallerwebi.dominio.servicio.impl;
 
 import com.tallerwebi.dominio.NotificadorSala;
-import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
-import com.tallerwebi.dominio.enumeration.EstadoSala;
 import com.tallerwebi.dominio.excepcion.PartidaNoEncontradaException;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
@@ -12,8 +10,8 @@ import com.tallerwebi.dominio.modelo.VotacionCategoria;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioRespuestaJugador;
+import com.tallerwebi.dominio.servicio.ServicioResultadoPartida;
 import com.tallerwebi.dominio.servicio.ServicioRonda;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,24 +24,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ServicioRondaImpl implements ServicioRonda {
 
-  private static final String EVENTO_PARTIDA_FINALIZADA = "PARTIDA_FINALIZADA";
   private static final String EVENTO_NUEVA_VOTACION = "NUEVA_VOTACION_CATEGORIA";
 
   private final RepositorioPartida repositorioPartida;
   private final RepositorioPartidaJugador repositorioPartidaJugador;
   private final RepositorioRespuestaJugador repositorioRespuestaJugador;
   private final NotificadorSala notificadorSala;
+  private final ServicioResultadoPartida servicioResultadoPartida;
 
   public ServicioRondaImpl(
     RepositorioPartida repositorioPartida,
     RepositorioPartidaJugador repositorioPartidaJugador,
     RepositorioRespuestaJugador repositorioRespuestaJugador,
-    NotificadorSala notificadorSala
+    NotificadorSala notificadorSala,
+    ServicioResultadoPartida servicioResultadoPartida
   ) {
     this.repositorioPartida = repositorioPartida;
     this.repositorioPartidaJugador = repositorioPartidaJugador;
     this.repositorioRespuestaJugador = repositorioRespuestaJugador;
     this.notificadorSala = notificadorSala;
+    this.servicioResultadoPartida = servicioResultadoPartida;
   }
 
   @Override
@@ -134,15 +134,7 @@ public class ServicioRondaImpl implements ServicioRonda {
   }
 
   private void finalizarPartida(Partida partida) {
-    partida.setEstado(EstadoPartida.FINALIZADA);
-    partida.setFechaFin(LocalDateTime.now());
-    partida.getSala().setEstado(EstadoSala.FINALIZADA);
-
-    notificadorSala.rondaActualizada(
-      partida.getSala().getCodigo(),
-      partida.getId(),
-      EVENTO_PARTIDA_FINALIZADA
-    );
+    servicioResultadoPartida.cerrarPartida(partida.getId());
   }
 
   private void avanzarARondaSiguiente(Partida partida) {

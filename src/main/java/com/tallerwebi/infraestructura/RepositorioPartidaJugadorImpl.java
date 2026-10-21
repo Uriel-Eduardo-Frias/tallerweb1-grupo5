@@ -1,5 +1,6 @@
 package com.tallerwebi.infraestructura;
 
+import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import java.util.List;
@@ -53,6 +54,44 @@ public class RepositorioPartidaJugadorImpl implements RepositorioPartidaJugador 
       .getCurrentSession()
       .createQuery(hql, PartidaJugador.class)
       .setParameter("partidaId", partidaId)
+      .getResultList();
+  }
+
+  @Override
+  public List<PartidaJugador> listarPartidasFinalizadasDelUsuario(Long usuarioId) {
+    String hql =
+      """
+      SELECT pj
+      FROM PartidaJugador pj
+      JOIN FETCH pj.partida p
+      WHERE pj.usuario.id = :usuarioId
+      AND p.estado = :estado
+      ORDER BY p.fechaInicio DESC
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, PartidaJugador.class)
+      .setParameter("usuarioId", usuarioId)
+      .setParameter("estado", EstadoPartida.FINALIZADA)
+      .getResultList();
+  }
+
+  @Override
+  public List<PartidaJugador> listarTodasLasPartidasFinalizadas() {
+    String hql =
+      """
+      SELECT pj
+      FROM PartidaJugador pj
+      JOIN FETCH pj.usuario u
+      JOIN FETCH pj.partida p
+      WHERE p.estado = :estado
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, PartidaJugador.class)
+      .setParameter("estado", EstadoPartida.FINALIZADA)
       .getResultList();
   }
 }

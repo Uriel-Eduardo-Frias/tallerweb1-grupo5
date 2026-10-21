@@ -27,8 +27,8 @@
         </section>
         <section class="card">
             <h2 class="card-title"><i class="fa-solid fa-chart-simple" style="color: var(--primary);"></i> Estadísticas</h2>
-            <div th:if="${estadistica != null}" class="stats-list">
-            </div>
+            <div th:replace="~{estadisticas-fragmento :: resumen(${estadistica})}"></div>
+
             <div th:unless="${estadistica != null}" style="color: var(--text-muted); font-size: 0.9rem;">
                 Las estadísticas aún no están disponibles.
             </div>

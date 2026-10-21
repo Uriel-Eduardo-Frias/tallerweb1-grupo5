@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="resumen(estadistica)"
+     th:with="fila='display:flex; justify-content:space-between; align-items:center; padding:0.7rem 0; border-bottom:1px solid var(--border-color); font-size:0.9rem;'">
+
+    <div th:style="${fila}">
+        <span style="color:var(--text-muted);">Partidas Jugadas:</span>
+        <strong th:text="${estadistica.partidasJugadas}">0</strong>
+    </div>
+    <div th:style="${fila}">
+        <span style="color:var(--text-muted);">Partidas Ganadas:</span>
+        <strong style="color:#00B894;" th:text="${estadistica.partidasGanadas}">0</strong>
+    </div>
+    <div th:style="${fila}">
+        <span style="color:var(--text-muted);">Preguntas Acertadas:</span>
+        <strong style="color:#0984E3;" th:text="${estadistica.preguntasAcertadas}">0</strong>
+    </div>
+    <div th:style="${fila}">
+        <span style="color:var(--text-muted);">Preguntas Erradas:</span>
+        <strong style="color:#D63031;" th:text="${estadistica.preguntasErradas}">0</strong>
+    </div>
+    <div th:style="${fila}">
+        <span style="color:var(--text-muted);">Efectividad / Promedio:</span>
+        <strong th:text="${estadistica.promedioAciertos} + '%'">0%</strong>
+    </div>
+    <div th:style="${fila}">
+        <span style="color:var(--text-muted);">Racha Respuestas Actual:</span>
+        <span class="badge" style="background:#FFF4E0; color:#E67E22;">
+            <span th:text="${estadistica.rachaActualRespuestas}">0</span> <i class="fa-solid fa-fire"></i>
+        </span>
+    </div>
+    <div th:style="${fila} + ' border-bottom:0;'">
+        <span style="color:var(--text-muted);">Récord de Racha:</span>
+        <span class="badge badge-purple">
+            <span th:text="${estadistica.mejorRachaRespuestas}">0</span> <i class="fa-solid fa-bolt"></i>
+        </span>
+    </div>
+</div>
+
+</body>
+</html>

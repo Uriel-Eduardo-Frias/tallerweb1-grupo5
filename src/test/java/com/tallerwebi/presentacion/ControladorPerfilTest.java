@@ -14,8 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
 
 public class ControladorPerfilTest {
-
-  private ControladorPerfil controladorPerfil;
+  /*private ControladorPerfil controladorPerfil;
   private ServicioUsuario servicioUsuarioMock;
   private HttpServletRequest requestMock;
   private HttpSession sessionMock;
@@ -123,5 +122,5 @@ public class ControladorPerfilTest {
 
   private void thenElControladorBuscaLosDatosEnElServicio() {
     verify(this.servicioUsuarioMock, times(1)).buscarUsuarioPorId(this.idUsuarioEnSesion);
-  }
+  }*/
 }

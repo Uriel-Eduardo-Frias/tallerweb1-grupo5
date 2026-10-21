@@ -7,4 +7,7 @@ public interface RepositorioPartidaJugador {
   PartidaJugador obtenerPorPartidaYUsuario(Long partidaId, Long usuarioId);
   void guardar(PartidaJugador jugador);
   List<PartidaJugador> obtenerPorPartida(Long partidaId);
+
+  List<PartidaJugador> listarPartidasFinalizadasDelUsuario(Long usuarioId);
+  List<PartidaJugador> listarTodasLasPartidasFinalizadas();
 }
