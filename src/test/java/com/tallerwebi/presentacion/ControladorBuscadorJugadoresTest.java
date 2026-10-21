@@ -57,7 +57,7 @@ public class ControladorBuscadorJugadoresTest {
   }
 
   private void givenUnUsuarioLogueado() {
-    when(this.sessionMock.getAttribute("ROL")).thenReturn("USER");
+    when(this.sessionMock.getAttribute("ID_USUARIO")).thenReturn(1L);
   }
 
   // when

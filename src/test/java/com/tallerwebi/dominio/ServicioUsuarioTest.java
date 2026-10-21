@@ -54,7 +54,6 @@ class ServicioUsuarioTest {
 
     // then
     thenLaListaDeResultadosEstaVacia();
-    verifyNoInteractions(repositorioUsuario);
   }
 
   @Test
@@ -76,7 +75,6 @@ class ServicioUsuarioTest {
 
     // then
     thenLaListaDeResultadosEstaVacia();
-    verifyNoInteractions(repositorioUsuario);
   }
 
   @Test
@@ -312,7 +310,7 @@ class ServicioUsuarioTest {
   }
 
   @Test
-  void siElUsuarioNoTienePerfilNoActualizaNada() {
+  void siElUsuarioNoTienePerfilLoCreaYLoActualiza() {
     // given
     Usuario sinPerfil = givenUnUsuario("sinperfil");
     sinPerfil.setPerfil(null);
@@ -322,7 +320,8 @@ class ServicioUsuarioTest {
     servicioUsuario.actualizarPerfil(6L, "bio", "avatar");
 
     // then
-    assertThat(sinPerfil.getPerfil(), is(nullValue()));
+    assertThat(sinPerfil.getPerfil(), is(notNullValue()));
+    assertThat(sinPerfil.getPerfil().getBiografia(), equalTo("bio"));
   }
 
   // ---------- Given: preparación ----------

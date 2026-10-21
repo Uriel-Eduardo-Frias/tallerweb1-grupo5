@@ -6,9 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.NotificadorSala;
-import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
-import com.tallerwebi.dominio.enumeration.EstadoSala;
 import com.tallerwebi.dominio.excepcion.PartidaNoEncontradaException;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
@@ -17,8 +15,8 @@ import com.tallerwebi.dominio.modelo.VotacionCategoria;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioRespuestaJugador;
+import com.tallerwebi.dominio.servicio.ServicioResultadoPartida;
 import com.tallerwebi.dominio.servicio.impl.ServicioRondaImpl;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +32,7 @@ class ServicioRondaImplTest {
   private RepositorioPartidaJugador repositorioPartidaJugador;
   private RepositorioRespuestaJugador repositorioRespuestaJugador;
   private NotificadorSala notificadorSala;
+  private ServicioResultadoPartida servicioResultadoPartida;
   private ServicioRondaImpl servicio;
 
   private Partida partida;
@@ -45,15 +44,17 @@ class ServicioRondaImplTest {
     repositorioPartidaJugador = mock(RepositorioPartidaJugador.class);
     repositorioRespuestaJugador = mock(RepositorioRespuestaJugador.class);
     notificadorSala = mock(NotificadorSala.class);
+    servicioResultadoPartida = mock(ServicioResultadoPartida.class);
+
     servicio =
       new ServicioRondaImpl(
         repositorioPartida,
         repositorioPartidaJugador,
         repositorioRespuestaJugador,
-        notificadorSala
+        notificadorSala,
+        servicioResultadoPartida
       );
 
-    // Deep stubs: evita armar Sala, Usuario, Pregunta, etc.
     partida = mock(Partida.class, RETURNS_DEEP_STUBS);
     ronda = mock(PartidaRonda.class, RETURNS_DEEP_STUBS);
 
@@ -63,8 +64,6 @@ class ServicioRondaImplTest {
     when(ronda.getId()).thenReturn(RONDA_ID);
     when(ronda.getEstado()).thenReturn(EstadoRonda.PREGUNTA_EN_CURSO);
   }
-
-  // ---------- finalizarRondaSiTodosRespondieron ----------
 
   @Test
   void finalizarRondaLanzaExcepcionSiLaPartidaNoExiste() {
@@ -134,8 +133,6 @@ class ServicioRondaImplTest {
     verify(notificadorSala).rondaResultado(any(), any());
   }
 
-  // ---------- avanzarRonda ----------
-
   @Test
   void avanzarRondaLanzaExcepcionSiLaPartidaNoExiste() {
     when(repositorioPartida.obtenerPorIdConRondas(PARTIDA_ID)).thenReturn(null);
@@ -175,7 +172,7 @@ class ServicioRondaImplTest {
     servicio.avanzarRonda(PARTIDA_ID, HOST_ID);
 
     verify(ronda, never()).setEstado(any(EstadoRonda.class));
-    verify(partida, never()).setEstado(any(EstadoPartida.class));
+    verifyNoInteractions(servicioResultadoPartida);
     verifyNoInteractions(notificadorSala);
   }
 
@@ -184,14 +181,12 @@ class ServicioRondaImplTest {
     when(ronda.getEstado()).thenReturn(EstadoRonda.RESULTADO_PREGUNTA);
     when(partida.getRondaActual()).thenReturn(5);
     when(partida.getTotalRondas()).thenReturn(5);
+    when(partida.getId()).thenReturn(PARTIDA_ID);
 
     servicio.avanzarRonda(PARTIDA_ID, HOST_ID);
 
     verify(ronda).setEstado(EstadoRonda.FINALIZADA);
-    verify(partida).setEstado(EstadoPartida.FINALIZADA);
-    verify(partida).setFechaFin(any(LocalDateTime.class));
-    verify(partida.getSala()).setEstado(EstadoSala.FINALIZADA);
-    verify(notificadorSala).rondaActualizada(any(), any(), eq("PARTIDA_FINALIZADA"));
+    verify(servicioResultadoPartida).cerrarPartida(PARTIDA_ID);
     verify(partida, never()).setRondaActual(anyInt());
   }
 
@@ -210,7 +205,7 @@ class ServicioRondaImplTest {
     verify(partida).setRondaActual(3);
     verify(votacion).reiniciar();
     verify(partida, never()).iniciarVotacionCategoria();
-    verify(partida, never()).setEstado(any(EstadoPartida.class));
+    verifyNoInteractions(servicioResultadoPartida);
     verify(notificadorSala).rondaActualizada(any(), any(), eq("NUEVA_VOTACION_CATEGORIA"));
   }
 
@@ -227,8 +222,6 @@ class ServicioRondaImplTest {
     verify(partida).iniciarVotacionCategoria();
     verify(notificadorSala).rondaActualizada(any(), any(), eq("NUEVA_VOTACION_CATEGORIA"));
   }
-
-  // ---------- helpers ----------
 
   private PartidaJugador jugador(Long id) {
     PartidaJugador j = mock(PartidaJugador.class);

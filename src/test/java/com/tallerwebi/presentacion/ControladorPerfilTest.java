@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.modelo.PerfilUsuario;
 import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -14,10 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
 
 public class ControladorPerfilTest {
-  /*private ControladorPerfil controladorPerfil;
+
+  private ControladorPerfil controladorPerfil;
   private ServicioUsuario servicioUsuarioMock;
   private HttpServletRequest requestMock;
   private HttpSession sessionMock;
+  private ServicioEstadistica servicioEstadisticaMock;
 
   private ModelAndView mav;
   private Long idUsuarioEnSesion;
@@ -27,9 +30,11 @@ public class ControladorPerfilTest {
     this.servicioUsuarioMock = mock(ServicioUsuario.class);
     this.requestMock = mock(HttpServletRequest.class);
     this.sessionMock = mock(HttpSession.class);
+    this.servicioEstadisticaMock = mock(ServicioEstadistica.class);
 
     when(this.requestMock.getSession()).thenReturn(sessionMock);
-    this.controladorPerfil = new ControladorPerfil(this.servicioUsuarioMock);
+    this.controladorPerfil =
+      new ControladorPerfil(this.servicioUsuarioMock, this.servicioEstadisticaMock);
   }
 
   @Test
@@ -122,5 +127,5 @@ public class ControladorPerfilTest {
 
   private void thenElControladorBuscaLosDatosEnElServicio() {
     verify(this.servicioUsuarioMock, times(1)).buscarUsuarioPorId(this.idUsuarioEnSesion);
-  }*/
+  }
 }

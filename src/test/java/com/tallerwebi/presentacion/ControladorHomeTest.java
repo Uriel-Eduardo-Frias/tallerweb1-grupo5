@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,16 +13,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
 
 public class ControladorHomeTest {
-  /*
+
   private ControladorHome controladorHome;
   private ModelAndView mav;
 
   private HttpServletRequest requestMock;
   private HttpSession sessionMock;
+  private ServicioEstadistica servicioEstadisticaMock;
 
   @BeforeEach
   public void init() {
-    this.controladorHome = new ControladorHome();
+    this.servicioEstadisticaMock = mock(ServicioEstadistica.class);
+    this.controladorHome = new ControladorHome(this.servicioEstadisticaMock);
 
     this.requestMock = mock(HttpServletRequest.class);
     this.sessionMock = mock(HttpSession.class);
@@ -52,5 +55,5 @@ public class ControladorHomeTest {
   // then
   private void thenSeMuestraLaVista(String vistaEsperada) {
     assertThat(this.mav.getViewName(), equalTo(vistaEsperada));
-  }*/
+  }
 }
