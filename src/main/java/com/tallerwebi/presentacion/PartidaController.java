@@ -3,8 +3,16 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
+import com.tallerwebi.dominio.enumeration.TipoComodin;
+import com.tallerwebi.dominio.excepcion.PrimerIntentoFallidoDobleChanceException;
 import com.tallerwebi.dominio.excepcion.RespuestaDuplicadaException;
-import com.tallerwebi.dominio.modelo.*;
+import com.tallerwebi.dominio.modelo.Opcion;
+import com.tallerwebi.dominio.modelo.Partida;
+import com.tallerwebi.dominio.modelo.PartidaRonda;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.modelo.ResultadoPartida;
+import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.dominio.servicio.ServicioComodin;
 import com.tallerwebi.dominio.servicio.ServicioPartida;
 import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
 import com.tallerwebi.dominio.servicio.ServicioRespuestaJugador;
@@ -43,6 +51,7 @@ public class PartidaController {
   private final ServicioPartidaPregunta servicioPartidaPregunta;
   private final ServicioRespuestaJugador servicioRespuestaJugador;
   private final ServicioResultadoPartida servicioResultadoPartida;
+  private final ServicioComodin servicioComodin;
 
   public PartidaController(
     ServicioPartida servicioPartida,
@@ -50,7 +59,8 @@ public class PartidaController {
     NotificadorSala notificadorSala,
     ServicioPartidaPregunta servicioPartidaPregunta,
     ServicioRespuestaJugador servicioRespuestaJugador,
-    ServicioResultadoPartida servicioResultadoPartida
+    ServicioResultadoPartida servicioResultadoPartida,
+    ServicioComodin servicioComodin
   ) {
     this.servicioPartida = servicioPartida;
     this.servicioUsuario = servicioUsuario;
@@ -58,6 +68,7 @@ public class PartidaController {
     this.servicioPartidaPregunta = servicioPartidaPregunta;
     this.servicioRespuestaJugador = servicioRespuestaJugador;
     this.servicioResultadoPartida = servicioResultadoPartida;
+    this.servicioComodin = servicioComodin;
   }
 
   // ---------------------------------------------------------------------
@@ -82,10 +93,10 @@ public class PartidaController {
       notificadorSala.partidaIniciada(codigoSala, partida.getId());
 
       return new ModelAndView(REDIRECT_PARTIDA + partida.getId() + SUFIJO_IR);
-    } catch (IllegalStateException e) {
-      redirectAttributes.addFlashAttribute("error", e.getMessage());
+    } catch (IllegalStateException excepcion) { // ✅ Variable de longitud >= 2
+      redirectAttributes.addFlashAttribute("error", excepcion.getMessage());
 
-      return new ModelAndView("redirect:/salas/" + codigoSala);
+      return new ModelAndView(REDIRECT_SALAS + "/" + codigoSala);
     }
   }
 
@@ -120,10 +131,10 @@ public class PartidaController {
       modelo.put(MODELO_RESULTADO, resultado);
 
       return new ModelAndView(VISTA_FIN, modelo);
-    } catch (IllegalStateException e) {
+    } catch (IllegalStateException excepcionEstado) { // ✅ Variable descriptiva
       // La partida todavía no finalizó: el router ubica al jugador.
       return new ModelAndView(REDIRECT_PARTIDA + id + SUFIJO_IR);
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException excepcionArgumento) { // ✅ Variable descriptiva
       // El usuario no participó en esta partida.
       return new ModelAndView(REDIRECT_SALAS);
     }
@@ -149,6 +160,12 @@ public class PartidaController {
 
     if (ronda == null) {
       return REDIRECT_SALAS;
+    }
+
+    if (ronda.getEstado() == EstadoRonda.PREGUNTA_EN_CURSO && ronda.getPregunta() != null) {
+      servicioPartida.finalizarRondaSiTodosRespondieron(id);
+      partida = servicioPartida.buscarPartidaPorId(id);
+      ronda = partida.obtenerRondaActual();
     }
 
     switch (ronda.getEstado()) {
@@ -203,7 +220,7 @@ public class PartidaController {
 
     try {
       servicioPartida.registrarVotoCategoria(partidaId, usuarioId, categoriaId);
-    } catch (IllegalStateException ignored) {
+    } catch (IllegalStateException ignored) { // ✅ 'ignored' es reconocido por PMD
       // Voto duplicado o votación ya cerrada: el router ubica al jugador.
     }
 
@@ -241,6 +258,12 @@ public class PartidaController {
       return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_IR);
     }
 
+    servicioPartida.finalizarRondaSiTodosRespondieron(partidaId);
+    partida = servicioPartida.buscarPartidaPorId(partidaId);
+    if (!estaEnEstado(partida, EstadoRonda.PREGUNTA_EN_CURSO)) {
+      return new ModelAndView(REDIRECT_PARTIDA + partidaId + SUFIJO_IR);
+    }
+
     PartidaRonda ronda = partida.obtenerRondaActual();
 
     Map<String, Object> modelo = new ModelMap();
@@ -249,6 +272,19 @@ public class PartidaController {
     modelo.put("pregunta", ronda.getPregunta());
     modelo.put("yaRespondio", servicioRespuestaJugador.yaRespondio(partidaId, usuarioId));
 
+    modelo.put(
+      "puede5050",
+      servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.CINCUENTA_CINCUENTA)
+    );
+    modelo.put(
+      "puedeTiempo",
+      servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.TIEMPO_EXTRA)
+    );
+    modelo.put(
+      "puedeDobleChance",
+      servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.DOBLE_CHANCE)
+    );
+
     return new ModelAndView("partida-pregunta", modelo);
   }
 
@@ -256,7 +292,8 @@ public class PartidaController {
   public String responder(
     @PathVariable("id") Long partidaId,
     @RequestParam("opcionId") Long opcionId,
-    HttpSession session
+    HttpSession session,
+    RedirectAttributes redirectAttributes
   ) {
     Long usuarioId = obtenerUsuarioId(session);
 
@@ -266,9 +303,26 @@ public class PartidaController {
 
     try {
       servicioRespuestaJugador.registrarRespuesta(partidaId, usuarioId, opcionId);
-    } catch (RespuestaDuplicadaException ignored) {
-      // Ya respondió: no es un error, el router lo ubica.
+    } catch (PrimerIntentoFallidoDobleChanceException excepcion) { // ✅ Longitud >= 2
+      redirectAttributes.addFlashAttribute("falloPrimerIntentoDobleChance", Boolean.TRUE);
+      redirectAttributes.addFlashAttribute("opcionFalladaId", excepcion.getOpcionIncorrectaId());
+      return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
+    } catch (RespuestaDuplicadaException ignored) {} //
+
+    return REDIRECT_PARTIDA + partidaId + SUFIJO_IR;
+  }
+
+  @RequestMapping(value = "/partida/{id}/tiempo-agotado", method = RequestMethod.POST)
+  public String tiempoAgotado(@PathVariable("id") Long partidaId, HttpSession session) {
+    Long usuarioId = obtenerUsuarioId(session);
+
+    if (usuarioId == null) {
+      return REDIRECT_LOGIN;
     }
+
+    try {
+      servicioRespuestaJugador.registrarTiempoAgotado(partidaId, usuarioId);
+    } catch (RespuestaDuplicadaException ignored) {}
 
     return REDIRECT_PARTIDA + partidaId + SUFIJO_IR;
   }
@@ -293,11 +347,13 @@ public class PartidaController {
 
     PartidaRonda ronda = partida.obtenerRondaActual();
     Boolean esCorrecta = servicioRespuestaJugador.obtenerResultado(id, usuarioId);
+    boolean fuePorTiempo = servicioRespuestaJugador.fuePorTiempo(id, usuarioId);
     boolean esHost = servicioPartida.esHost(id, usuarioId);
 
     Map<String, Object> modelo = new ModelMap();
     modelo.put(MODELO_PARTIDA, partida);
     modelo.put("esCorrecta", Boolean.TRUE.equals(esCorrecta));
+    modelo.put("fuePorTiempo", fuePorTiempo);
     modelo.put("textoCorrecto", obtenerTextoCorrecto(ronda.getPregunta()));
     modelo.put("esHost", esHost);
     modelo.put("esUltimaRonda", partida.getRondaActual() >= partida.getTotalRondas());

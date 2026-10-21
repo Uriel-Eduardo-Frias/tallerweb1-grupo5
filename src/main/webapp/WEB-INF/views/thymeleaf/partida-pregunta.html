@@ -14,10 +14,23 @@
 
         <h1 class="text-center mb-3">TRIVIA</h1>
 
-        <h5 class="text-center text-secondary mb-4">
+        <h5 class="text-center text-secondary mb-3">
             Ronda <span th:text="${ronda.numero}">1</span>
             / <span th:text="${partida.totalRondas}">5</span>
         </h5>
+
+        <div class="mb-3" th:if="${!yaRespondio}">
+            <div class="d-flex justify-content-between mb-1 small fw-bold">
+                <span>Tiempo restante</span>
+                <span><span id="segundosRestantes">15</span>s</span>
+            </div>
+            <div class="progress" style="height: 18px;">
+                <div id="barraTiempo"
+                     class="progress-bar bg-warning progress-bar-striped progress-bar-animated text-dark fw-bold"
+                     style="width: 100%;">
+                </div>
+            </div>
+        </div>
 
         <div class="text-end mb-3" th:if="${pregunta.categoria != null}">
             <span class="badge bg-info text-dark fs-6" th:text="${pregunta.categoria.nombre}">Categoría</span>
@@ -25,20 +38,74 @@
 
         <h2 class="mb-4" th:text="${pregunta.descripcion}">Enunciado de la pregunta</h2>
 
-        <form th:if="${!yaRespondio}"
+        <div class="card bg-white p-3 mb-4 border" th:if="${!yaRespondio}">
+            <p class="text-muted small mb-2 fw-bold text-center">COMODINES DE LA PARTIDA</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+                <button type="button"
+                        id="btn5050"
+                        th:disabled="${!puede5050}"
+                        th:classappend="${!puede5050} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-warning'"
+                        class="btn btn-sm fw-bold px-3 py-2"
+                        onclick="usar5050()">
+                    50/50 (-5s)
+                    <span th:if="${!puede5050}" class="badge bg-dark ms-1">Usado</span>
+                </button>
+
+                <button type="button"
+                        id="btnTiempoExtra"
+                        th:disabled="${!puedeTiempo}"
+                        th:classappend="${!puedeTiempo} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-info'"
+                        class="btn btn-sm fw-bold px-3 py-2"
+                        onclick="usarTiempoExtra()">
+                    +10s
+                    <span th:if="${!puedeTiempo}" class="badge bg-dark ms-1">Usado</span>
+                </button>
+
+                <button type="button"
+                        id="btnDobleChance"
+                        th:disabled="${!puedeDobleChance}"
+                        th:classappend="${!puedeDobleChance} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-primary'"
+                        class="btn btn-sm fw-bold px-3 py-2"
+                        onclick="usarDobleChance()">
+                    2x Chance
+                    <span th:if="${!puedeDobleChance}" class="badge bg-dark ms-1">Usado</span>
+                </button>
+            </div>
+            <div id="alertaComodin" class="alert alert-info py-1 px-2 mt-3 mb-0 small text-center d-none"></div>
+        </div>
+
+        <div th:if="${falloPrimerIntentoDobleChance}" class="alert alert-warning text-center fw-bold mb-3">
+            ⚠️ ¡Respuesta incorrecta! Pero gracias a tu <strong>Doble Chance</strong> tienes un segundo intento. ¡Elige otra opción!
+        </div>
+
+        <!-- FORMULARIO DE RESPUESTAS -->
+        <form id="formRespuesta"
+              th:if="${!yaRespondio}"
               th:action="@{/partida/{id}/responder(id=${partida.id})}"
               method="POST"
               class="d-grid gap-3">
             <button th:each="opcion : ${pregunta.opciones}"
                     type="submit"
                     name="opcionId"
+                    th:id="'opcion-' + ${opcion.id}"
                     th:value="${opcion.id}"
-                    class="btn btn-outline-primary text-start p-3 fs-5"
-                    th:text="${opcion.texto}">
-                Opción de respuesta
+                    th:disabled="${opcionFalladaId != null and opcionFalladaId == opcion.id}"
+                    th:classappend="${opcionFalladaId != null and opcionFalladaId == opcion.id} ? 'btn-danger opacity-50 pe-none' : 'btn-outline-primary'"
+                    class="btn text-start p-3 fs-5 boton-opcion">
+                <span th:text="${opcion.texto}">Opción de respuesta</span>
+                <span th:if="${opcionFalladaId != null and opcionFalladaId == opcion.id}" class="badge bg-dark float-end">Incorrecta</span>
             </button>
         </form>
 
+        <form id="formTiempoAgotado"
+              th:if="${!yaRespondio}"
+              th:action="@{/partida/{id}/tiempo-agotado(id=${partida.id})}"
+              method="POST"
+              style="display: none;">
+        </form>
+
+        <!-- MENSAJE DE ESPERA SI YA RESPODIÓ -->
         <div th:if="${yaRespondio}" class="alert alert-info text-center">
             Respuesta registrada. Esperando a los demás jugadores...
         </div>
@@ -53,6 +120,103 @@
     const codigoSala = /*[[${partida.sala.codigo}]]*/ "";
     const urlIr = /*[[@{/partida/{id}/ir(id=${partida.id})}]]*/ "";
     const urlWs = /*[[@{/ws}]]*/ "/ws";
+    const yaRespondio = /*[[${yaRespondio}]]*/ false;
+
+    let tiempoRestante = 15;
+    const tiempoMaximoBase = 15;
+    const barra = document.getElementById("barraTiempo");
+    const labelSegundos = document.getElementById("segundosRestantes");
+    const alertaComodin = document.getElementById("alertaComodin");
+
+    function actualizarCronometroVisual() {
+        if (!labelSegundos || !barra) return;
+        labelSegundos.textContent = tiempoRestante;
+        const porcentaje = Math.min(100, Math.max(0, (tiempoRestante / tiempoMaximoBase) * 100));
+        barra.style.width = porcentaje + "%";
+
+        if (tiempoRestante <= 5) {
+            barra.className = "progress-bar bg-danger progress-bar-striped progress-bar-animated text-white fw-bold";
+        } else {
+            barra.className = "progress-bar bg-warning progress-bar-striped progress-bar-animated text-dark fw-bold";
+        }
+    }
+
+    let intervalReloj = null;
+
+    if (!yaRespondio) {
+        intervalReloj = setInterval(() => {
+            tiempoRestante--;
+            actualizarCronometroVisual();
+
+            if (tiempoRestante <= 0) {
+                clearInterval(intervalReloj);
+                mostrarMensajeComodin("¡Tiempo agotado!");
+                document.querySelectorAll(".boton-opcion").forEach(b => b.disabled = true);
+
+                const formTiempo = document.getElementById("formTiempoAgotado");
+                if (formTiempo) {
+                    formTiempo.submit();
+                }
+            }
+        }, 1000);
+    }
+
+    function mostrarMensajeComodin(mensaje) {
+        if (alertaComodin) {
+            alertaComodin.textContent = mensaje;
+            alertaComodin.classList.remove("d-none");
+        }
+    }
+
+    function desactivarBotonComodin(btnId) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        btn.disabled = true;
+        btn.classList.remove("btn-outline-warning", "btn-outline-info", "btn-outline-primary");
+        btn.classList.add("btn-secondary", "opacity-50", "pe-none");
+        btn.innerHTML += ' <span class="badge bg-dark ms-1">Usado</span>';
+    }
+
+    function usar5050() {
+        const url = /*[[@{/partida/{id}/comodin/50-50(id=${partida.id})}]]*/ "";
+        fetch(url, { method: "POST" })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                data.opcionesDescartadas.forEach(id => {
+                    const btnOpcion = document.getElementById("opcion-" + id);
+                    if (btnOpcion) btnOpcion.style.display = "none";
+                });
+                tiempoRestante = Math.max(2, tiempoRestante - data.penalizacionSegundos);
+                actualizarCronometroVisual();
+                desactivarBotonComodin("btn5050");
+                mostrarMensajeComodin("50/50 aplicado: 2 opciones descartadas (-" + data.penalizacionSegundos + "s)");
+            });
+    }
+
+    function usarTiempoExtra() {
+        const url = /*[[@{/partida/{id}/comodin/tiempo-extra(id=${partida.id})}]]*/ "";
+        fetch(url, { method: "POST" })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                tiempoRestante += data.segundosExtra;
+                actualizarCronometroVisual();
+                desactivarBotonComodin("btnTiempoExtra");
+                mostrarMensajeComodin("¡+10 segundos agregados al cronómetro!");
+            });
+    }
+
+    function usarDobleChance() {
+        const url = /*[[@{/partida/{id}/comodin/doble-chance(id=${partida.id})}]]*/ "";
+        fetch(url, { method: "POST" })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                desactivarBotonComodin("btnDobleChance");
+                mostrarMensajeComodin("Doble Chance activa: tendrás un intento extra si fallas");
+            });
+    }
 
     const eventosTransicion = [
         "VOTACION_CATEGORIA_FINALIZADA",
@@ -79,6 +243,7 @@
             }
 
             if (eventosTransicion.includes(evento.tipo)) {
+                if (intervalReloj) clearInterval(intervalReloj);
                 window.location.href = urlIr;
             }
         });
@@ -93,6 +258,12 @@
     };
 
     cliente.activate();
+
+    if (yaRespondio) {
+        setInterval(() => {
+            window.location.href = urlIr;
+        }, 2000);
+    }
 </script>
 </body>
 </html>
