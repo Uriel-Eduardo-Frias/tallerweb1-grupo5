@@ -1,399 +1,187 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title th:text="${sala.nombre + ' | TriviaWeb'}">
-        Detalle de la sala
-    </title>
-
-    <link rel="stylesheet"
-          th:href="@{/resources/core/css/salas.css}">
-
-    <style>
-        :root {
-            --bg: #10101a;
-            --surface: #1a1a29;
-            --surface-hover: #222238;
-            --text: #f4f2ff;
-            --text-muted: #aaa7bf;
-            --border: #34334a;
-            --primary: #8b5cf6;
-            --primary-hover: #7c3aed;
-            --success: #34d399;
-            --warning: #fbbf24;
-            --error: #f87171;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            margin: 0;
-            background:
-                    radial-gradient(ellipse at top, #292044 0, transparent 45%),
-                    var(--bg);
-            color: var(--text);
-            font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
-        }
-
-        .main-header {
-            border-bottom: 1px solid var(--border);
-            background: rgb(16 16 26 / 85%);
-        }
-
-        .header-container,
-        .main-content {
-            width: min(1120px, calc(100% - 2rem));
-            margin: 0 auto;
-        }
-
-        .header-container {
-            min-height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .brand-logo {
-            color: var(--text);
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-decoration: none;
-        }
-
-        .brand-accent {
-            color: #a78bfa;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 160ms ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--text);
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
-            align-items: start;
-            gap: 1.25rem;
-            padding: 3rem 0;
-        }
-
-        .card {
-            padding: clamp(1.4rem, 4vw, 2rem);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            background: var(--surface);
-            box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
-        }
-
-        .card h1 {
-            margin: 0 0 1.5rem;
-            font-size: clamp(1.8rem, 5vw, 2.4rem);
-            letter-spacing: -0.04em;
-            overflow-wrap: anywhere;
-        }
-
-        .card h2 {
-            margin: 1.8rem 0 1rem;
-            font-size: 1.2rem;
-        }
-
-        .card p {
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        .card p strong {
-            color: var(--text);
-        }
-
-        .card ul {
-            display: grid;
-            gap: 0.65rem;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .card li {
-            padding: 0.75rem 0.9rem;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: rgb(255 255 255 / 3%);
-        }
-
-        .form-field {
-            display: grid;
-            gap: 0.55rem;
-            margin: 1.25rem 0;
-        }
-
-        .form-field label {
-            font-size: 0.95rem;
-            font-weight: 650;
-        }
-
-        .form-field input {
-            width: 100%;
-            padding: 0.85rem 0.95rem;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            outline: none;
-            background: #12121e;
-            color: var(--text);
-            font: inherit;
-            transition: border-color 160ms ease, box-shadow 160ms ease;
-        }
-
-        .form-field input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgb(139 92 246 / 18%);
-        }
-
-        .btn {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            padding: 0.9rem 1.1rem;
-            border: 0;
-            border-radius: 10px;
-            color: #fff;
-            font: inherit;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 160ms ease, transform 160ms ease;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-        }
-
-        .notice,
-        .error-message {
-            grid-column: 1 / -1;
-            margin: 0;
-            padding: 1rem 1.2rem;
-            border: 1px solid;
-            border-radius: 12px;
-            line-height: 1.5;
-        }
-
-        .notice {
-            border-color: rgb(251 191 36 / 30%);
-            background: rgb(251 191 36 / 9%);
-            color: #fcd34d;
-        }
-
-        .error-message {
-            border-color: rgb(248 113 113 / 30%);
-            background: rgb(248 113 113 / 9%);
-            color: #fca5a5;
-        }
-
-        .btn:focus-visible,
-        .nav-links a:focus-visible,
-        .brand-logo:focus-visible {
-            outline: 3px solid #c4b5fd;
-            outline-offset: 3px;
-        }
-
-        @media (max-width: 720px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                padding: 2rem 0;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        .status {
-            display: inline-block;
-            padding: 0.35rem 0.7rem;
-            border-radius: 999px;
-            background: rgb(139 92 246 / 16%);
-            color: #c4b5fd;
-            font-size: 0.85rem;
-        }
-    </style>
-
-</head>
+<head th:replace="~{header :: head('Lobby de Sala')}"></head>
 <body>
-<header class="main-header">
-    <div class="header-container">
-        <a class="brand-logo" th:href="@{/salas}">
-            Trivia<span class="brand-accent">Web</span>
-        </a>
-
-        <nav class="nav-links" aria-label="Navegación principal">
-            <a th:href="@{/salas}">Salas</a>
-        </nav>
-    </div>
-</header>
+<header th:replace="~{header :: navbar}"></header>
 
 <main class="main-content">
 
-    <!-- DATOS DE LA SALA -->
-    <section class="card" aria-labelledby="room-title">
-        <h1 id="room-title" th:text="${sala.nombre}">
-            Nombre de la sala
-        </h1>
-
-        <p>
-            Estado de la sala:
-            <strong class="status"
-                    th:if="${sala.estado.name() == 'EN_ESPERA'}">
-                En espera
-            </strong>
-
-            <strong class="status"
-                    th:if="${sala.estado.name() == 'EN_CURSO'}">
-                En curso
-            </strong>
-
-            <strong class="status"
-                    th:if="${sala.estado.name() == 'FINALIZADA'}">
-                Finalizada
-            </strong>
-        </p>
-
-        <p>
-            Código para invitar:
-            <strong th:text="${sala.codigo}">TRV-XXXX</strong>
-        </p>
-
-        <p>
-            Host:
-            <span th:text="${sala.host.username}">Nombre del host</span>
-        </p>
-
-        <p>
-            Jugadores:
-            <strong id="cantidad-jugadores" th:text="${#lists.size(sala.jugadores)}">1</strong>
-            /
-            <span th:text="${sala.maxJugadores}">4</span>
-        </p>
-
-        <h2>Participantes</h2>
-
-        <p th:if="${#lists.isEmpty(sala.jugadores)}">
-            Todavía no hay jugadores en la sala.
-        </p>
-
-        <ul id="lista-jugadores" th:unless="${#lists.isEmpty(sala.jugadores)}">
-            <li th:each="jugador : ${sala.jugadores}">
-                <span th:text="${jugador.usuario.username}">Nombre del jugador</span>
-
-                <!-- el host no tiene estado "listo" -->
-                <strong th:if="${jugador.usuario.id == sala.host.id}">(Host)</strong>
-
-                <strong th:if="${jugador.usuario.id != sala.host.id and jugador.listo}"
-                        class="status status-ok">
-                    Listo
-                </strong>
-
-                <strong th:if="${jugador.usuario.id != sala.host.id and !jugador.listo}"
-                        class="status status-wait">
-                    No listo
-                </strong>
-            </li>
-        </ul>
-    </section>
-
-    <!-- UNIRSE: solo si no es host, no está unido, la sala espera y hay lugar -->
+    <!-- ENCABEZADO DEL LOBBY -->
     <section class="card"
-             aria-labelledby="join-title"
-             th:if="${!esHost and !yaUnido
-                     and sala.estado.name() == 'EN_ESPERA'
-                     and #lists.size(sala.jugadores) < sala.maxJugadores}">
-        <h2 id="join-title">Unirse a esta sala</h2>
+             style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2rem;">
+        <div>
+            <span class="badge badge-purple" th:if="${sala.estado.name() == 'EN_ESPERA'}">LOBBY DE ESPERA</span>
+            <span class="badge badge-warning" th:if="${sala.estado.name() == 'EN_CURSO'}">PARTIDA EN CURSO</span>
+            <span class="badge badge-info" th:if="${sala.estado.name() == 'FINALIZADA'}">SALA FINALIZADA</span>
 
-        <form th:action="@{/salas/{codigo}/unirse(codigo=${sala.codigo})}"
-              method="post">
-            <button type="submit" class="btn btn-primary">
-                Unirme
+            <h1 style="font-size: 2rem; font-weight: 800; margin: 0.6rem 0 0.3rem; overflow-wrap: anywhere;"
+                th:text="${sala.nombre}">Nombre de la sala</h1>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Host: <strong style="color: var(--text-main);" th:text="${sala.host.username}">admin</strong>
+                | Capacidad:
+                <span id="cantidad-jugadores" th:text="${#lists.size(sala.jugadores)}">1</span>/<span th:text="${sala.maxJugadores}">4</span>
+            </p>
+        </div>
+
+        <div style="border: 2px dashed var(--primary-light); background: #F1EFFF; border-radius: 14px; padding: 1rem 1.4rem; text-align: center; min-width: 240px;">
+            <span style="display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--primary);">
+                CÓDIGO DE INVITACIÓN
+            </span>
+            <strong id="codigo-sala"
+                    style="display: block; font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: var(--primary); margin: 0.3rem 0 0.7rem;"
+                    th:text="${sala.codigo}">TRV-XXXX</strong>
+            <button type="button" class="btn btn-primary"
+                    style="width: 100%; padding: 0.5rem 1rem; font-size: 0.85rem;"
+                    onclick="copiarCodigo(this)">
+                <i class="fa-solid fa-copy"></i> Copiar Código
             </button>
-        </form>
+        </div>
     </section>
 
-    <p class="notice"
-       th:if="${!esHost and !yaUnido
-               and sala.estado.name() == 'EN_ESPERA'
-               and #lists.size(sala.jugadores) >= sala.maxJugadores}">
-        La sala está completa.
-    </p>
+    <div class="dashboard-grid">
 
-    <!-- ESTOY LISTO: solo invitados que ya están en la sala -->
-    <section class="card"
-             th:if="${!esHost and yaUnido and sala.estado.name() == 'EN_ESPERA'}">
-        <h3>¿Listo para jugar?</h3>
-        <p>Cuando estés listo, el host podrá comenzar la partida.</p>
+        <!-- JUGADORES Y ACCIONES -->
+        <section class="card">
+            <h2 class="card-title">
+                <i class="fa-solid fa-users" style="color: var(--primary);"></i> Jugadores en la Sala
+            </h2>
 
-        <form th:action="@{/salas/{codigo}/listo(codigo=${sala.codigo})}"
-              method="post">
-            <button type="submit" class="btn btn-primary">
-                Estoy listo
-            </button>
-        </form>
-    </section>
+            <p th:if="${#lists.isEmpty(sala.jugadores)}" style="color: var(--text-muted);">
+                Todavía no hay jugadores en la sala.
+            </p>
 
-    <!-- COMENZAR PARTIDA: solo el host, habilitado cuando todos están listos -->
-    <div class="start-game"
-         th:if="${esHost and sala.estado.name() == 'EN_ESPERA'}">
-        <h3>Comenzar partida</h3>
+            <div id="lista-jugadores"
+                 th:unless="${#lists.isEmpty(sala.jugadores)}"
+                 style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
 
-        <p th:if="${todosListos}">
-            Todos los jugadores están listos.
-        </p>
-        <p th:unless="${todosListos}">
-            Esperando a que todos los jugadores estén listos.
-        </p>
+                <div th:each="jugador : ${sala.jugadores}"
+                     th:with="avatar=${jugador.usuario.perfil?.avatarUrl}, nivel=${jugador.usuario.perfil?.nivel}"
+                     style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; padding: 1.2rem 1rem; background: #F8F9FB; border: 1px solid var(--border-color); border-radius: var(--radius);">
 
-        <form th:action="@{/partidas/{codigo}/iniciar(codigo=${sala.codigo})}"
-              method="post">
-            <button type="submit"
-                    class="btn btn-primary"
-                    th:disabled="${!todosListos}">
-                Comenzar partida
-            </button>
-        </form>
+                    <img th:unless="${#strings.isEmpty(avatar)}" th:src="${avatar}" alt="Avatar"
+                         style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; background: #FFF;">
+                    <div th:if="${#strings.isEmpty(avatar)}"
+                         style="width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.6rem;">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                    </div>
+
+                    <strong th:text="${jugador.usuario.username}" style="overflow-wrap: anywhere;">Jugador</strong>
+
+                    <span class="badge badge-purple" th:text="'Nvl ' + (${nivel} ?: 1)">Nvl 1</span>
+
+                    <span th:if="${jugador.usuario.id == sala.host.id}" class="badge badge-warning">
+                        <i class="fa-solid fa-crown"></i> Anfitrión
+                    </span>
+                    <span th:if="${jugador.usuario.id != sala.host.id and jugador.listo}" class="badge badge-success">
+                        <i class="fa-solid fa-check"></i> Listo
+                    </span>
+                    <span th:if="${jugador.usuario.id != sala.host.id and !jugador.listo}"
+                          class="badge" style="background: #F1F2F6; color: var(--text-muted);">
+                        No listo
+                    </span>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+            <!-- UNIRSE: solo si no es host, no está unido, la sala espera y hay lugar -->
+            <div th:if="${!esHost and !yaUnido
+                         and sala.estado.name() == 'EN_ESPERA'
+                         and #lists.size(sala.jugadores) < sala.maxJugadores}">
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.8rem;">Unirse a esta sala</h3>
+                <form th:action="@{/salas/{codigo}/unirse(codigo=${sala.codigo})}" method="post">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-right-to-bracket"></i> Unirme
+                    </button>
+                </form>
+            </div>
+
+            <div class="badge badge-warning"
+                 style="display: block; padding: 0.8rem; text-align: center;"
+                 th:if="${!esHost and !yaUnido
+                         and sala.estado.name() == 'EN_ESPERA'
+                         and #lists.size(sala.jugadores) >= sala.maxJugadores}">
+                La sala está completa.
+            </div>
+
+            <!-- ESTOY LISTO: solo invitados que ya están en la sala -->
+            <div th:if="${!esHost and yaUnido and sala.estado.name() == 'EN_ESPERA'}">
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.4rem;">¿Listo para jugar?</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.9rem;">
+                    Cuando estés listo, el host podrá comenzar la partida.
+                </p>
+                <form th:action="@{/salas/{codigo}/listo(codigo=${sala.codigo})}" method="post">
+                    <button type="submit" class="btn btn-success" style="width: 100%;">
+                        <i class="fa-solid fa-check"></i> Estoy listo
+                    </button>
+                </form>
+            </div>
+
+            <!-- COMENZAR PARTIDA: solo el host, habilitado cuando todos están listos -->
+            <div th:if="${esHost and sala.estado.name() == 'EN_ESPERA'}">
+                <p th:if="${todosListos}" style="color: var(--success); font-size: 0.9rem; font-weight: 600; margin-bottom: 0.9rem;">
+                    <i class="fa-solid fa-circle-check"></i> Todos los jugadores están listos.
+                </p>
+                <p th:unless="${todosListos}" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.9rem;">
+                    <i class="fa-solid fa-hourglass-half"></i> Esperando a que todos los jugadores estén listos.
+                </p>
+
+                <form th:action="@{/partidas/{codigo}/iniciar(codigo=${sala.codigo})}" method="post">
+                    <button type="submit" class="btn btn-success"
+                            style="width: 100%; padding: 1rem 1.5rem; font-size: 1.05rem;"
+                            th:disabled="${!todosListos}"
+                            th:style="${!todosListos} ? 'width:100%; padding:1rem 1.5rem; font-size:1.05rem; opacity:0.5; cursor:not-allowed;' : 'width:100%; padding:1rem 1.5rem; font-size:1.05rem;'">
+                        <i class="fa-solid fa-play"></i> ¡Iniciar Partida Ahora!
+                    </button>
+                </form>
+            </div>
+
+            <div class="badge badge-info"
+                 style="display: block; padding: 0.8rem; text-align: center;"
+                 th:if="${sala.estado.name() != 'EN_ESPERA'}">
+                Esta sala ya no acepta jugadores.
+            </div>
+
+            <!-- aviso que se muestra al recibir PARTIDA_INICIADA -->
+            <div id="mensaje-inicio" class="badge badge-success"
+                 style="display: none; padding: 0.8rem; text-align: center; margin-top: 1rem; width: 100%;">
+                ¡La partida comienza! Redirigiendo...
+            </div>
+
+            <div class="badge badge-danger"
+                 style="display: block; padding: 0.8rem; text-align: center; margin-top: 1rem;"
+                 th:if="${error != null}"
+                 th:text="${error}">
+                No se pudo completar la acción.
+            </div>
+        </section>
+
+        <!-- DETALLES DE LA SALA -->
+        <section class="card" style="align-self: start;">
+            <h2 class="card-title">
+                <i class="fa-solid fa-circle-info" style="color: var(--primary);"></i> Detalles
+            </h2>
+            <div class="stats-list">
+                <div>
+                    <span>Estado</span>
+                    <strong th:text="${sala.estado.name() == 'EN_ESPERA'} ? 'En espera' : (${sala.estado.name() == 'EN_CURSO'} ? 'En curso' : 'Finalizada')">En espera</strong>
+                </div>
+                <div>
+                    <span>Rondas</span>
+                    <strong th:text="${sala.totalRondas}">5</strong>
+                </div>
+                <div>
+                    <span>Modo de juego</span>
+                    <strong th:text="${#strings.replace(sala.modoJuego, '_', ' ')}">TURNO TODOS</strong>
+                </div>
+                <div>
+                    <span>Jugadores</span>
+                    <strong th:text="${#lists.size(sala.jugadores)} + ' / ' + ${sala.maxJugadores}">1 / 4</strong>
+                </div>
+            </div>
+        </section>
     </div>
-
-    <p class="notice"
-       th:if="${sala.estado.name() != 'EN_ESPERA'}">
-        Esta sala ya no acepta jugadores.
-    </p>
-
-    <!-- aviso que se muestra al recibir PARTIDA_INICIADA -->
-    <p id="mensaje-inicio" class="notice" style="display: none;">
-        ¡La partida comienza! Redirigiendo...
-    </p>
-
-    <p class="error-message"
-       th:if="${error != null}"
-       th:text="${error}">
-        No se pudo completar la acción.
-    </p>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
@@ -401,9 +189,26 @@
 
     const codigoSala = /*[[${sala.codigo}]]*/ "";
     const urlBase = /*[[@{/}]]*/ "/";
+    const urlWs = /*[[@{/ws}]]*/ "/ws";
+
+    function copiarCodigo(boton) {
+        const texto = document.getElementById("codigo-sala").textContent.trim();
+        const original = boton.innerHTML;
+
+        if (!navigator.clipboard) {
+            return;
+        }
+
+        navigator.clipboard.writeText(texto).then(function () {
+            boton.innerHTML = '<i class="fa-solid fa-check"></i> ¡Copiado!';
+            setTimeout(function () {
+                boton.innerHTML = original;
+            }, 1500);
+        });
+    }
 
     const cliente = new StompJs.Client({
-        brokerURL: "ws://localhost:8080/spring/ws",
+        brokerURL: (location.protocol === "https:" ? "wss://" : "ws://") + location.host + urlWs,
         reconnectDelay: 3000
     });
 
@@ -428,7 +233,7 @@
                     case "PARTIDA_INICIADA":
                         document.getElementById("mensaje-inicio").style.display = "block";
                         setTimeout(function () {
-                            window.location.href = urlBase + "partida/" + evento.partidaId +"/votacion-categoria";
+                            window.location.href = urlBase + "partida/" + evento.partidaId + "/votacion-categoria";
                         }, 3000);
                         break;
                 }
