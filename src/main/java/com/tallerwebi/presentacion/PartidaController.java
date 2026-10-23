@@ -285,6 +285,8 @@ public class PartidaController {
       servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.DOBLE_CHANCE)
     );
 
+    modelo.put("nivelJugador", servicioComodin.obtenerNivelJugador(usuarioId));
+
     return new ModelAndView("partida-pregunta", modelo);
   }
 
