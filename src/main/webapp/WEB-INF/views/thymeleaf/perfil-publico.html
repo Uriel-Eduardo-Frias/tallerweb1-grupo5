@@ -21,10 +21,13 @@
                     <p th:text="${perfil?.biografia != null} ? ${perfil.biografia} : 'Sin biografía'"></p>
                 </div>
             </div>
-            <div class="xp-summary" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                <span>Experiencia: </span><strong th:text="${perfil?.experiencia != null ? perfil.experiencia : 0} + ' XP'">0 XP</strong>
+
+            <div class="xp-summary" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa-solid fa-trophy" style="color: var(--warning);"></i> Partidas Ganadas: <strong th:text="${estadistica != null ? estadistica.partidasGanadas : 0}">0</strong></span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-wand-magic-sparkles"></i> Comodines: <strong th:text="${perfil?.nivel != null ? perfil.nivel : 1} + ' / 3'">1 / 3</strong></span>
             </div>
         </section>
+
         <section class="card">
             <h2 class="card-title"><i class="fa-solid fa-chart-simple" style="color: var(--primary);"></i> Estadísticas</h2>
             <div th:replace="~{estadisticas-fragmento :: resumen(${estadistica})}"></div>
