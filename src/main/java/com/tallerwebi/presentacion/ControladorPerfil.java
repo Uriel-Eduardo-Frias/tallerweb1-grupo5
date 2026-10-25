@@ -18,12 +18,6 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class ControladorPerfil {
 
-  private static final int VICTORIAS_PARA_NIVEL_TRES = 2;
-  private static final int VICTORIAS_PARA_NIVEL_DOS = 1;
-  private static final int NIVEL_INICIAL = 1;
-  private static final int NIVEL_INTERMEDIO = 2;
-  private static final int NIVEL_AVANZADO = 3;
-
   private final ServicioUsuario servicioUsuario;
   private final ServicioEstadistica servicioEstadistica;
 
@@ -47,8 +41,7 @@ public class ControladorPerfil {
     Usuario usuario = servicioUsuario.buscarUsuarioPorId(idUsuario);
     EstadisticaUsuario estadistica = servicioEstadistica.obtenerEstadisticaUsuario(idUsuario);
 
-    int partidasGanadas = (estadistica != null) ? estadistica.getPartidasGanadas() : 0;
-    int nivel = calcularNivel(partidasGanadas);
+    int nivel = servicioEstadistica.calcularNivelUsuario(idUsuario);
 
     if (usuario != null && usuario.getPerfil() != null) {
       usuario.getPerfil().setNivel(nivel);
@@ -72,9 +65,7 @@ public class ControladorPerfil {
     }
 
     EstadisticaUsuario estadistica = servicioEstadistica.obtenerEstadisticaUsuario(id);
-
-    int partidasGanadas = (estadistica != null) ? estadistica.getPartidasGanadas() : 0;
-    int nivel = calcularNivel(partidasGanadas);
+    int nivel = servicioEstadistica.calcularNivelUsuario(id);
 
     if (usuarioBuscado.getPerfil() != null) {
       usuarioBuscado.getPerfil().setNivel(nivel);
@@ -101,15 +92,5 @@ public class ControladorPerfil {
     }
 
     return new ModelAndView("redirect:/perfil");
-  }
-
-  private int calcularNivel(int partidasGanadas) {
-    if (partidasGanadas >= VICTORIAS_PARA_NIVEL_TRES) {
-      return NIVEL_AVANZADO;
-    }
-    if (partidasGanadas == VICTORIAS_PARA_NIVEL_DOS) {
-      return NIVEL_INTERMEDIO;
-    }
-    return NIVEL_INICIAL;
   }
 }

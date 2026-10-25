@@ -24,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ServicioComodinImpl implements ServicioComodin {
 
-  private static final int VICTORIAS_PARA_NIVEL_TRES = 2;
-  private static final int VICTORIAS_PARA_NIVEL_DOS = 1;
   private static final int NIVEL_INICIAL = 1;
   private static final int NIVEL_INTERMEDIO = 2;
   private static final int NIVEL_AVANZADO = 3;
@@ -59,17 +57,7 @@ public class ServicioComodinImpl implements ServicioComodin {
     if (usuarioId == null || servicioEstadistica == null) {
       return NIVEL_INICIAL;
     }
-
-    int partidasGanadas = servicioEstadistica
-      .obtenerEstadisticaUsuario(usuarioId)
-      .getPartidasGanadas();
-    if (partidasGanadas >= VICTORIAS_PARA_NIVEL_TRES) {
-      return NIVEL_AVANZADO;
-    }
-    if (partidasGanadas == VICTORIAS_PARA_NIVEL_DOS) {
-      return NIVEL_INTERMEDIO;
-    }
-    return NIVEL_INICIAL;
+    return servicioEstadistica.calcularNivelUsuario(usuarioId);
   }
 
   private boolean esComodinPermitidoParaJugador(PartidaJugador jugador, TipoComodin tipo) {

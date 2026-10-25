@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -16,11 +17,16 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class ControladorBuscadorJugadores {
 
-  private ServicioUsuario servicioUsuario;
+  private final ServicioUsuario servicioUsuario;
+  private final ServicioEstadistica servicioEstadistica;
 
   @Autowired
-  public ControladorBuscadorJugadores(ServicioUsuario servicioUsuario) {
+  public ControladorBuscadorJugadores(
+    ServicioUsuario servicioUsuario,
+    ServicioEstadistica servicioEstadistica
+  ) {
     this.servicioUsuario = servicioUsuario;
+    this.servicioEstadistica = servicioEstadistica;
   }
 
   @RequestMapping(path = "/buscar-jugadores", method = RequestMethod.GET)
@@ -35,6 +41,13 @@ public class ControladorBuscadorJugadores {
 
     Map<String, Object> modelo = new ModelMap();
     List<Usuario> resultados = servicioUsuario.buscarUsuariosPorNombre(terminoBusqueda);
+
+    for (Usuario jugador : resultados) {
+      if (jugador != null && jugador.getPerfil() != null) {
+        int nivel = servicioEstadistica.calcularNivelUsuario(jugador.getId());
+        jugador.getPerfil().setNivel(nivel);
+      }
+    }
 
     modelo.put("jugadores", resultados);
     modelo.put("terminoBusqueda", terminoBusqueda != null ? terminoBusqueda : "");
