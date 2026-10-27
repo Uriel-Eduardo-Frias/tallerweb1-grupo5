@@ -16,6 +16,7 @@ import com.tallerwebi.dominio.modelo.PartidaRonda;
 import com.tallerwebi.dominio.modelo.ResultadoPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
+import com.tallerwebi.dominio.servicio.ServicioLogro;
 import com.tallerwebi.dominio.servicio.impl.ServicioResultadoPartidaImpl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ class ServicioResultadoPartidaImplTest {
   private RepositorioPartidaJugador repositorioPartidaJugador;
   private NotificadorSala notificadorSala;
   private ServicioResultadoPartidaImpl servicio;
+  private ServicioLogro servicioLogro;
 
   private Partida partida;
 
@@ -45,7 +47,8 @@ class ServicioResultadoPartidaImplTest {
       new ServicioResultadoPartidaImpl(
         repositorioPartida,
         repositorioPartidaJugador,
-        notificadorSala
+        notificadorSala,
+        servicioLogro
       );
 
     // Deep stubs: evita tener que importar/armar Sala, Usuario, etc.

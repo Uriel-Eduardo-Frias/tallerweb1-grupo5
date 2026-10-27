@@ -8,6 +8,7 @@ import com.tallerwebi.dominio.excepcion.PartidaNoEncontradaException;
 import com.tallerwebi.dominio.modelo.*;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
+import com.tallerwebi.dominio.servicio.ServicioLogro;
 import com.tallerwebi.dominio.servicio.ServicioResultadoPartida;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -36,15 +37,18 @@ public class ServicioResultadoPartidaImpl implements ServicioResultadoPartida {
   private final RepositorioPartida repositorioPartida;
   private final RepositorioPartidaJugador repositorioPartidaJugador;
   private final NotificadorSala notificadorSala;
+  private final ServicioLogro servicioLogro;
 
   public ServicioResultadoPartidaImpl(
     RepositorioPartida repositorioPartida,
     RepositorioPartidaJugador repositorioPartidaJugador,
-    NotificadorSala notificadorSala
+    NotificadorSala notificadorSala,
+    ServicioLogro servicioLogro
   ) {
     this.repositorioPartida = repositorioPartida;
     this.repositorioPartidaJugador = repositorioPartidaJugador;
     this.notificadorSala = notificadorSala;
+    this.servicioLogro = servicioLogro;
   }
 
   @Override
@@ -57,6 +61,8 @@ public class ServicioResultadoPartidaImpl implements ServicioResultadoPartida {
 
     asignarPosiciones(repositorioPartidaJugador.obtenerPorPartida(partidaId));
     marcarComoFinalizada(partida);
+
+    servicioLogro.evaluarLogroDePartida(partidaId);
 
     notificadorSala.rondaActualizada(
       partida.getSala().getCodigo(),
