@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.*;
 
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -16,20 +17,21 @@ public class ControladorBuscadorJugadoresTest {
 
   private ControladorBuscadorJugadores controladorBuscador;
   private ServicioUsuario servicioUsuarioMock;
+  private ServicioEstadistica servicioEstadisticaMock;
 
   private ModelAndView mav;
   private String busqueda;
 
-  // 1. Agregamos las variables para simular la petición web
   private HttpServletRequest requestMock;
   private HttpSession sessionMock;
 
   @BeforeEach
   public void init() {
     this.servicioUsuarioMock = mock(ServicioUsuario.class);
-    this.controladorBuscador = new ControladorBuscadorJugadores(servicioUsuarioMock);
+    this.servicioEstadisticaMock = mock(ServicioEstadistica.class);
+    this.controladorBuscador =
+      new ControladorBuscadorJugadores(servicioUsuarioMock, servicioEstadisticaMock);
 
-    // 2. Inicializamos los mocks
     this.requestMock = mock(HttpServletRequest.class);
     this.sessionMock = mock(HttpSession.class);
     when(this.requestMock.getSession()).thenReturn(this.sessionMock);

@@ -6,14 +6,17 @@ import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.enumeration.TipoComodin;
 import com.tallerwebi.dominio.modelo.Comodin;
+import com.tallerwebi.dominio.modelo.EstadisticaUsuario;
 import com.tallerwebi.dominio.modelo.Opcion;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
 import com.tallerwebi.dominio.modelo.PartidaJugadorComodin;
 import com.tallerwebi.dominio.modelo.PartidaRonda;
+import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.repositorio.RepositorioComodin;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.dominio.servicio.impl.ServicioComodinImpl;
 import com.tallerwebi.presentacion.dto.Comodin5050DTO;
 import java.util.ArrayList;
@@ -30,25 +33,43 @@ class ServicioComodinImplTest {
   private RepositorioComodin repositorioComodin;
   private RepositorioPartida repositorioPartida;
   private RepositorioPartidaJugador repositorioPartidaJugador;
+  private ServicioEstadistica servicioEstadistica;
   private ServicioComodinImpl servicio;
 
   private PartidaJugador jugador;
+  private Usuario usuario;
+  private EstadisticaUsuario estadistica;
 
   @BeforeEach
   void setUp() {
     repositorioComodin = mock(RepositorioComodin.class);
     repositorioPartida = mock(RepositorioPartida.class);
     repositorioPartidaJugador = mock(RepositorioPartidaJugador.class);
+    servicioEstadistica = mock(ServicioEstadistica.class);
+
     servicio =
-      new ServicioComodinImpl(repositorioComodin, repositorioPartida, repositorioPartidaJugador);
+      new ServicioComodinImpl(
+        repositorioComodin,
+        repositorioPartida,
+        repositorioPartidaJugador,
+        servicioEstadistica
+      );
+
+    usuario = mock(Usuario.class);
+    when(usuario.getId()).thenReturn(USUARIO_ID);
 
     jugador = mock(PartidaJugador.class);
     when(jugador.getId()).thenReturn(JUGADOR_ID);
+    when(jugador.getUsuario()).thenReturn(usuario);
+
+    estadistica = mock(EstadisticaUsuario.class);
+    when(estadistica.getPartidasGanadas()).thenReturn(2);
+    when(servicioEstadistica.obtenerEstadisticaUsuario(USUARIO_ID)).thenReturn(estadistica);
+
     when(repositorioPartidaJugador.obtenerPorPartidaYUsuario(PARTIDA_ID, USUARIO_ID))
       .thenReturn(jugador);
   }
 
-  /** Deja un comodín del jugador con la cantidad pedida, para el tipo indicado. */
   private PartidaJugadorComodin comodinConStock(TipoComodin tipo, int cantidad) {
     PartidaJugadorComodin pjc = mock(PartidaJugadorComodin.class);
     when(pjc.getCantidadDisponible()).thenReturn(cantidad);
@@ -57,10 +78,45 @@ class ServicioComodinImplTest {
     return pjc;
   }
 
-  // ---------- inicializarComodinesParaJugador ----------
+  @Test
+  void jugadorNivel1SoloInicializaUnComodinDeTiempoExtra() {
+    when(estadistica.getPartidasGanadas()).thenReturn(0); // 0 victorias = Nivel 1
+
+    servicio.inicializarComodinesParaJugador(jugador);
+
+    verify(repositorioComodin, times(1)).guardar(any(PartidaJugadorComodin.class));
+  }
 
   @Test
-  void inicializarNoCreaNadaSiElJugadorYaTieneLosTresComodines() {
+  void jugadorNivel2InicializaDosComodines() {
+    when(estadistica.getPartidasGanadas()).thenReturn(1); // 1 victoria = Nivel 2
+
+    servicio.inicializarComodinesParaJugador(jugador);
+
+    verify(repositorioComodin, times(2)).guardar(any(PartidaJugadorComodin.class));
+  }
+
+  @Test
+  void jugadorNivel1NoPuedeUsarDobleChanceNi5050() {
+    when(estadistica.getPartidasGanadas()).thenReturn(0);
+
+    boolean puedeDobleChance = servicio.tieneComodinDisponible(
+      PARTIDA_ID,
+      USUARIO_ID,
+      TipoComodin.DOBLE_CHANCE
+    );
+    boolean puede5050 = servicio.tieneComodinDisponible(
+      PARTIDA_ID,
+      USUARIO_ID,
+      TipoComodin.CINCUENTA_CINCUENTA
+    );
+
+    assertFalse(puedeDobleChance);
+    assertFalse(puede5050);
+  }
+
+  @Test
+  void inicializarNoCreaNadaSiElJugadorYaTieneLosComodines() {
     when(repositorioComodin.buscarPorJugadorYTipo(eq(JUGADOR_ID), any(TipoComodin.class)))
       .thenReturn(mock(PartidaJugadorComodin.class));
 
@@ -95,8 +151,6 @@ class ServicioComodinImplTest {
     verify(repositorioComodin, times(3)).guardar(any(PartidaJugadorComodin.class));
   }
 
-  // ---------- obtenerComodinesDeJugador ----------
-
   @Test
   void obtenerComodinesDeJugadorInicializaYDevuelveLaLista() {
     when(repositorioComodin.buscarPorJugadorYTipo(eq(JUGADOR_ID), any(TipoComodin.class)))
@@ -111,8 +165,6 @@ class ServicioComodinImplTest {
     );
 
     assertSame(esperados, resultado);
-    verify(repositorioComodin, times(3))
-      .buscarPorJugadorYTipo(eq(JUGADOR_ID), any(TipoComodin.class));
   }
 
   @Test
@@ -125,8 +177,6 @@ class ServicioComodinImplTest {
       () -> servicio.obtenerComodinesDeJugador(PARTIDA_ID, USUARIO_ID)
     );
   }
-
-  // ---------- tieneComodinDisponible ----------
 
   @Test
   void tieneComodinDisponibleDevuelveTrueSiHayStock() {
@@ -149,8 +199,6 @@ class ServicioComodinImplTest {
 
     assertFalse(servicio.tieneComodinDisponible(PARTIDA_ID, USUARIO_ID, TipoComodin.TIEMPO_EXTRA));
   }
-
-  // ---------- aplicarTiempoExtra ----------
 
   @Test
   void aplicarTiempoExtraConsumeElComodinYDevuelveDiezSegundos() {
@@ -176,8 +224,6 @@ class ServicioComodinImplTest {
     verify(repositorioComodin, never()).actualizar(pjc);
   }
 
-  // ---------- aplicarCincuentaCincuenta ----------
-
   @Test
   void aplicarCincuentaCincuentaConsumeElComodinYDescartaDosIncorrectas() {
     PartidaJugadorComodin pjc = comodinConStock(TipoComodin.CINCUENTA_CINCUENTA, 1);
@@ -185,7 +231,7 @@ class ServicioComodinImplTest {
     Opcion correcta = opcion(1L, true);
     Opcion incorrecta1 = opcion(2L, false);
     Opcion incorrecta2 = opcion(3L, false);
-    Opcion sinDato = opcion(4L, null); // cubre el caso Boolean nulo -> se trata como incorrecta
+    Opcion sinDato = opcion(4L, null);
     List<Opcion> opciones = new ArrayList<>(List.of(correcta, incorrecta1, incorrecta2, sinDato));
 
     Partida partida = mock(Partida.class);
@@ -197,10 +243,6 @@ class ServicioComodinImplTest {
     Comodin5050DTO dto = servicio.aplicarCincuentaCincuenta(PARTIDA_ID, USUARIO_ID);
 
     assertNotNull(dto);
-    // TODO: asserts sobre el DTO con sus getters reales:
-    //  - tiene 2 ids descartados
-    //  - ninguno es el id 1L (la correcta)
-    //  - penalización = 5 segundos
     verify(pjc).setCantidadDisponible(0);
     verify(repositorioComodin).actualizar(pjc);
   }
@@ -216,8 +258,6 @@ class ServicioComodinImplTest {
 
     verify(repositorioPartida, never()).obtenerPorIdConRondas(any());
   }
-
-  // ---------- activarDobleChance ----------
 
   @Test
   void activarDobleChanceGuardaLaRondaEnElJugadorYConsumeElStock() {
@@ -249,8 +289,6 @@ class ServicioComodinImplTest {
 
     verify(repositorioPartidaJugador, never()).guardar(any(PartidaJugador.class));
   }
-
-  // ---------- helpers ----------
 
   private Opcion opcion(Long id, Boolean esCorrecta) {
     Opcion op = mock(Opcion.class);

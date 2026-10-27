@@ -4,14 +4,23 @@ import com.tallerwebi.dominio.modelo.EstadisticaUsuario;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.servicio.ServicioEstadistica;
-import com.tallerwebi.dominio.servicio.ServicioPartidaPregunta;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
 public class ServicioEstadisticaImpl implements ServicioEstadistica {
+
+  private static final int VICTORIAS_PARA_NIVEL_TRES = 2;
+  private static final int VICTORIAS_PARA_NIVEL_DOS = 1;
+  private static final int NIVEL_INICIAL = 1;
+  private static final int NIVEL_INTERMEDIO = 2;
+  private static final int NIVEL_AVANZADO = 3;
 
   private final RepositorioPartidaJugador repositorioPartidaJugador;
 
@@ -43,6 +52,24 @@ public class ServicioEstadisticaImpl implements ServicioEstadistica {
     }
 
     return estadistica;
+  }
+
+  @Override
+  public int calcularNivelUsuario(Long usuarioId) {
+    if (usuarioId == null) {
+      return NIVEL_INICIAL;
+    }
+
+    EstadisticaUsuario estadistica = obtenerEstadisticaUsuario(usuarioId);
+    int partidasGanadas = (estadistica != null) ? estadistica.getPartidasGanadas() : 0;
+
+    if (partidasGanadas >= VICTORIAS_PARA_NIVEL_TRES) {
+      return NIVEL_AVANZADO;
+    }
+    if (partidasGanadas == VICTORIAS_PARA_NIVEL_DOS) {
+      return NIVEL_INTERMEDIO;
+    }
+    return NIVEL_INICIAL;
   }
 
   @Override

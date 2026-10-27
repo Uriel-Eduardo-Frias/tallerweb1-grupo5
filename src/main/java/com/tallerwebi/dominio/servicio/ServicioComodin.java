@@ -13,4 +13,5 @@ public interface ServicioComodin {
   int aplicarTiempoExtra(Long partidaId, Long usuarioId);
   Comodin5050DTO aplicarCincuentaCincuenta(Long partidaId, Long usuarioId);
   void activarDobleChance(Long partidaId, Long usuarioId);
+  int obtenerNivelJugador(Long usuarioId);
 }

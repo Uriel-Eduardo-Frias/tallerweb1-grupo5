@@ -1,5 +1,6 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.modelo.EstadisticaUsuario;
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
@@ -17,8 +18,8 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class ControladorPerfil {
 
-  private ServicioUsuario servicioUsuario;
-  private ServicioEstadistica servicioEstadistica;
+  private final ServicioUsuario servicioUsuario;
+  private final ServicioEstadistica servicioEstadistica;
 
   @Autowired
   public ControladorPerfil(
@@ -38,10 +39,19 @@ public class ControladorPerfil {
     }
 
     Usuario usuario = servicioUsuario.buscarUsuarioPorId(idUsuario);
+    EstadisticaUsuario estadistica = servicioEstadistica.obtenerEstadisticaUsuario(idUsuario);
+
+    int nivel = servicioEstadistica.calcularNivelUsuario(idUsuario);
+
+    if (usuario != null && usuario.getPerfil() != null) {
+      usuario.getPerfil().setNivel(nivel);
+    }
+
     Map<String, Object> modelo = new ModelMap();
     modelo.put("usuario", usuario);
-    modelo.put("perfil", usuario.getPerfil());
-    modelo.put("estadistica", servicioEstadistica.obtenerEstadisticaUsuario(idUsuario));
+    modelo.put("perfil", usuario != null ? usuario.getPerfil() : null);
+    modelo.put("estadistica", estadistica);
+    modelo.put("nivel", nivel);
 
     return new ModelAndView("perfil", modelo);
   }
@@ -54,10 +64,18 @@ public class ControladorPerfil {
       return new ModelAndView("redirect:/buscar-jugadores");
     }
 
+    EstadisticaUsuario estadistica = servicioEstadistica.obtenerEstadisticaUsuario(id);
+    int nivel = servicioEstadistica.calcularNivelUsuario(id);
+
+    if (usuarioBuscado.getPerfil() != null) {
+      usuarioBuscado.getPerfil().setNivel(nivel);
+    }
+
     Map<String, Object> modelo = new ModelMap();
     modelo.put("usuario", usuarioBuscado);
     modelo.put("perfil", usuarioBuscado.getPerfil());
-    modelo.put("estadistica", servicioEstadistica.obtenerEstadisticaUsuario(id));
+    modelo.put("estadistica", estadistica);
+    modelo.put("nivel", nivel);
 
     return new ModelAndView("perfil-publico", modelo);
   }

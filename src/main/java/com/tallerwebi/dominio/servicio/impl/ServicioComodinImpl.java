@@ -11,6 +11,7 @@ import com.tallerwebi.dominio.repositorio.RepositorioComodin;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.servicio.ServicioComodin;
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.presentacion.dto.Comodin5050DTO;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,30 +24,79 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ServicioComodinImpl implements ServicioComodin {
 
+  private static final int NIVEL_INICIAL = 1;
+  private static final int NIVEL_INTERMEDIO = 2;
+  private static final int NIVEL_AVANZADO = 3;
+
+  private static final int SEGUNDOS_TIEMPO_EXTRA = 10;
+  private static final int PENALIZACION_CINCUENTA_CINCUENTA = 5;
+  private static final int CANTIDAD_OPCIONES_DESCARTADAS = 2;
+  private static final int CANTIDAD_MINIMA_DISPONIBLE = 0;
+  private static final int STOCK_INICIAL_COMODIN = 1;
+
   private final RepositorioComodin repositorioComodin;
   private final RepositorioPartida repositorioPartida;
   private final RepositorioPartidaJugador repositorioPartidaJugador;
+  private final ServicioEstadistica servicioEstadistica;
 
   @Autowired
   public ServicioComodinImpl(
     RepositorioComodin repositorioComodin,
     RepositorioPartida repositorioPartida,
-    RepositorioPartidaJugador repositorioPartidaJugador
+    RepositorioPartidaJugador repositorioPartidaJugador,
+    ServicioEstadistica servicioEstadistica
   ) {
     this.repositorioComodin = repositorioComodin;
     this.repositorioPartida = repositorioPartida;
     this.repositorioPartidaJugador = repositorioPartidaJugador;
+    this.servicioEstadistica = servicioEstadistica;
+  }
+
+  @Override
+  public int obtenerNivelJugador(Long usuarioId) {
+    if (usuarioId == null || servicioEstadistica == null) {
+      return NIVEL_INICIAL;
+    }
+    return servicioEstadistica.calcularNivelUsuario(usuarioId);
+  }
+
+  private boolean esComodinPermitidoParaJugador(PartidaJugador jugador, TipoComodin tipo) {
+    Long usuarioId = (jugador != null && jugador.getUsuario() != null)
+      ? jugador.getUsuario().getId()
+      : null;
+
+    int nivel = obtenerNivelJugador(usuarioId);
+
+    if (tipo == TipoComodin.TIEMPO_EXTRA) {
+      return true;
+    }
+    if (tipo == TipoComodin.DOBLE_CHANCE) {
+      return nivel >= NIVEL_INTERMEDIO;
+    }
+    if (tipo == TipoComodin.CINCUENTA_CINCUENTA) {
+      return nivel >= NIVEL_AVANZADO;
+    }
+    return false;
   }
 
   @Override
   public void inicializarComodinesParaJugador(PartidaJugador jugador) {
-    TipoComodin[] comodinesActivos = {
-      TipoComodin.CINCUENTA_CINCUENTA,
-      TipoComodin.TIEMPO_EXTRA,
-      TipoComodin.DOBLE_CHANCE,
-    };
+    List<TipoComodin> permitidos = new ArrayList<>();
+    permitidos.add(TipoComodin.TIEMPO_EXTRA);
 
-    for (TipoComodin tipo : comodinesActivos) {
+    Long usuarioId = (jugador != null && jugador.getUsuario() != null)
+      ? jugador.getUsuario().getId()
+      : null;
+
+    int nivel = obtenerNivelJugador(usuarioId);
+    if (nivel >= NIVEL_INTERMEDIO) {
+      permitidos.add(TipoComodin.DOBLE_CHANCE);
+    }
+    if (nivel >= NIVEL_AVANZADO) {
+      permitidos.add(TipoComodin.CINCUENTA_CINCUENTA);
+    }
+
+    for (TipoComodin tipo : permitidos) {
       obtenerOCrearComodinDeJugador(jugador, tipo);
     }
   }
@@ -62,9 +112,21 @@ public class ServicioComodinImpl implements ServicioComodin {
   public boolean tieneComodinDisponible(Long partidaId, Long usuarioId, TipoComodin tipo) {
     try {
       PartidaJugador jugador = obtenerJugador(partidaId, usuarioId);
-      PartidaJugadorComodin pjc = obtenerOCrearComodinDeJugador(jugador, tipo);
-      return pjc != null && pjc.getCantidadDisponible() > 0;
-    } catch (Exception excepcion) { // ✅ Variable de longitud >= 2
+      if (!esComodinPermitidoParaJugador(jugador, tipo)) {
+        return false;
+      }
+      PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
+        jugador.getId(),
+        tipo
+      );
+      if (comodinJugador == null) {
+        comodinJugador = obtenerOCrearComodinDeJugador(jugador, tipo);
+      }
+      return (
+        comodinJugador != null &&
+        comodinJugador.getCantidadDisponible() > CANTIDAD_MINIMA_DISPONIBLE
+      );
+    } catch (Exception excepcion) {
       return false;
     }
   }
@@ -72,7 +134,7 @@ public class ServicioComodinImpl implements ServicioComodin {
   @Override
   public int aplicarTiempoExtra(Long partidaId, Long usuarioId) {
     consumirComodinValido(partidaId, usuarioId, TipoComodin.TIEMPO_EXTRA);
-    return 10;
+    return SEGUNDOS_TIEMPO_EXTRA;
   }
 
   @Override
@@ -84,17 +146,16 @@ public class ServicioComodinImpl implements ServicioComodin {
     List<Opcion> opciones = ronda.getPregunta().getOpciones();
 
     List<Long> incorrectas = new ArrayList<>();
-    for (Opcion op : opciones) {
-      if (!Boolean.TRUE.equals(op.getEsCorrecta())) {
-        incorrectas.add(op.getId());
+    for (Opcion opcion : opciones) {
+      if (!Boolean.TRUE.equals(opcion.getEsCorrecta())) {
+        incorrectas.add(opcion.getId());
       }
     }
 
     Collections.shuffle(incorrectas);
-    List<Long> descartadas = incorrectas.subList(0, 2);
-    int penalizacionSegundos = 5;
+    List<Long> descartadas = incorrectas.subList(0, CANTIDAD_OPCIONES_DESCARTADAS);
 
-    return new Comodin5050DTO(descartadas, penalizacionSegundos);
+    return new Comodin5050DTO(descartadas, PENALIZACION_CINCUENTA_CINCUENTA);
   }
 
   @Override
@@ -115,42 +176,62 @@ public class ServicioComodinImpl implements ServicioComodin {
     TipoComodin tipo
   ) {
     PartidaJugador jugador = obtenerJugador(partidaId, usuarioId);
-    PartidaJugadorComodin pjc = obtenerOCrearComodinDeJugador(jugador, tipo);
 
-    if (pjc.getCantidadDisponible() <= 0) {
+    if (!esComodinPermitidoParaJugador(jugador, tipo)) {
+      throw new IllegalStateException(
+        "El jugador no posee el nivel necesario para usar el comodín " + tipo
+      );
+    }
+
+    PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
+      jugador.getId(),
+      tipo
+    );
+
+    if (comodinJugador == null) {
+      comodinJugador = obtenerOCrearComodinDeJugador(jugador, tipo);
+    }
+
+    if (comodinJugador.getCantidadDisponible() <= CANTIDAD_MINIMA_DISPONIBLE) {
       throw new IllegalStateException("El comodín " + tipo + " ya fue utilizado en esta partida.");
     }
 
-    pjc.setCantidadDisponible(pjc.getCantidadDisponible() - 1);
-    pjc.setVecesUsado(pjc.getVecesUsado() + 1);
-    repositorioComodin.actualizar(pjc);
-    return pjc;
+    comodinJugador.setCantidadDisponible(comodinJugador.getCantidadDisponible() - 1);
+    comodinJugador.setVecesUsado(comodinJugador.getVecesUsado() + 1);
+    repositorioComodin.actualizar(comodinJugador);
+    return comodinJugador;
   }
 
   private PartidaJugadorComodin obtenerOCrearComodinDeJugador(
     PartidaJugador jugador,
     TipoComodin tipo
   ) {
-    PartidaJugadorComodin pjc = repositorioComodin.buscarPorJugadorYTipo(jugador.getId(), tipo);
+    PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
+      jugador.getId(),
+      tipo
+    );
 
-    if (pjc == null) {
+    if (comodinJugador == null) {
       Comodin comodin = repositorioComodin.buscarComodinPorCodigo(tipo);
       if (comodin == null) {
         comodin = new Comodin(tipo, tipo.getEtiqueta(), tipo.getDescripcion(), null);
         repositorioComodin.guardarComodinMaestro(comodin);
       }
-      pjc = new PartidaJugadorComodin(jugador, comodin, 1);
-      repositorioComodin.guardar(pjc);
+      comodinJugador = new PartidaJugadorComodin(jugador, comodin, STOCK_INICIAL_COMODIN);
+      repositorioComodin.guardar(comodinJugador);
     }
 
-    return pjc;
+    return comodinJugador;
   }
 
   private PartidaJugador obtenerJugador(Long partidaId, Long usuarioId) {
-    PartidaJugador pj = repositorioPartidaJugador.obtenerPorPartidaYUsuario(partidaId, usuarioId);
-    if (pj == null) {
+    PartidaJugador jugadorPartida = repositorioPartidaJugador.obtenerPorPartidaYUsuario(
+      partidaId,
+      usuarioId
+    );
+    if (jugadorPartida == null) {
       throw new IllegalArgumentException("El jugador no participa en la partida.");
     }
-    return pj;
+    return jugadorPartida;
   }
 }

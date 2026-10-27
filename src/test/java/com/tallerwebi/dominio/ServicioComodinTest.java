@@ -2,10 +2,8 @@ package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -13,16 +11,19 @@ import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.enumeration.TipoComodin;
 import com.tallerwebi.dominio.modelo.Comodin;
+import com.tallerwebi.dominio.modelo.EstadisticaUsuario;
 import com.tallerwebi.dominio.modelo.Opcion;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
 import com.tallerwebi.dominio.modelo.PartidaJugadorComodin;
 import com.tallerwebi.dominio.modelo.PartidaRonda;
 import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.repositorio.RepositorioComodin;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.servicio.ServicioComodin;
+import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.dominio.servicio.impl.ServicioComodinImpl;
 import com.tallerwebi.presentacion.dto.Comodin5050DTO;
 import java.util.List;
@@ -39,6 +40,7 @@ public class ServicioComodinTest {
   private RepositorioComodin repositorioComodin;
   private RepositorioPartida repositorioPartida;
   private RepositorioPartidaJugador repositorioPartidaJugador;
+  private ServicioEstadistica servicioEstadistica;
   private ServicioComodin servicioComodin;
 
   private PartidaJugador jugador;
@@ -50,9 +52,15 @@ public class ServicioComodinTest {
     repositorioComodin = mock(RepositorioComodin.class);
     repositorioPartida = mock(RepositorioPartida.class);
     repositorioPartidaJugador = mock(RepositorioPartidaJugador.class);
+    servicioEstadistica = mock(ServicioEstadistica.class);
 
     servicioComodin =
-      new ServicioComodinImpl(repositorioComodin, repositorioPartida, repositorioPartidaJugador);
+      new ServicioComodinImpl(
+        repositorioComodin,
+        repositorioPartida,
+        repositorioPartidaJugador,
+        servicioEstadistica
+      );
 
     inicializarEscenarioBase();
   }
@@ -138,8 +146,8 @@ public class ServicioComodinTest {
     try {
       servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
       return null;
-    } catch (Throwable ex) {
-      return ex;
+    } catch (Throwable excepcion) {
+      return excepcion;
     }
   }
 
@@ -148,9 +156,8 @@ public class ServicioComodinTest {
     int cantidadEsperada,
     Long idCorrecta
   ) {
-    assertThat(resultado, is(notNullValue()));
     assertThat(resultado.getOpcionesDescartadas().size(), equalTo(cantidadEsperada));
-    assertThat(resultado.getOpcionesDescartadas(), not(hasItem(idCorrecta)));
+    assertThat(resultado.getOpcionesDescartadas().contains(idCorrecta), is(false));
   }
 
   private void thenSePenalizanSegundos(Comodin5050DTO resultado, int penalizacionEsperada) {
@@ -172,8 +179,12 @@ public class ServicioComodinTest {
   }
 
   private void inicializarEscenarioBase() {
+    Usuario usuario = new Usuario();
+    usuario.setId(USUARIO_ID);
+
     jugador = new PartidaJugador();
     jugador.setId(JUGADOR_ID);
+    jugador.setUsuario(usuario);
 
     partida = new Partida();
     partida.setId(PARTIDA_ID);
@@ -182,6 +193,10 @@ public class ServicioComodinTest {
     ronda = new PartidaRonda(partida, 1);
     ronda.setId(RONDA_ID);
     partida.getRondas().add(ronda);
+
+    EstadisticaUsuario estadistica = mock(EstadisticaUsuario.class);
+    when(estadistica.getPartidasGanadas()).thenReturn(2); // Nivel 3 para pruebas
+    when(servicioEstadistica.obtenerEstadisticaUsuario(USUARIO_ID)).thenReturn(estadistica);
 
     when(repositorioPartidaJugador.obtenerPorPartidaYUsuario(PARTIDA_ID, USUARIO_ID))
       .thenReturn(jugador);

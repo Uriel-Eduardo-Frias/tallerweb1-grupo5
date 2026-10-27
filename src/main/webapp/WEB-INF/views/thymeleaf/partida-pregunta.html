@@ -38,10 +38,14 @@
 
         <h2 class="mb-4" th:text="${pregunta.descripcion}">Enunciado de la pregunta</h2>
 
+
         <div class="card bg-white p-3 mb-4 border" th:if="${!yaRespondio}">
-            <p class="text-muted small mb-2 fw-bold text-center">COMODINES DE LA PARTIDA</p>
+            <p class="text-muted small mb-2 fw-bold text-center">
+                COMODINES DE LA PARTIDA <span th:if="${nivelJugador != null}">(NIVEL <span th:text="${nivelJugador}">1</span>)</span>
+            </p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
 
+                <!-- 50/50: Se desbloquea en Nivel 3 -->
                 <button type="button"
                         id="btn5050"
                         th:disabled="${!puede5050}"
@@ -49,9 +53,11 @@
                         class="btn btn-sm fw-bold px-3 py-2"
                         onclick="usar5050()">
                     50/50 (-5s)
-                    <span th:if="${!puede5050}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge bg-secondary ms-1">Bloqueado (Nvl 3)</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puede5050}" class="badge bg-dark ms-1">Usado</span>
                 </button>
 
+                <!-- +10s: Disponible desde Nivel 1 -->
                 <button type="button"
                         id="btnTiempoExtra"
                         th:disabled="${!puedeTiempo}"
@@ -62,6 +68,7 @@
                     <span th:if="${!puedeTiempo}" class="badge bg-dark ms-1">Usado</span>
                 </button>
 
+                <!-- Doble Chance: Se desbloquea en Nivel 2 -->
                 <button type="button"
                         id="btnDobleChance"
                         th:disabled="${!puedeDobleChance}"
@@ -69,7 +76,8 @@
                         class="btn btn-sm fw-bold px-3 py-2"
                         onclick="usarDobleChance()">
                     2x Chance
-                    <span th:if="${!puedeDobleChance}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge bg-secondary ms-1">Bloqueado (Nvl 2)</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeDobleChance}" class="badge bg-dark ms-1">Usado</span>
                 </button>
             </div>
             <div id="alertaComodin" class="alert alert-info py-1 px-2 mt-3 mb-0 small text-center d-none"></div>
