@@ -443,3 +443,74 @@ body {
 
 .category-card-vote:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
 .category-card-vote i { font-size: 2.5rem; margin-bottom: 0.8rem; }
+
+/* =========================================================
+   12. LOGROS
+========================================================= */
+.page-header { margin-bottom: 2rem; }
+.page-title { font-size: 2rem; font-weight: 800; }
+.page-subtitle { color: var(--text-muted); }
+
+.logros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.logro-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logro-card.desbloqueado {
+    border: 2px solid var(--warning);
+}
+
+.logro-card.desbloqueado:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+}
+
+.logro-card.bloqueado {
+    opacity: 0.6;
+    filter: grayscale(80%);
+}
+
+.logro-body {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.logro-icon {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    background: #FEF6E4;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logro-icon i { font-size: 2rem; color: #D4AC0D; }
+
+.logro-info { flex: 1; }
+
+.logro-nombre { font-size: 1.1rem; margin-bottom: 0.2rem; }
+
+.logro-descripcion {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+}
+
+.logro-footer {
+    margin-top: 1.2rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logro-fecha { color: var(--text-muted); font-size: 0.75rem; }
