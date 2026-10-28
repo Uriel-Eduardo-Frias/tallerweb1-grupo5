@@ -43,6 +43,7 @@ class ServicioResultadoPartidaImplTest {
     repositorioPartida = mock(RepositorioPartida.class);
     repositorioPartidaJugador = mock(RepositorioPartidaJugador.class);
     notificadorSala = mock(NotificadorSala.class);
+    servicioLogro = mock(ServicioLogro.class);
     servicio =
       new ServicioResultadoPartidaImpl(
         repositorioPartida,
