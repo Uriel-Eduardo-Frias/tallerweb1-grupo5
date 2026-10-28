@@ -38,7 +38,6 @@ class ServicioComodinImplTest {
 
   private PartidaJugador jugador;
   private Usuario usuario;
-  private EstadisticaUsuario estadistica;
 
   @BeforeEach
   void setUp() {
@@ -62,9 +61,7 @@ class ServicioComodinImplTest {
     when(jugador.getId()).thenReturn(JUGADOR_ID);
     when(jugador.getUsuario()).thenReturn(usuario);
 
-    estadistica = mock(EstadisticaUsuario.class);
-    when(estadistica.getPartidasGanadas()).thenReturn(2);
-    when(servicioEstadistica.obtenerEstadisticaUsuario(USUARIO_ID)).thenReturn(estadistica);
+    when(servicioEstadistica.calcularNivelUsuario(USUARIO_ID)).thenReturn(3);
 
     when(repositorioPartidaJugador.obtenerPorPartidaYUsuario(PARTIDA_ID, USUARIO_ID))
       .thenReturn(jugador);
@@ -80,7 +77,7 @@ class ServicioComodinImplTest {
 
   @Test
   void jugadorNivel1SoloInicializaUnComodinDeTiempoExtra() {
-    when(estadistica.getPartidasGanadas()).thenReturn(0); // 0 victorias = Nivel 1
+    when(servicioEstadistica.calcularNivelUsuario(USUARIO_ID)).thenReturn(1);
 
     servicio.inicializarComodinesParaJugador(jugador);
 
@@ -89,7 +86,7 @@ class ServicioComodinImplTest {
 
   @Test
   void jugadorNivel2InicializaDosComodines() {
-    when(estadistica.getPartidasGanadas()).thenReturn(1); // 1 victoria = Nivel 2
+    when(servicioEstadistica.calcularNivelUsuario(USUARIO_ID)).thenReturn(2);
 
     servicio.inicializarComodinesParaJugador(jugador);
 
@@ -98,7 +95,7 @@ class ServicioComodinImplTest {
 
   @Test
   void jugadorNivel1NoPuedeUsarDobleChanceNi5050() {
-    when(estadistica.getPartidasGanadas()).thenReturn(0);
+    when(servicioEstadistica.calcularNivelUsuario(USUARIO_ID)).thenReturn(1);
 
     boolean puedeDobleChance = servicio.tieneComodinDisponible(
       PARTIDA_ID,

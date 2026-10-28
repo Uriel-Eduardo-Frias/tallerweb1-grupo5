@@ -195,8 +195,10 @@ public class ServicioComodinTest {
     partida.getRondas().add(ronda);
 
     EstadisticaUsuario estadistica = mock(EstadisticaUsuario.class);
-    when(estadistica.getPartidasGanadas()).thenReturn(2); // Nivel 3 para pruebas
+    when(estadistica.getPartidasGanadas()).thenReturn(2);
     when(servicioEstadistica.obtenerEstadisticaUsuario(USUARIO_ID)).thenReturn(estadistica);
+
+    when(servicioEstadistica.calcularNivelUsuario(USUARIO_ID)).thenReturn(3);
 
     when(repositorioPartidaJugador.obtenerPorPartidaYUsuario(PARTIDA_ID, USUARIO_ID))
       .thenReturn(jugador);
