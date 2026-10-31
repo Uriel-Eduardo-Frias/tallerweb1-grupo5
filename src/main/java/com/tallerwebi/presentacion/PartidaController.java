@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.EstadoPartida;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
 import com.tallerwebi.dominio.enumeration.TipoComodin;
+import com.tallerwebi.dominio.excepcion.JugadorBloqueadoException;
 import com.tallerwebi.dominio.excepcion.PrimerIntentoFallidoDobleChanceException;
 import com.tallerwebi.dominio.excepcion.RespuestaDuplicadaException;
 import com.tallerwebi.dominio.modelo.Opcion;
@@ -272,6 +273,7 @@ public class PartidaController {
     modelo.put("pregunta", ronda.getPregunta());
     modelo.put("yaRespondio", servicioRespuestaJugador.yaRespondio(partidaId, usuarioId));
 
+    // Comodines modo tradicional (TURNO_TODOS)
     modelo.put(
       "puede5050",
       servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.CINCUENTA_CINCUENTA)
@@ -283,6 +285,20 @@ public class PartidaController {
     modelo.put(
       "puedeDobleChance",
       servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.DOBLE_CHANCE)
+    );
+
+    // Comodines modo rápido (PRIMERO_GANA)
+    modelo.put(
+      "puedeBloqueo",
+      servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.BLOQUEO)
+    );
+    modelo.put(
+      "puedeBorroso",
+      servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.BORROSO)
+    );
+    modelo.put(
+      "puedeMezclar",
+      servicioComodin.tieneComodinDisponible(partidaId, usuarioId, TipoComodin.MEZCLAR)
     );
 
     modelo.put("nivelJugador", servicioComodin.obtenerNivelJugador(usuarioId));
@@ -308,6 +324,12 @@ public class PartidaController {
     } catch (PrimerIntentoFallidoDobleChanceException excepcion) { // ✅ Longitud >= 2
       redirectAttributes.addFlashAttribute("falloPrimerIntentoDobleChance", Boolean.TRUE);
       redirectAttributes.addFlashAttribute("opcionFalladaId", excepcion.getOpcionIncorrectaId());
+      return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
+    } catch (JugadorBloqueadoException excepcion) {
+      redirectAttributes.addFlashAttribute(
+        "errorBloqueo",
+        "🧊 ¡Estás congelado por un comodín! Espera " + excepcion.getSegundosRestantes() + "s"
+      );
       return REDIRECT_PARTIDA + partidaId + SUFIJO_PREGUNTA;
     } catch (RespuestaDuplicadaException ignored) {} //
 

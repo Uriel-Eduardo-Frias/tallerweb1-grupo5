@@ -2,10 +2,12 @@ package com.tallerwebi.dominio.servicio.impl;
 
 import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.EstadoRonda;
+import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.excepcion.PartidaNoEncontradaException;
 import com.tallerwebi.dominio.modelo.Partida;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
 import com.tallerwebi.dominio.modelo.PartidaRonda;
+import com.tallerwebi.dominio.modelo.RespuestaJugador;
 import com.tallerwebi.dominio.modelo.VotacionCategoria;
 import com.tallerwebi.dominio.repositorio.RepositorioPartida;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
@@ -61,7 +63,12 @@ public class ServicioRondaImpl implements ServicioRonda {
 
     List<PartidaJugador> jugadores = repositorioPartidaJugador.obtenerPorPartida(partidaId);
 
-    if (!todosRespondieron(ronda, jugadores)) {
+    boolean finalizaPorPrimeroGana = false;
+    if (partida.getModoJuego() == ModoJuego.PRIMERO_GANA) {
+      finalizaPorPrimeroGana = algunoRespondioCorrectamente(ronda, jugadores);
+    }
+
+    if (!finalizaPorPrimeroGana && !todosRespondieron(ronda, jugadores)) {
       return false;
     }
 
@@ -69,6 +76,19 @@ public class ServicioRondaImpl implements ServicioRonda {
     notificadorSala.rondaResultado(partida.getSala().getCodigo(), partida.getId());
 
     return true;
+  }
+
+  private boolean algunoRespondioCorrectamente(PartidaRonda ronda, List<PartidaJugador> jugadores) {
+    for (PartidaJugador jugador : jugadores) {
+      RespuestaJugador respuesta = repositorioRespuestaJugador.buscarRespuestaEnRonda(
+        ronda.getId(),
+        jugador.getId()
+      );
+      if (respuesta != null && Boolean.TRUE.equals(respuesta.getEsCorrecta())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
