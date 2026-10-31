@@ -38,8 +38,32 @@ public class TipoComodinTest {
   }
 
   @Test
+  public void bloqueoDeberiaTenerEtiquetaYDescripcion() {
+    assertEquals("Bloqueo 10s", TipoComodin.BLOQUEO.getEtiqueta());
+    assertEquals("Bloquea al oponente durante 10 segundos", TipoComodin.BLOQUEO.getDescripcion());
+  }
+
+  @Test
+  public void borrosoDeberiaTenerEtiquetaYDescripcion() {
+    assertEquals("Borroso 5s", TipoComodin.BORROSO.getEtiqueta());
+    assertEquals(
+      "Hace borrosa la pantalla del oponente durante 5 segundos",
+      TipoComodin.BORROSO.getDescripcion()
+    );
+  }
+
+  @Test
+  public void mezclarDeberiaTenerEtiquetaYDescripcion() {
+    assertEquals("Mezclar", TipoComodin.MEZCLAR.getEtiqueta());
+    assertEquals("Desordena las opciones del oponente", TipoComodin.MEZCLAR.getDescripcion());
+  }
+
+  @Test
   public void valueOfDeberiaDevolverElComodinCorrecto() {
-    assertEquals(4, TipoComodin.values().length);
+    assertEquals(7, TipoComodin.values().length);
     assertEquals(TipoComodin.TIEMPO_EXTRA, TipoComodin.valueOf("TIEMPO_EXTRA"));
+    assertEquals(TipoComodin.BLOQUEO, TipoComodin.valueOf("BLOQUEO"));
+    assertEquals(TipoComodin.BORROSO, TipoComodin.valueOf("BORROSO"));
+    assertEquals(TipoComodin.MEZCLAR, TipoComodin.valueOf("MEZCLAR"));
   }
 }

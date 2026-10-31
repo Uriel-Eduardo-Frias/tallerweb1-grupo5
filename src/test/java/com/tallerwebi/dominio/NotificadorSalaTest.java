@@ -6,11 +6,10 @@ import static org.mockito.Mockito.*;
 import com.tallerwebi.dominio.modelo.Sala;
 import com.tallerwebi.dominio.modelo.SalaJugador;
 import com.tallerwebi.dominio.modelo.Usuario;
+import com.tallerwebi.presentacion.dto.EventoSala;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import com.tallerwebi.presentacion.dto.EventoSala;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

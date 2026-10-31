@@ -12,18 +12,43 @@ public class CrearSalaDTO {
 
   public CrearSalaDTO() {}
 
-  public String getNombre() { return nombre; }
-  public void setNombre(String nombre) { this.nombre = nombre; }
+  public String getNombre() {
+    return nombre;
+  }
 
-  public int getMaxJugadores() { return maxJugadores; }
-  public void setMaxJugadores(int maxJugadores) { this.maxJugadores = maxJugadores; }
+  public void setNombre(String nombre) {
+    this.nombre = nombre;
+  }
 
-  public boolean isEsPrivada() { return esPrivada; }
-  public void setEsPrivada(boolean esPrivada) { this.esPrivada = esPrivada; }
+  public int getMaxJugadores() {
+    return maxJugadores;
+  }
 
-  public ModoJuego getModoJuego() { return modoJuego; }
-  public void setModoJuego(ModoJuego modoJuego) { this.modoJuego = modoJuego; }
+  public void setMaxJugadores(int maxJugadores) {
+    this.maxJugadores = maxJugadores;
+  }
 
-  public int getTotalRondas() { return totalRondas; }
-  public void setTotalRondas(int totalRondas) { this.totalRondas = totalRondas; }
+  public boolean isEsPrivada() {
+    return esPrivada;
+  }
+
+  public void setEsPrivada(boolean esPrivada) {
+    this.esPrivada = esPrivada;
+  }
+
+  public ModoJuego getModoJuego() {
+    return modoJuego;
+  }
+
+  public void setModoJuego(ModoJuego modoJuego) {
+    this.modoJuego = modoJuego;
+  }
+
+  public int getTotalRondas() {
+    return totalRondas;
+  }
+
+  public void setTotalRondas(int totalRondas) {
+    this.totalRondas = totalRondas;
+  }
 }

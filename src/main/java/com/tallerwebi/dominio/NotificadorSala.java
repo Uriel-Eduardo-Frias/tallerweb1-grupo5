@@ -24,15 +24,15 @@ public class NotificadorSala {
 
   public void jugadorSeUnio(Sala sala) {
     enviar(
-            sala.getCodigo(),
-            new EventoSala("JUGADOR_SE_UNIO", sala.getCodigo(), obtenerJugadores(sala))
+      sala.getCodigo(),
+      new EventoSala("JUGADOR_SE_UNIO", sala.getCodigo(), obtenerJugadores(sala))
     );
   }
 
   public void jugadorListo(Sala sala) {
     enviar(
-            sala.getCodigo(),
-            new EventoSala("JUGADOR_LISTO", sala.getCodigo(), obtenerJugadores(sala))
+      sala.getCodigo(),
+      new EventoSala("JUGADOR_LISTO", sala.getCodigo(), obtenerJugadores(sala))
     );
   }
 
@@ -55,8 +55,17 @@ public class NotificadorSala {
     enviar(codigoSala, evento);
   }
 
-  public void notificarComodinOponente(String codigoSala, Long partidaId, String tipoComodin, String usernameObjetivo) {
-    EventoSala evento = new EventoSala(tipoComodin, codigoSala, Collections.singletonList(usernameObjetivo));
+  public void notificarComodinOponente(
+    String codigoSala,
+    Long partidaId,
+    String tipoComodin,
+    String usernameObjetivo
+  ) {
+    EventoSala evento = new EventoSala(
+      tipoComodin,
+      codigoSala,
+      Collections.singletonList(usernameObjetivo)
+    );
     evento.setPartidaId(partidaId);
 
     enviar(codigoSala, evento);
@@ -75,12 +84,12 @@ public class NotificadorSala {
   private void enviar(String codigoSala, EventoSala evento) {
     if (TransactionSynchronizationManager.isSynchronizationActive()) {
       TransactionSynchronizationManager.registerSynchronization(
-              new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                  messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
-                }
-              }
+        new TransactionSynchronization() {
+          @Override
+          public void afterCommit() {
+            messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
+          }
+        }
       );
       return;
     }

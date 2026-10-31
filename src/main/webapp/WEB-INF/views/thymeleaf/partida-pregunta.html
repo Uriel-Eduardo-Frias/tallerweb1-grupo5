@@ -38,13 +38,17 @@
 
         <h2 class="mb-4" th:text="${pregunta.descripcion}">Enunciado de la pregunta</h2>
 
-
+        <!-- SECCIÓN DE COMODINES -->
         <div class="card bg-white p-3 mb-4 border" th:if="${!yaRespondio}">
             <p class="text-muted small mb-2 fw-bold text-center">
-                COMODINES DE LA PARTIDA <span th:if="${nivelJugador != null}">(NIVEL <span th:text="${nivelJugador}">1</span>)</span>
+                COMODINES DE LA PARTIDA
+                <span th:if="${partida.modoJuego.name() == 'TURNO_TODOS' and nivelJugador != null}">
+                    (NIVEL <span th:text="${nivelJugador}">1</span>)
+                </span>
             </p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
 
+            <!-- 1. Comodines para MODO TRADICIONAL (TURNO_TODOS) -->
+            <div th:if="${partida.modoJuego.name() == 'TURNO_TODOS'}" class="d-flex justify-content-center gap-3 flex-wrap">
                 <!-- 50/50: Se desbloquea en Nivel 3 -->
                 <button type="button"
                         id="btn5050"
@@ -80,11 +84,54 @@
                     <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeDobleChance}" class="badge bg-dark ms-1">Usado</span>
                 </button>
             </div>
+
+            <!-- 2. Comodines para MODO RÁPIDO (PRIMERO_GANA) -->
+            <div th:if="${partida.modoJuego.name() == 'PRIMERO_GANA'}" class="d-flex justify-content-center gap-3 flex-wrap">
+                <!-- Bloqueo: Congela al rival por 10s -->
+                <button type="button"
+                        id="btnBloqueo"
+                        th:disabled="${!puedeBloqueo}"
+                        th:classappend="${!puedeBloqueo} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-info'"
+                        class="btn btn-sm fw-bold px-3 py-2"
+                        onclick="usarBloqueo()">
+                    🧊 Bloqueo (10s)
+                    <span th:if="${!puedeBloqueo}" class="badge bg-dark ms-1">Usado</span>
+                </button>
+
+                <!-- Borroso: Dificulta la visión por 5s -->
+                <button type="button"
+                        id="btnBorroso"
+                        th:disabled="${!puedeBorroso}"
+                        th:classappend="${!puedeBorroso} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-dark'"
+                        class="btn btn-sm fw-bold px-3 py-2"
+                        onclick="usarBorroso()">
+                    💨 Borroso (5s)
+                    <span th:if="${!puedeBorroso}" class="badge bg-dark ms-1">Usado</span>
+                </button>
+
+                <!-- Mezclar: Desordena las opciones -->
+                <button type="button"
+                        id="btnMezclar"
+                        th:disabled="${!puedeMezclar}"
+                        th:classappend="${!puedeMezclar} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-warning'"
+                        class="btn btn-sm fw-bold px-3 py-2"
+                        onclick="usarMezclar()">
+                    🔀 Mezclar
+                    <span th:if="${!puedeMezclar}" class="badge bg-dark ms-1">Usado</span>
+                </button>
+            </div>
+
             <div id="alertaComodin" class="alert alert-info py-1 px-2 mt-3 mb-0 small text-center d-none"></div>
         </div>
 
+        <!-- Alerta si falló el primer intento con Doble Chance -->
         <div th:if="${falloPrimerIntentoDobleChance}" class="alert alert-warning text-center fw-bold mb-3">
             ⚠️ ¡Respuesta incorrecta! Pero gracias a tu <strong>Doble Chance</strong> tienes un segundo intento. ¡Elige otra opción!
+        </div>
+
+        <!-- Alerta si intentó contestar congelado -->
+        <div th:if="${errorBloqueo}" class="alert alert-danger text-center fw-bold mb-3" th:text="${errorBloqueo}">
+            🧊 ¡Estás congelado por un comodín!
         </div>
 
         <!-- FORMULARIO DE RESPUESTAS -->
@@ -92,7 +139,8 @@
               th:if="${!yaRespondio}"
               th:action="@{/partida/{id}/responder(id=${partida.id})}"
               method="POST"
-              class="d-grid gap-3">
+              class="d-grid gap-3"
+              style="transition: filter 0.3s ease;">
             <button th:each="opcion : ${pregunta.opciones}"
                     type="submit"
                     name="opcionId"
@@ -113,7 +161,7 @@
               style="display: none;">
         </form>
 
-        <!-- MENSAJE DE ESPERA SI YA RESPODIÓ -->
+        <!-- MENSAJE DE ESPERA SI YA RESPONDIÓ -->
         <div th:if="${yaRespondio}" class="alert alert-info text-center">
             Respuesta registrada. Esperando a los demás jugadores...
         </div>
@@ -129,6 +177,7 @@
     const urlIr = /*[[@{/partida/{id}/ir(id=${partida.id})}]]*/ "";
     const urlWs = /*[[@{/ws}]]*/ "/ws";
     const yaRespondio = /*[[${yaRespondio}]]*/ false;
+    const miUsername = /*[[${session.USERNAME}]]*/ "";
 
     let tiempoRestante = 15;
     const tiempoMaximoBase = 15;
@@ -180,11 +229,12 @@
         const btn = document.getElementById(btnId);
         if (!btn) return;
         btn.disabled = true;
-        btn.classList.remove("btn-outline-warning", "btn-outline-info", "btn-outline-primary");
+        btn.classList.remove("btn-outline-warning", "btn-outline-info", "btn-outline-primary", "btn-outline-dark");
         btn.classList.add("btn-secondary", "opacity-50", "pe-none");
         btn.innerHTML += ' <span class="badge bg-dark ms-1">Usado</span>';
     }
 
+    // --- FUNCIONES COMODINES TRADICIONALES ---
     function usar5050() {
         const url = /*[[@{/partida/{id}/comodin/50-50(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
@@ -226,6 +276,72 @@
             });
     }
 
+    // --- FUNCIONES COMODINES MODO RÁPIDO ---
+    function usarBloqueo() {
+        const url = /*[[@{/partida/{id}/comodin/bloqueo(id=${partida.id})}]]*/ "";
+        fetch(url, { method: "POST" })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                desactivarBotonComodin("btnBloqueo");
+                mostrarMensajeComodin("¡Has congelado al oponente por 10 segundos!");
+            });
+    }
+
+    function usarBorroso() {
+        const url = /*[[@{/partida/{id}/comodin/borroso(id=${partida.id})}]]*/ "";
+        fetch(url, { method: "POST" })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                desactivarBotonComodin("btnBorroso");
+                mostrarMensajeComodin("¡Has nublado la pantalla del rival por 5 segundos!");
+            });
+    }
+
+    function usarMezclar() {
+        const url = /*[[@{/partida/{id}/comodin/mezclar(id=${partida.id})}]]*/ "";
+        fetch(url, { method: "POST" })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                desactivarBotonComodin("btnMezclar");
+                mostrarMensajeComodin("¡Has mezclado las opciones del rival!");
+            });
+    }
+
+    // --- EFECTOS RECIBIDOS DEL OPONENTE ---
+    function activarEfectoBloqueo(segundos) {
+        const botones = document.querySelectorAll(".boton-opcion");
+        botones.forEach(b => b.disabled = true);
+        mostrarMensajeComodin("🧊 ¡El oponente te congeló por " + segundos + " segundos!");
+
+        setTimeout(() => {
+            botones.forEach(b => b.disabled = false);
+            mostrarMensajeComodin("¡Te has descongelado!");
+        }, segundos * 1000);
+    }
+
+    function activarEfectoBorroso(segundos) {
+        const formResp = document.getElementById("formRespuesta");
+        if (formResp) formResp.style.filter = "blur(8px)";
+        mostrarMensajeComodin("💨 ¡El oponente nubló tu pantalla por " + segundos + " segundos!");
+
+        setTimeout(() => {
+            if (formResp) formResp.style.filter = "none";
+            mostrarMensajeComodin("Tu vista se ha aclarado.");
+        }, segundos * 1000);
+    }
+
+    function activarEfectoMezclar() {
+        const contenedor = document.getElementById("formRespuesta");
+        if (!contenedor) return;
+        for (let i = contenedor.children.length; i >= 0; i--) {
+            contenedor.appendChild(contenedor.children[Math.random() * i | 0]);
+        }
+        mostrarMensajeComodin("🔀 ¡El oponente desordenó tus respuestas!");
+    }
+
     const eventosTransicion = [
         "VOTACION_CATEGORIA_FINALIZADA",
         "RONDA_RESULTADO",
@@ -250,6 +366,19 @@
                 return;
             }
 
+            // Si el comodín fue lanzado hacia este usuario
+            if (evento.jugadores && evento.jugadores.includes(miUsername)) {
+                if (evento.tipo === "BLOQUEO") {
+                    activarEfectoBloqueo(10);
+                } else if (evento.tipo === "BORROSO") {
+                    activarEfectoBorroso(5);
+                } else if (evento.tipo === "MEZCLAR") {
+                    activarEfectoMezclar();
+                }
+                return;
+            }
+
+            // Transiciones normales de ronda
             if (eventosTransicion.includes(evento.tipo)) {
                 if (intervalReloj) clearInterval(intervalReloj);
                 window.location.href = urlIr;

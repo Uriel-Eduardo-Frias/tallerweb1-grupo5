@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-import com.tallerwebi.presentacion.dto.CrearSalaDTO;
 import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.excepcion.SalaLlenaException;
@@ -16,6 +15,7 @@ import com.tallerwebi.dominio.modelo.Sala;
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.servicio.ServicioSala;
 import com.tallerwebi.dominio.servicio.ServicioUsuario;
+import com.tallerwebi.presentacion.dto.CrearSalaDTO;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;

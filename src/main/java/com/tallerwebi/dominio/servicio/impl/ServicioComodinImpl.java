@@ -1,5 +1,7 @@
 package com.tallerwebi.dominio.servicio.impl;
 
+import com.tallerwebi.dominio.NotificadorSala;
+import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.enumeration.TipoComodin;
 import com.tallerwebi.dominio.modelo.Comodin;
 import com.tallerwebi.dominio.modelo.Opcion;
@@ -13,6 +15,7 @@ import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.servicio.ServicioComodin;
 import com.tallerwebi.dominio.servicio.ServicioEstadistica;
 import com.tallerwebi.presentacion.dto.Comodin5050DTO;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +32,7 @@ public class ServicioComodinImpl implements ServicioComodin {
   private static final int NIVEL_AVANZADO = 3;
 
   private static final int SEGUNDOS_TIEMPO_EXTRA = 10;
+  private static final int SEGUNDOS_BLOQUEO = 10;
   private static final int PENALIZACION_CINCUENTA_CINCUENTA = 5;
   private static final int CANTIDAD_OPCIONES_DESCARTADAS = 2;
   private static final int CANTIDAD_MINIMA_DISPONIBLE = 0;
@@ -38,18 +42,36 @@ public class ServicioComodinImpl implements ServicioComodin {
   private final RepositorioPartida repositorioPartida;
   private final RepositorioPartidaJugador repositorioPartidaJugador;
   private final ServicioEstadistica servicioEstadistica;
+  private final NotificadorSala notificadorSala;
 
   @Autowired
   public ServicioComodinImpl(
     RepositorioComodin repositorioComodin,
     RepositorioPartida repositorioPartida,
     RepositorioPartidaJugador repositorioPartidaJugador,
-    ServicioEstadistica servicioEstadistica
+    ServicioEstadistica servicioEstadistica,
+    NotificadorSala notificadorSala
   ) {
     this.repositorioComodin = repositorioComodin;
     this.repositorioPartida = repositorioPartida;
     this.repositorioPartidaJugador = repositorioPartidaJugador;
     this.servicioEstadistica = servicioEstadistica;
+    this.notificadorSala = notificadorSala;
+  }
+
+  public ServicioComodinImpl(
+    RepositorioComodin repositorioComodin,
+    RepositorioPartida repositorioPartida,
+    RepositorioPartidaJugador repositorioPartidaJugador,
+    ServicioEstadistica servicioEstadistica
+  ) {
+    this(
+      repositorioComodin,
+      repositorioPartida,
+      repositorioPartidaJugador,
+      servicioEstadistica,
+      null
+    );
   }
 
   @Override
@@ -61,6 +83,16 @@ public class ServicioComodinImpl implements ServicioComodin {
   }
 
   private boolean esComodinPermitidoParaJugador(PartidaJugador jugador, TipoComodin tipo) {
+    ModoJuego modo = (jugador != null && jugador.getPartida() != null)
+      ? jugador.getPartida().getModoJuego()
+      : ModoJuego.TURNO_TODOS;
+
+    if (modo == ModoJuego.PRIMERO_GANA) {
+      return (
+        tipo == TipoComodin.BLOQUEO || tipo == TipoComodin.BORROSO || tipo == TipoComodin.MEZCLAR
+      );
+    }
+
     Long usuarioId = (jugador != null && jugador.getUsuario() != null)
       ? jugador.getUsuario().getId()
       : null;
@@ -82,18 +114,28 @@ public class ServicioComodinImpl implements ServicioComodin {
   @Override
   public void inicializarComodinesParaJugador(PartidaJugador jugador) {
     List<TipoComodin> permitidos = new ArrayList<>();
-    permitidos.add(TipoComodin.TIEMPO_EXTRA);
 
-    Long usuarioId = (jugador != null && jugador.getUsuario() != null)
-      ? jugador.getUsuario().getId()
-      : null;
+    ModoJuego modo = (jugador != null && jugador.getPartida() != null)
+      ? jugador.getPartida().getModoJuego()
+      : ModoJuego.TURNO_TODOS;
 
-    int nivel = obtenerNivelJugador(usuarioId);
-    if (nivel >= NIVEL_INTERMEDIO) {
-      permitidos.add(TipoComodin.DOBLE_CHANCE);
-    }
-    if (nivel >= NIVEL_AVANZADO) {
-      permitidos.add(TipoComodin.CINCUENTA_CINCUENTA);
+    if (modo == ModoJuego.PRIMERO_GANA) {
+      permitidos.add(TipoComodin.BLOQUEO);
+      permitidos.add(TipoComodin.BORROSO);
+      permitidos.add(TipoComodin.MEZCLAR);
+    } else {
+      permitidos.add(TipoComodin.TIEMPO_EXTRA);
+      Long usuarioId = (jugador != null && jugador.getUsuario() != null)
+        ? jugador.getUsuario().getId()
+        : null;
+
+      int nivel = obtenerNivelJugador(usuarioId);
+      if (nivel >= NIVEL_INTERMEDIO) {
+        permitidos.add(TipoComodin.DOBLE_CHANCE);
+      }
+      if (nivel >= NIVEL_AVANZADO) {
+        permitidos.add(TipoComodin.CINCUENTA_CINCUENTA);
+      }
     }
 
     for (TipoComodin tipo : permitidos) {
@@ -170,6 +212,60 @@ public class ServicioComodinImpl implements ServicioComodin {
     repositorioPartidaJugador.guardar(jugador);
   }
 
+  @Override
+  public void aplicarBloqueo(Long partidaId, Long usuarioId) {
+    consumirComodinValido(partidaId, usuarioId, TipoComodin.BLOQUEO);
+
+    Partida partida = repositorioPartida.obtenerPorIdConRondas(partidaId);
+    PartidaJugador oponente = obtenerOponente(partidaId, usuarioId);
+
+    oponente.setBloqueadoHasta(LocalDateTime.now().plusSeconds(SEGUNDOS_BLOQUEO));
+    repositorioPartidaJugador.guardar(oponente);
+
+    if (notificadorSala != null) {
+      notificadorSala.notificarComodinOponente(
+        partida.getSala().getCodigo(),
+        partidaId,
+        TipoComodin.BLOQUEO.name(),
+        oponente.getUsuario().getUsername()
+      );
+    }
+  }
+
+  @Override
+  public void aplicarBorroso(Long partidaId, Long usuarioId) {
+    consumirComodinValido(partidaId, usuarioId, TipoComodin.BORROSO);
+
+    Partida partida = repositorioPartida.obtenerPorIdConRondas(partidaId);
+    PartidaJugador oponente = obtenerOponente(partidaId, usuarioId);
+
+    if (notificadorSala != null) {
+      notificadorSala.notificarComodinOponente(
+        partida.getSala().getCodigo(),
+        partidaId,
+        TipoComodin.BORROSO.name(),
+        oponente.getUsuario().getUsername()
+      );
+    }
+  }
+
+  @Override
+  public void aplicarMezclar(Long partidaId, Long usuarioId) {
+    consumirComodinValido(partidaId, usuarioId, TipoComodin.MEZCLAR);
+
+    Partida partida = repositorioPartida.obtenerPorIdConRondas(partidaId);
+    PartidaJugador oponente = obtenerOponente(partidaId, usuarioId);
+
+    if (notificadorSala != null) {
+      notificadorSala.notificarComodinOponente(
+        partida.getSala().getCodigo(),
+        partidaId,
+        TipoComodin.MEZCLAR.name(),
+        oponente.getUsuario().getUsername()
+      );
+    }
+  }
+
   private PartidaJugadorComodin consumirComodinValido(
     Long partidaId,
     Long usuarioId,
@@ -179,7 +275,7 @@ public class ServicioComodinImpl implements ServicioComodin {
 
     if (!esComodinPermitidoParaJugador(jugador, tipo)) {
       throw new IllegalStateException(
-        "El jugador no posee el nivel necesario para usar el comodín " + tipo
+        "El jugador no posee el nivel o el modo necesario para usar el comodín " + tipo
       );
     }
 
@@ -233,5 +329,15 @@ public class ServicioComodinImpl implements ServicioComodin {
       throw new IllegalArgumentException("El jugador no participa en la partida.");
     }
     return jugadorPartida;
+  }
+
+  private PartidaJugador obtenerOponente(Long partidaId, Long usuarioId) {
+    List<PartidaJugador> jugadores = repositorioPartidaJugador.obtenerPorPartida(partidaId);
+    for (PartidaJugador pj : jugadores) {
+      if (!pj.getUsuario().getId().equals(usuarioId)) {
+        return pj;
+      }
+    }
+    throw new IllegalStateException("No hay un oponente en la partida.");
   }
 }
