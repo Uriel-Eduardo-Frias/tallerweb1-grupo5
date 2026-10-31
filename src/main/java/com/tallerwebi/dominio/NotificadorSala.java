@@ -4,6 +4,8 @@ import com.tallerwebi.dominio.modelo.Sala;
 import com.tallerwebi.dominio.modelo.SalaJugador;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.tallerwebi.presentacion.dto.EventoSala;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;

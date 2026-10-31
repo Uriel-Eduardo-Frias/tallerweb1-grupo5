@@ -6,7 +6,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.CrearSalaDTO;
+import com.tallerwebi.presentacion.dto.CrearSalaDTO;
 import com.tallerwebi.dominio.NotificadorSala;
 import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.excepcion.SalaLlenaException;

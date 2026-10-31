@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import com.tallerwebi.presentacion.dto.EventoSala;
 import org.junit.Before;
 import org.junit.Test;
 
