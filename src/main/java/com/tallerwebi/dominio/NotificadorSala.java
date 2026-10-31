@@ -2,10 +2,10 @@ package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.modelo.Sala;
 import com.tallerwebi.dominio.modelo.SalaJugador;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.tallerwebi.presentacion.dto.EventoSala;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -24,15 +24,15 @@ public class NotificadorSala {
 
   public void jugadorSeUnio(Sala sala) {
     enviar(
-      sala.getCodigo(),
-      new EventoSala("JUGADOR_SE_UNIO", sala.getCodigo(), obtenerJugadores(sala))
+            sala.getCodigo(),
+            new EventoSala("JUGADOR_SE_UNIO", sala.getCodigo(), obtenerJugadores(sala))
     );
   }
 
   public void jugadorListo(Sala sala) {
     enviar(
-      sala.getCodigo(),
-      new EventoSala("JUGADOR_LISTO", sala.getCodigo(), obtenerJugadores(sala))
+            sala.getCodigo(),
+            new EventoSala("JUGADOR_LISTO", sala.getCodigo(), obtenerJugadores(sala))
     );
   }
 
@@ -55,6 +55,13 @@ public class NotificadorSala {
     enviar(codigoSala, evento);
   }
 
+  public void notificarComodinOponente(String codigoSala, Long partidaId, String tipoComodin, String usernameObjetivo) {
+    EventoSala evento = new EventoSala(tipoComodin, codigoSala, Collections.singletonList(usernameObjetivo));
+    evento.setPartidaId(partidaId);
+
+    enviar(codigoSala, evento);
+  }
+
   private List<String> obtenerJugadores(Sala sala) {
     List<String> jugadores = new ArrayList<>();
 
@@ -65,19 +72,15 @@ public class NotificadorSala {
     return jugadores;
   }
 
-  /**
-   * Si hay una transacción activa, el mensaje se envía recién después del commit.
-   * Así, cuando el navegador pide /ir, ya ve el estado nuevo en la base.
-   */
   private void enviar(String codigoSala, EventoSala evento) {
     if (TransactionSynchronizationManager.isSynchronizationActive()) {
       TransactionSynchronizationManager.registerSynchronization(
-        new TransactionSynchronization() {
-          @Override
-          public void afterCommit() {
-            messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
-          }
-        }
+              new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                  messagingTemplate.convertAndSend(TOPIC_SALA + codigoSala, evento);
+                }
+              }
       );
       return;
     }
