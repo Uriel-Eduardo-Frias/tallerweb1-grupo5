@@ -23,7 +23,8 @@
     <section class="card">
 
         <div th:if="${#lists.isEmpty(salas)}" class="empty-state">
-            <i class="fa-solid fa-door-closed" style="font-size: 2.5rem; color: var(--primary-light); margin-bottom: 1rem;"></i>
+            <i class="fa-solid fa-door-closed"
+               style="font-size: 2.5rem; color: var(--primary-light); margin-bottom: 1rem;"></i>
             <h2>Todavía no hay salas</h2>
             <p>Cuando haya salas disponibles, aparecerán acá.</p>
         </div>
@@ -32,7 +33,6 @@
             <table class="styled-table">
                 <thead>
                 <tr>
-                    <th>Código</th>
                     <th>Nombre de sala</th>
                     <th>Host</th>
                     <th>Jugadores</th>
@@ -43,10 +43,6 @@
 
                 <tbody>
                 <tr th:each="s : ${salas}">
-                    <td>
-                        <span class="badge badge-purple" th:text="${s.codigo}">TRV-1234</span>
-                    </td>
-
                     <td><strong th:text="${s.nombre}">Trivia del viernes</strong></td>
 
                     <td th:text="${s.host.username}">Juan</td>

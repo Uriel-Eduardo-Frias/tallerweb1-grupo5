@@ -3,6 +3,7 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.excepcion.SalaLlenaException;
+import com.tallerwebi.dominio.excepcion.SalaNoEncontradaException;
 import com.tallerwebi.dominio.modelo.Sala;
 import com.tallerwebi.dominio.modelo.SalaJugador;
 import com.tallerwebi.dominio.modelo.Usuario;
@@ -42,10 +43,10 @@ public class SalaController {
   }
 
   /* código nuevo que va a empezar a tener sentido */
-  /* mostrar las salas disponibles */
+  /* mostrar las salas disponibles (solo públicas y en espera) */
   @RequestMapping(path = "/salas", method = RequestMethod.GET)
   public ModelAndView listarSalas() {
-    List<Sala> salas = servicioSala.listarSalas();
+    List<Sala> salas = servicioSala.listarSalasPublicas();
 
     Map<String, Object> modelo = new ModelMap();
     modelo.put("salas", salas);
@@ -126,7 +127,6 @@ public class SalaController {
       }
     }
 
-    // sin invitados no se puede comenzar
     if (cantidadInvitados == 0) {
       todosListos = false;
     }
@@ -155,7 +155,10 @@ public class SalaController {
       return new ModelAndView(REDIRECT_SALAS + sala.getCodigo());
     } catch (SalaLlenaException e) {
       return vistaErrorUnirse("Sala llena");
-    } catch (IllegalStateException e) {
+    } catch (SalaNoEncontradaException e) {
+      // con salas privadas, escribir mal el código es el caso más común
+      return vistaErrorUnirse(e.getMessage());
+    } catch (IllegalArgumentException | IllegalStateException e) {
       return vistaErrorUnirse(e.getMessage());
     }
   }
@@ -176,7 +179,7 @@ public class SalaController {
   private ModelAndView vistaErrorUnirse(String mensaje) {
     Map<String, Object> modelo = new ModelMap();
     modelo.put("mensaje", mensaje);
-    modelo.put("salas", servicioSala.listarSalas());
+    modelo.put("salas", servicioSala.listarSalasPublicas());
     return new ModelAndView("error-unirse", modelo);
   }
 

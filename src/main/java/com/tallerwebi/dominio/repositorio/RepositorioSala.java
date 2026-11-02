@@ -8,4 +8,5 @@ public interface RepositorioSala {
   void guardar(Sala sala);
   List<Sala> listarSalas();
   Sala obtenerPorCodigoConJugadores(String codigo);
+  List<Sala> listarSalasPublicasEnEspera();
 }

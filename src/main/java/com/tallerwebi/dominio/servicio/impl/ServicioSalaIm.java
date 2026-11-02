@@ -15,6 +15,7 @@ import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
 import com.tallerwebi.dominio.servicio.ServicioSala;
 import jakarta.transaction.Transactional;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -299,5 +300,21 @@ public class ServicioSalaIm implements ServicioSala {
     }
 
     throw new IllegalStateException("El usuario no está en la sala");
+  }
+
+  @Override
+  public List<Sala> listarSalasPublicas() {
+    return repositorioSala.listarSalasPublicasEnEspera();
+  }
+
+  @Override
+  public List<Sala> listarSalasDestacadas(int cantidad) {
+    return repositorioSala
+      .listarSalasPublicasEnEspera()
+      .stream()
+      .filter(s -> s.getJugadores().size() < s.getMaxJugadores())
+      .sorted(Comparator.comparingInt((Sala s) -> s.getJugadores().size()).reversed())
+      .limit(cantidad)
+      .toList();
   }
 }

@@ -1,5 +1,6 @@
 package com.tallerwebi.infraestructura;
 
+import com.tallerwebi.dominio.enumeration.EstadoSala;
 import com.tallerwebi.dominio.modelo.Sala;
 import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import java.util.List;
@@ -60,5 +61,26 @@ public class RepositorioSalaImpl implements RepositorioSala {
       .createQuery(hql, Sala.class)
       .setParameter("codigo", codigo)
       .uniqueResult();
+  }
+
+  @Override
+  public List<Sala> listarSalasPublicasEnEspera() {
+    String hql =
+      """
+      SELECT DISTINCT s
+      FROM Sala s
+      LEFT JOIN FETCH s.host
+      LEFT JOIN FETCH s.jugadores sj
+      LEFT JOIN FETCH sj.usuario
+      WHERE s.esPrivada = false
+      AND s.estado = :estado
+      AND s.host IS NOT NULL
+              """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, Sala.class)
+      .setParameter("estado", EstadoSala.EN_ESPERA)
+      .getResultList();
   }
 }

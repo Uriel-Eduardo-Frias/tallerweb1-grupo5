@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.servicio.ServicioEstadistica;
+import com.tallerwebi.dominio.servicio.ServicioSala;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +14,14 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorHome {
 
   private static final int TAMANIO_TOP = 5;
+  private static final int CANTIDAD_SALAS_HOME = 4;
   private ServicioEstadistica servicioEstadistica;
+  private ServicioSala servicioSala;
 
   @Autowired
-  public ControladorHome(ServicioEstadistica servicioEstadistica) {
+  public ControladorHome(ServicioEstadistica servicioEstadistica, ServicioSala servicioSala) {
     this.servicioEstadistica = servicioEstadistica;
+    this.servicioSala = servicioSala;
   }
 
   // Pagina principal
@@ -31,6 +35,7 @@ public class ControladorHome {
   public ModelAndView irAlHome() {
     Map<String, Object> modelo = new ModelMap();
     modelo.put("topRanking", servicioEstadistica.obtenerLeaderBoard(TAMANIO_TOP));
+    modelo.put("salasPublicas", servicioSala.listarSalasDestacadas(CANTIDAD_SALAS_HOME));
     return new ModelAndView("home", modelo);
   }
 }
