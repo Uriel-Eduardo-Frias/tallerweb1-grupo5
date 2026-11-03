@@ -46,11 +46,11 @@ public class ServicioComodinImpl implements ServicioComodin {
 
   @Autowired
   public ServicioComodinImpl(
-    RepositorioComodin repositorioComodin,
-    RepositorioPartida repositorioPartida,
-    RepositorioPartidaJugador repositorioPartidaJugador,
-    ServicioEstadistica servicioEstadistica,
-    NotificadorSala notificadorSala
+          RepositorioComodin repositorioComodin,
+          RepositorioPartida repositorioPartida,
+          RepositorioPartidaJugador repositorioPartidaJugador,
+          ServicioEstadistica servicioEstadistica,
+          NotificadorSala notificadorSala
   ) {
     this.repositorioComodin = repositorioComodin;
     this.repositorioPartida = repositorioPartida;
@@ -60,17 +60,17 @@ public class ServicioComodinImpl implements ServicioComodin {
   }
 
   public ServicioComodinImpl(
-    RepositorioComodin repositorioComodin,
-    RepositorioPartida repositorioPartida,
-    RepositorioPartidaJugador repositorioPartidaJugador,
-    ServicioEstadistica servicioEstadistica
+          RepositorioComodin repositorioComodin,
+          RepositorioPartida repositorioPartida,
+          RepositorioPartidaJugador repositorioPartidaJugador,
+          ServicioEstadistica servicioEstadistica
   ) {
     this(
-      repositorioComodin,
-      repositorioPartida,
-      repositorioPartidaJugador,
-      servicioEstadistica,
-      null
+            repositorioComodin,
+            repositorioPartida,
+            repositorioPartidaJugador,
+            servicioEstadistica,
+            null
     );
   }
 
@@ -84,29 +84,36 @@ public class ServicioComodinImpl implements ServicioComodin {
 
   private boolean esComodinPermitidoParaJugador(PartidaJugador jugador, TipoComodin tipo) {
     ModoJuego modo = (jugador != null && jugador.getPartida() != null)
-      ? jugador.getPartida().getModoJuego()
-      : ModoJuego.TURNO_TODOS;
-
-    if (modo == ModoJuego.PRIMERO_GANA) {
-      return (
-        tipo == TipoComodin.BLOQUEO || tipo == TipoComodin.BORROSO || tipo == TipoComodin.MEZCLAR
-      );
-    }
+            ? jugador.getPartida().getModoJuego()
+            : ModoJuego.TURNO_TODOS;
 
     Long usuarioId = (jugador != null && jugador.getUsuario() != null)
-      ? jugador.getUsuario().getId()
-      : null;
+            ? jugador.getUsuario().getId()
+            : null;
 
     int nivel = obtenerNivelJugador(usuarioId);
 
+    if (modo == ModoJuego.PRIMERO_GANA) {
+      if (tipo == TipoComodin.BORROSO) {
+        return true; // Nivel 1
+      }
+      if (tipo == TipoComodin.MEZCLAR) {
+        return nivel >= NIVEL_INTERMEDIO; // Nivel 2
+      }
+      if (tipo == TipoComodin.BLOQUEO) {
+        return nivel >= NIVEL_AVANZADO; // Nivel 3
+      }
+      return false;
+    }
+
     if (tipo == TipoComodin.TIEMPO_EXTRA) {
-      return true;
+      return true; // Nivel 1
     }
     if (tipo == TipoComodin.DOBLE_CHANCE) {
-      return nivel >= NIVEL_INTERMEDIO;
+      return nivel >= NIVEL_INTERMEDIO; // Nivel 2
     }
     if (tipo == TipoComodin.CINCUENTA_CINCUENTA) {
-      return nivel >= NIVEL_AVANZADO;
+      return nivel >= NIVEL_AVANZADO; // Nivel 3
     }
     return false;
   }
@@ -116,20 +123,26 @@ public class ServicioComodinImpl implements ServicioComodin {
     List<TipoComodin> permitidos = new ArrayList<>();
 
     ModoJuego modo = (jugador != null && jugador.getPartida() != null)
-      ? jugador.getPartida().getModoJuego()
-      : ModoJuego.TURNO_TODOS;
+            ? jugador.getPartida().getModoJuego()
+            : ModoJuego.TURNO_TODOS;
+
+    Long usuarioId = (jugador != null && jugador.getUsuario() != null)
+            ? jugador.getUsuario().getId()
+            : null;
+
+    int nivel = obtenerNivelJugador(usuarioId);
 
     if (modo == ModoJuego.PRIMERO_GANA) {
-      permitidos.add(TipoComodin.BLOQUEO);
-      permitidos.add(TipoComodin.BORROSO);
-      permitidos.add(TipoComodin.MEZCLAR);
+      permitidos.add(TipoComodin.BORROSO); // Nivel 1
+      if (nivel >= NIVEL_INTERMEDIO) {
+        permitidos.add(TipoComodin.MEZCLAR); // Nivel 2
+      }
+      if (nivel >= NIVEL_AVANZADO) {
+        permitidos.add(TipoComodin.BLOQUEO); // Nivel 3
+      }
     } else {
+      // INICIALIZACIÓN POR NIVEL PARA TURNO_TODOS
       permitidos.add(TipoComodin.TIEMPO_EXTRA);
-      Long usuarioId = (jugador != null && jugador.getUsuario() != null)
-        ? jugador.getUsuario().getId()
-        : null;
-
-      int nivel = obtenerNivelJugador(usuarioId);
       if (nivel >= NIVEL_INTERMEDIO) {
         permitidos.add(TipoComodin.DOBLE_CHANCE);
       }
@@ -158,15 +171,15 @@ public class ServicioComodinImpl implements ServicioComodin {
         return false;
       }
       PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
-        jugador.getId(),
-        tipo
+              jugador.getId(),
+              tipo
       );
       if (comodinJugador == null) {
         comodinJugador = obtenerOCrearComodinDeJugador(jugador, tipo);
       }
       return (
-        comodinJugador != null &&
-        comodinJugador.getCantidadDisponible() > CANTIDAD_MINIMA_DISPONIBLE
+              comodinJugador != null &&
+                      comodinJugador.getCantidadDisponible() > CANTIDAD_MINIMA_DISPONIBLE
       );
     } catch (Exception excepcion) {
       return false;
@@ -224,10 +237,10 @@ public class ServicioComodinImpl implements ServicioComodin {
 
     if (notificadorSala != null) {
       notificadorSala.notificarComodinOponente(
-        partida.getSala().getCodigo(),
-        partidaId,
-        TipoComodin.BLOQUEO.name(),
-        oponente.getUsuario().getUsername()
+              partida.getSala().getCodigo(),
+              partidaId,
+              TipoComodin.BLOQUEO.name(),
+              oponente.getUsuario().getUsername()
       );
     }
   }
@@ -241,10 +254,10 @@ public class ServicioComodinImpl implements ServicioComodin {
 
     if (notificadorSala != null) {
       notificadorSala.notificarComodinOponente(
-        partida.getSala().getCodigo(),
-        partidaId,
-        TipoComodin.BORROSO.name(),
-        oponente.getUsuario().getUsername()
+              partida.getSala().getCodigo(),
+              partidaId,
+              TipoComodin.BORROSO.name(),
+              oponente.getUsuario().getUsername()
       );
     }
   }
@@ -258,30 +271,30 @@ public class ServicioComodinImpl implements ServicioComodin {
 
     if (notificadorSala != null) {
       notificadorSala.notificarComodinOponente(
-        partida.getSala().getCodigo(),
-        partidaId,
-        TipoComodin.MEZCLAR.name(),
-        oponente.getUsuario().getUsername()
+              partida.getSala().getCodigo(),
+              partidaId,
+              TipoComodin.MEZCLAR.name(),
+              oponente.getUsuario().getUsername()
       );
     }
   }
 
   private PartidaJugadorComodin consumirComodinValido(
-    Long partidaId,
-    Long usuarioId,
-    TipoComodin tipo
+          Long partidaId,
+          Long usuarioId,
+          TipoComodin tipo
   ) {
     PartidaJugador jugador = obtenerJugador(partidaId, usuarioId);
 
     if (!esComodinPermitidoParaJugador(jugador, tipo)) {
       throw new IllegalStateException(
-        "El jugador no posee el nivel o el modo necesario para usar el comodín " + tipo
+              "El jugador no posee el nivel o el modo necesario para usar el comodín " + tipo
       );
     }
 
     PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
-      jugador.getId(),
-      tipo
+            jugador.getId(),
+            tipo
     );
 
     if (comodinJugador == null) {
@@ -299,12 +312,12 @@ public class ServicioComodinImpl implements ServicioComodin {
   }
 
   private PartidaJugadorComodin obtenerOCrearComodinDeJugador(
-    PartidaJugador jugador,
-    TipoComodin tipo
+          PartidaJugador jugador,
+          TipoComodin tipo
   ) {
     PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
-      jugador.getId(),
-      tipo
+            jugador.getId(),
+            tipo
     );
 
     if (comodinJugador == null) {
@@ -322,8 +335,8 @@ public class ServicioComodinImpl implements ServicioComodin {
 
   private PartidaJugador obtenerJugador(Long partidaId, Long usuarioId) {
     PartidaJugador jugadorPartida = repositorioPartidaJugador.obtenerPorPartidaYUsuario(
-      partidaId,
-      usuarioId
+            partidaId,
+            usuarioId
     );
     if (jugadorPartida == null) {
       throw new IllegalArgumentException("El jugador no participa en la partida.");

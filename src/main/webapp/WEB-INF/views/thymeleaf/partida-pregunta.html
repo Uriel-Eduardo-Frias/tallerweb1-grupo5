@@ -42,9 +42,7 @@
         <div class="card bg-white p-3 mb-4 border" th:if="${!yaRespondio}">
             <p class="text-muted small mb-2 fw-bold text-center">
                 COMODINES DE LA PARTIDA
-                <span th:if="${partida.modoJuego.name() == 'TURNO_TODOS' and nivelJugador != null}">
-                    (NIVEL <span th:text="${nivelJugador}">1</span>)
-                </span>
+                <span th:if="${nivelJugador != null}">(NIVEL <span th:text="${nivelJugador}">1</span>)</span>
             </p>
 
             <!-- 1. Comodines para MODO TRADICIONAL (TURNO_TODOS) -->
@@ -85,20 +83,9 @@
                 </button>
             </div>
 
-            <!-- 2. Comodines para MODO RÁPIDO (PRIMERO_GANA) -->
+            <!-- 2. Comodines para MODO RÁPIDO (PRIMERO_GANA) CON NIVELES -->
             <div th:if="${partida.modoJuego.name() == 'PRIMERO_GANA'}" class="d-flex justify-content-center gap-3 flex-wrap">
-                <!-- Bloqueo: Congela al rival por 10s -->
-                <button type="button"
-                        id="btnBloqueo"
-                        th:disabled="${!puedeBloqueo}"
-                        th:classappend="${!puedeBloqueo} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-info'"
-                        class="btn btn-sm fw-bold px-3 py-2"
-                        onclick="usarBloqueo()">
-                    🧊 Bloqueo (10s)
-                    <span th:if="${!puedeBloqueo}" class="badge bg-dark ms-1">Usado</span>
-                </button>
-
-                <!-- Borroso: Dificulta la visión por 5s -->
+                <!-- Borroso: Disponible desde Nivel 1 -->
                 <button type="button"
                         id="btnBorroso"
                         th:disabled="${!puedeBorroso}"
@@ -109,7 +96,7 @@
                     <span th:if="${!puedeBorroso}" class="badge bg-dark ms-1">Usado</span>
                 </button>
 
-                <!-- Mezclar: Desordena las opciones -->
+                <!-- Mezclar: Se desbloquea en Nivel 2 -->
                 <button type="button"
                         id="btnMezclar"
                         th:disabled="${!puedeMezclar}"
@@ -117,7 +104,20 @@
                         class="btn btn-sm fw-bold px-3 py-2"
                         onclick="usarMezclar()">
                     🔀 Mezclar
-                    <span th:if="${!puedeMezclar}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge bg-secondary ms-1">Bloqueado (Nvl 2)</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeMezclar}" class="badge bg-dark ms-1">Usado</span>
+                </button>
+
+                <!-- Bloqueo: Se desbloquea en Nivel 3 -->
+                <button type="button"
+                        id="btnBloqueo"
+                        th:disabled="${!puedeBloqueo}"
+                        th:classappend="${!puedeBloqueo} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-info'"
+                        class="btn btn-sm fw-bold px-3 py-2"
+                        onclick="usarBloqueo()">
+                    🧊 Bloqueo (10s)
+                    <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge bg-secondary ms-1">Bloqueado (Nvl 3)</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puedeBloqueo}" class="badge bg-dark ms-1">Usado</span>
                 </button>
             </div>
 
@@ -234,7 +234,7 @@
         btn.innerHTML += ' <span class="badge bg-dark ms-1">Usado</span>';
     }
 
-    // --- FUNCIONES COMODINES TRADICIONALES ---
+    // --- COMODINES MODO TRADICIONAL ---
     function usar5050() {
         const url = /*[[@{/partida/{id}/comodin/50-50(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
@@ -276,7 +276,7 @@
             });
     }
 
-    // --- FUNCIONES COMODINES MODO RÁPIDO ---
+    // --- COMODINES MODO RÁPIDO ---
     function usarBloqueo() {
         const url = /*[[@{/partida/{id}/comodin/bloqueo(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
@@ -366,7 +366,6 @@
                 return;
             }
 
-            // Si el comodín fue lanzado hacia este usuario
             if (evento.jugadores && evento.jugadores.includes(miUsername)) {
                 if (evento.tipo === "BLOQUEO") {
                     activarEfectoBloqueo(10);
@@ -378,7 +377,6 @@
                 return;
             }
 
-            // Transiciones normales de ronda
             if (eventosTransicion.includes(evento.tipo)) {
                 if (intervalReloj) clearInterval(intervalReloj);
                 window.location.href = urlIr;
