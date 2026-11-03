@@ -83,78 +83,66 @@ public class ServicioComodinImpl implements ServicioComodin {
   }
 
   private boolean esComodinPermitidoParaJugador(PartidaJugador jugador, TipoComodin tipo) {
-    ModoJuego modo = (jugador != null && jugador.getPartida() != null)
-            ? jugador.getPartida().getModoJuego()
-            : ModoJuego.TURNO_TODOS;
-
-    Long usuarioId = (jugador != null && jugador.getUsuario() != null)
-            ? jugador.getUsuario().getId()
-            : null;
-
-    int nivel = obtenerNivelJugador(usuarioId);
-
-    if (modo == ModoJuego.PRIMERO_GANA) {
-      if (tipo == TipoComodin.BORROSO) {
-        return true; // Nivel 1
-      }
-      if (tipo == TipoComodin.MEZCLAR) {
-        return nivel >= NIVEL_INTERMEDIO; // Nivel 2
-      }
-      if (tipo == TipoComodin.BLOQUEO) {
-        return nivel >= NIVEL_AVANZADO; // Nivel 3
-      }
-      return false;
-    }
-
-    if (tipo == TipoComodin.TIEMPO_EXTRA) {
-      return true; // Nivel 1
-    }
-    if (tipo == TipoComodin.DOBLE_CHANCE) {
-      return nivel >= NIVEL_INTERMEDIO; // Nivel 2
-    }
-    if (tipo == TipoComodin.CINCUENTA_CINCUENTA) {
-      return nivel >= NIVEL_AVANZADO; // Nivel 3
-    }
-    return false;
+    return obtenerComodinesPermitidos(jugador).contains(tipo);
   }
 
   @Override
   public void inicializarComodinesParaJugador(PartidaJugador jugador) {
-    List<TipoComodin> permitidos = new ArrayList<>();
-
-    ModoJuego modo = (jugador != null && jugador.getPartida() != null)
-            ? jugador.getPartida().getModoJuego()
-            : ModoJuego.TURNO_TODOS;
-
-    Long usuarioId = (jugador != null && jugador.getUsuario() != null)
-            ? jugador.getUsuario().getId()
-            : null;
-
-    int nivel = obtenerNivelJugador(usuarioId);
-
-    if (modo == ModoJuego.PRIMERO_GANA) {
-      permitidos.add(TipoComodin.BORROSO); // Nivel 1
-      if (nivel >= NIVEL_INTERMEDIO) {
-        permitidos.add(TipoComodin.MEZCLAR); // Nivel 2
-      }
-      if (nivel >= NIVEL_AVANZADO) {
-        permitidos.add(TipoComodin.BLOQUEO); // Nivel 3
-      }
-    } else {
-      // INICIALIZACIÓN POR NIVEL PARA TURNO_TODOS
-      permitidos.add(TipoComodin.TIEMPO_EXTRA);
-      if (nivel >= NIVEL_INTERMEDIO) {
-        permitidos.add(TipoComodin.DOBLE_CHANCE);
-      }
-      if (nivel >= NIVEL_AVANZADO) {
-        permitidos.add(TipoComodin.CINCUENTA_CINCUENTA);
-      }
-    }
-
-    for (TipoComodin tipo : permitidos) {
+    for (TipoComodin tipo : obtenerComodinesPermitidos(jugador)) {
       obtenerOCrearComodinDeJugador(jugador, tipo);
     }
   }
+
+
+  private List<TipoComodin> obtenerComodinesPermitidos(PartidaJugador jugador) {
+    ModoJuego modo = obtenerModo(jugador);
+    int nivel = obtenerNivel(jugador);
+
+    if (modo == ModoJuego.PRIMERO_GANA) {
+      return obtenerComodinesModoPrimeroGana(nivel);
+    }
+    return obtenerComodinesModoTurnoTodos(nivel);
+  }
+
+  private List<TipoComodin> obtenerComodinesModoPrimeroGana(int nivel) {
+    List<TipoComodin> permitidos = new ArrayList<>();
+    permitidos.add(TipoComodin.BORROSO);
+    if (nivel >= NIVEL_INTERMEDIO) {
+      permitidos.add(TipoComodin.MEZCLAR);
+    }
+    if (nivel >= NIVEL_AVANZADO) {
+      permitidos.add(TipoComodin.BLOQUEO);
+    }
+    return permitidos;
+  }
+
+  private List<TipoComodin> obtenerComodinesModoTurnoTodos(int nivel) {
+    List<TipoComodin> permitidos = new ArrayList<>();
+    permitidos.add(TipoComodin.TIEMPO_EXTRA);
+    if (nivel >= NIVEL_INTERMEDIO) {
+      permitidos.add(TipoComodin.DOBLE_CHANCE);
+    }
+    if (nivel >= NIVEL_AVANZADO) {
+      permitidos.add(TipoComodin.CINCUENTA_CINCUENTA);
+    }
+    return permitidos;
+  }
+
+  private ModoJuego obtenerModo(PartidaJugador jugador) {
+    if (jugador == null || jugador.getPartida() == null) {
+      return ModoJuego.TURNO_TODOS;
+    }
+    return jugador.getPartida().getModoJuego();
+  }
+
+  private int obtenerNivel(PartidaJugador jugador) {
+    if (jugador == null || jugador.getUsuario() == null) {
+      return NIVEL_INICIAL;
+    }
+    return obtenerNivelJugador(jugador.getUsuario().getId());
+  }
+
+
 
   @Override
   public List<PartidaJugadorComodin> obtenerComodinesDeJugador(Long partidaId, Long usuarioId) {
