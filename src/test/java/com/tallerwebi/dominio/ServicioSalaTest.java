@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.enumeration.EstadoJugador;
+import com.tallerwebi.dominio.enumeration.EstadoSala;
 import com.tallerwebi.dominio.enumeration.ModoJuego;
 import com.tallerwebi.dominio.excepcion.SalaLlenaException;
 import com.tallerwebi.dominio.excepcion.SalaNoEncontradaException;
@@ -410,6 +411,103 @@ class ServicioSalaTest {
 
     // then
     thenSeLanza(excepcion, IllegalStateException.class);
+  }
+
+  @Test
+  void deberiaListarSalasPublicasEnEspera() {
+    // given
+    List<Sala> salasEsperadas = new ArrayList<>();
+    when(repositorioSala.listarSalasPublicasEnEspera()).thenReturn(salasEsperadas);
+
+    // when
+    List<Sala> resultado = servicioSala.listarSalasPublicas();
+
+    // then
+    assertThat(resultado, equalTo(salasEsperadas));
+    verify(repositorioSala).listarSalasPublicasEnEspera();
+  }
+
+  @Test
+  void deberiaListarSalasDestacadasYFiltrarLasQueEstanLlenas() {
+    // given
+    List<Sala> salas = givenSalasParaDestacadas(); // Contiene 1 sala llena y 2 disponibles
+    when(repositorioSala.listarSalasPublicasEnEspera()).thenReturn(salas);
+
+    // when
+    List<Sala> resultado = servicioSala.listarSalasDestacadas(5);
+
+    // then
+    assertThat(resultado, hasSize(2));
+
+    for (Sala sala : resultado) {
+      assertThat(sala.getJugadores().size() < sala.getMaxJugadores(), is(true));
+    }
+  }
+
+  @Test
+  void deberiaListarSalasDestacadasRespetandoElLimiteSolicitado() {
+    // given
+    List<Sala> salas = givenSalasParaDestacadas(); // Contiene 2 disponibles
+    when(repositorioSala.listarSalasPublicasEnEspera()).thenReturn(salas);
+
+    // when
+    List<Sala> resultado = servicioSala.listarSalasDestacadas(1); // Pedimos solo 1
+
+    // then
+    assertThat(resultado, hasSize(1));
+  }
+
+  @Test
+  void deberiaLanzarExcepcionAlUnirseSiLaSalaNoEstaEnEspera() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    sala.setEstado(EstadoSala.EN_CURSO);
+
+    // when
+    Throwable excepcion = whenUnirseCapturandoExcepcion(sala.getCodigo(), 2L);
+
+    // then
+    thenSeLanza(excepcion, IllegalStateException.class);
+    thenNoSeGuardaLaSala();
+  }
+
+  @Test
+  void deberiaLanzarExcepcionAlMarcarListoSiLaSalaNoEstaEnEspera() {
+    // given
+    Sala sala = givenUnaSalaConUnHost();
+    sala.setEstado(com.tallerwebi.dominio.enumeration.EstadoSala.FINALIZADA);
+
+    // when
+    Throwable excepcion = whenMarcarListoCapturandoExcepcion(
+      sala.getCodigo(),
+      sala.getHost().getId()
+    );
+
+    // then
+    thenSeLanza(excepcion, IllegalStateException.class);
+  }
+
+  private List<Sala> givenSalasParaDestacadas() {
+    List<Sala> lista = new ArrayList<>();
+
+    Usuario host1 = usuario(1L, "Host1");
+    Usuario host2 = usuario(2L, "Host2");
+    Usuario host3 = usuario(3L, "Host3");
+
+    Sala sala1 = nuevaSalaConHost(host1);
+    sala1.setMaxJugadores(4);
+
+    Sala sala2 = nuevaSalaConHost(host2);
+    sala2.setMaxJugadores(2);
+
+    Sala sala3 = nuevaSalaConHost(host3);
+    sala3.setMaxJugadores(1);
+
+    lista.add(sala1);
+    lista.add(sala2);
+    lista.add(sala3);
+
+    return lista;
   }
 
   // Given: preparación
