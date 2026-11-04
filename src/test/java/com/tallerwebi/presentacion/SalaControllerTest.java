@@ -126,7 +126,7 @@ public class SalaControllerTest {
     Usuario host = new Usuario();
     host.setUsername("Host1");
     salas.add(new Sala(CODIGO_SALA, "Sala 1", host));
-    when(this.servicioSalaMock.listarSalas()).thenReturn(salas);
+    when(this.servicioSalaMock.listarSalasPublicas()).thenReturn(salas);
   }
 
   private Usuario givenUnUsuarioAutenticado() {

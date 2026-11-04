@@ -26,8 +26,8 @@ public class ControladorHomeTest {
   @BeforeEach
   public void init() {
     this.servicioEstadisticaMock = mock(ServicioEstadistica.class);
+    this.servicioSalaMock = mock(ServicioSala.class); // <-- Agregar esta línea
     this.controladorHome = new ControladorHome(this.servicioEstadisticaMock, this.servicioSalaMock);
-
     this.requestMock = mock(HttpServletRequest.class);
     this.sessionMock = mock(HttpSession.class);
     when(this.requestMock.getSession()).thenReturn(this.sessionMock);
