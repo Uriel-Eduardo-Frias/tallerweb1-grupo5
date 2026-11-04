@@ -9,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "partidas")
+@SuppressWarnings("PMD.TooManyFields")
 public class Partida {
 
   @Id
@@ -39,6 +40,9 @@ public class Partida {
 
   @OneToOne(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true)
   private VotacionCategoria votacionCategoria;
+
+  @Embedded
+  private Revancha revancha = new Revancha();
 
   public Partida() {}
 
@@ -158,5 +162,17 @@ public class Partida {
     if (this.votacionCategoria == null) {
       setVotacionCategoria(new VotacionCategoria(this));
     }
+  }
+
+  public String getSalaRevanchaCodigo() {
+    return revancha == null ? null : revancha.getSalaCodigo();
+  }
+
+  public void setSalaRevanchaCodigo(String salaRevanchaCodigo) {
+    if (revancha == null) {
+      revancha = new Revancha();
+    }
+
+    revancha.setSalaCodigo(salaRevanchaCodigo);
   }
 }

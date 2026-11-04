@@ -309,4 +309,63 @@ public class ServicioPartidaImp implements ServicioPartida {
   public void finalizarVotacionCategoria(Long partidaId, Long usuarioId) {
     servicioVotacionCategoria.finalizarVotacionCategoria(partidaId, usuarioId);
   }
+
+  @Override
+  public String crearRevancha(Long partidaId, Usuario solicitante) {
+    Partida partida = buscarPartidaPorId(partidaId);
+
+    if (partida.getEstado() != EstadoPartida.FINALIZADA) {
+      throw new IllegalStateException("La partida todavía no finalizó");
+    }
+
+    Sala salaAnterior = partida.getSala();
+
+    validarEsHost(salaAnterior, solicitante);
+
+    // Idempotente: si el host hace doble click, no se crea otra sala
+    if (partida.getSalaRevanchaCodigo() != null) {
+      return partida.getSalaRevanchaCodigo();
+    }
+
+    Sala nuevaSala = servicioSala.crearSala(
+      salaAnterior.getNombre(),
+      solicitante,
+      salaAnterior.getMaxJugadores(),
+      salaAnterior.getTotalRondas(),
+      salaAnterior.getModoJuego(),
+      salaAnterior.isEsPrivada() // ver nota 1
+    );
+
+    partida.setSalaRevanchaCodigo(nuevaSala.getCodigo());
+
+    return nuevaSala.getCodigo();
+  }
+
+  @Override
+  public String unirseARevancha(Long partidaId, Long usuarioId) {
+    Partida partida = buscarPartidaPorId(partidaId);
+
+    if (repositorioPartidaJugador.obtenerPorPartidaYUsuario(partidaId, usuarioId) == null) {
+      throw new IllegalArgumentException("El usuario no participó en esta partida");
+    }
+
+    String codigo = partida.getSalaRevanchaCodigo();
+
+    if (codigo == null) {
+      throw new IllegalStateException("Todavía no hay una revancha creada");
+    }
+
+    return servicioSala.unirse(codigo, usuarioId).getCodigo();
+  }
+
+  @Override
+  public String obtenerSalaRevancha(Long partidaId, Long usuarioId) {
+    Partida partida = buscarPartidaPorId(partidaId);
+
+    if (repositorioPartidaJugador.obtenerPorPartidaYUsuario(partidaId, usuarioId) == null) {
+      throw new IllegalArgumentException("El usuario no participó en esta partida");
+    }
+
+    return partida.getSalaRevanchaCodigo(); // puede ser null
+  }
 }

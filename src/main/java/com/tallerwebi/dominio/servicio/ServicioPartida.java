@@ -23,4 +23,7 @@ public interface ServicioPartida {
   void avanzarRonda(Long partidaId, Long usuarioId);
   boolean usuarioYaVoto(Long partidaId, Long usuarioId);
   boolean esHost(Long partidaId, Long usuarioId);
+  String crearRevancha(Long partidaId, Usuario solicitante);
+  String unirseARevancha(Long partidaId, Long usuarioId);
+  String obtenerSalaRevancha(Long partidaId, Long usuarioId);
 }

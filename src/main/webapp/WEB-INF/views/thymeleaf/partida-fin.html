@@ -91,9 +91,102 @@
             <span th:text="${resultado.duracion}">0 min 0 s</span>
         </p>
 
+        <!-- NUEVO: revancha. Lo completa el script de abajo según el estado (host / jugador / ya creada). -->
+        <div id="zonaRevancha" class="mt-2 mb-2" aria-live="polite"></div>
+
         <a th:href="@{/salas}" class="btn btn-primary mt-2">Volver a las salas</a>
     </div>
 </div>
+
+<!-- NUEVO: revancha rápida -->
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
+<script th:inline="javascript">
+    (function () {
+        const urlBasePartida = /*[[@{/partida}]]*/ "/partida";
+        const urlWs = /*[[@{/ws}]]*/ "/ws";
+
+        // Esta vista no recibe el id de la partida en el modelo: se toma de la URL (/partida/{id}/fin).
+        const coincidencia = window.location.pathname.match(/\/partida\/(\d+)\/fin/);
+        const zonaRevancha = document.getElementById("zonaRevancha");
+
+        if (!coincidencia || !zonaRevancha) {
+            return;
+        }
+
+        const partidaId = coincidencia[1];
+        const urlRevancha = urlBasePartida + "/" + partidaId + "/revancha";
+
+        function crearFormulario(accion, texto) {
+            const formulario = document.createElement("form");
+            formulario.action = accion;
+            formulario.method = "POST";
+            formulario.className = "d-inline";
+
+            const boton = document.createElement("button");
+            boton.type = "submit";
+            boton.className = "btn btn-success";
+            boton.textContent = texto;
+
+            formulario.appendChild(boton);
+            return formulario;
+        }
+
+        function crearMensajeEspera() {
+            const mensaje = document.createElement("p");
+            mensaje.className = "text-muted small mb-0";
+            mensaje.textContent = "Esperando a que el anfitrión inicie la revancha...";
+            return mensaje;
+        }
+
+        function pintarRevancha(estado) {
+            zonaRevancha.replaceChildren();
+
+            if (estado.salaRevanchaCodigo) {
+                zonaRevancha.appendChild(crearFormulario(urlRevancha + "/unirse", "Ir a la revancha"));
+            } else if (estado.esHost) {
+                zonaRevancha.appendChild(crearFormulario(urlRevancha, "🔄 Jugar de nuevo"));
+            } else {
+                zonaRevancha.appendChild(crearMensajeEspera());
+            }
+        }
+
+        function cargarEstadoRevancha() {
+            return fetch(urlRevancha + "/estado")
+                .then(respuesta => (respuesta.ok ? respuesta.json() : null))
+                .then(estado => {
+                    if (estado) {
+                        pintarRevancha(estado);
+                    }
+                    return estado;
+                });
+        }
+
+        function escucharRevancha(codigoSala) {
+            const cliente = new StompJs.Client({
+                brokerURL: (location.protocol === "https:" ? "wss://" : "ws://") + location.host + urlWs,
+                reconnectDelay: 3000
+            });
+
+            cliente.onConnect = function () {
+                cliente.subscribe("/topic/salas/" + codigoSala, function (mensaje) {
+                    const evento = JSON.parse(mensaje.body);
+
+                    if (String(evento.partidaId) === partidaId && evento.tipo === "REVANCHA_CREADA") {
+                        cargarEstadoRevancha();
+                    }
+                });
+            };
+
+            cliente.activate();
+        }
+
+        cargarEstadoRevancha().then(estado => {
+            if (estado) {
+                escucharRevancha(estado.codigoSala);
+            }
+        });
+    })();
+</script>
 
 </body>
 </html>
