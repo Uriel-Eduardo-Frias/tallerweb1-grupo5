@@ -36,32 +36,40 @@ public class ServicioLogroImpl implements ServicioLogro {
   @Override
   public void evaluarLogroDePartida(Long partidaId) {
     for (PartidaJugador jugador : repositorioPartidaJugador.obtenerPorPartida(partidaId)) {
-      evaluarLogrosDelUsuario(jugador.getUsuario());
+      evaluarLogrosDelJugador(jugador);
     }
   }
 
   @Override
-  public List<TipoLogro> evaluarLogrosDelUsuario(Usuario usuario) {
+  public List<TipoLogro> evaluarLogrosDelJugador(PartidaJugador jugador) {
     List<TipoLogro> nuevos = new ArrayList<>();
+
+    if (jugador == null) {
+      return nuevos;
+    }
+
+    Usuario usuario = jugador.getUsuario();
+
     if (usuario == null || usuario.getId() == null) {
       return nuevos;
     }
 
     Map<TipoLogro, UsuarioLogro> yaDesbloqueados = logrosDelUsuario(usuario.getId());
 
-    List<PartidaJugador> partidas = repositorioPartidaJugador.listarPartidasFinalizadasDelUsuario(
-      usuario.getId()
-    );
+    // Salida temprana: si ya tiene todos, no hay nada más que calcular ni acumular.
+    if (yaDesbloqueados.size() == TipoLogro.values().length) {
+      return nuevos;
+    }
 
-    EstadisticaUsuario estadistica = armarEstadistica(partidas);
-    int victoriasConsecutivas = contarVictoriasConsecutivas(partidas);
+    boolean gano = jugador.getPosicionFinal() != null && jugador.getPosicionFinal() == 1;
+    ProgresoUsuario progreso = actualizarProgreso(usuario, jugador.getAciertos(), gano);
 
     for (TipoLogro tipoLogro : TipoLogro.values()) {
       if (yaDesbloqueados.containsKey(tipoLogro)) {
         continue;
       }
 
-      if (cumpleCondicion(tipoLogro, estadistica, victoriasConsecutivas)) {
+      if (cumpleCondicion(tipoLogro, jugador, gano, progreso)) {
         repositorioLogro.guardarLogro(new UsuarioLogro(usuario, tipoLogro));
         nuevos.add(tipoLogro);
       }
@@ -99,43 +107,31 @@ public class ServicioLogroImpl implements ServicioLogro {
     return mapa;
   }
 
-  private EstadisticaUsuario armarEstadistica(List<PartidaJugador> partidas) {
-    EstadisticaUsuario estadistica = new EstadisticaUsuario();
-
-    for (PartidaJugador partida : partidas) {
-      estadistica.sumarPartida(partida);
-    }
-
-    return estadistica;
-  }
-
-  private int contarVictoriasConsecutivas(List<PartidaJugador> partidasRecientesPrimero) {
-    int victorias = 0;
-
-    for (PartidaJugador partida : partidasRecientesPrimero) {
-      Integer posicion = partida.getPosicionFinal();
-
-      if (posicion == null || posicion != 1) {
-        break;
-      }
-
-      victorias++;
-    }
-
-    return victorias;
-  }
-
   private boolean cumpleCondicion(
     TipoLogro tipoLogro,
-    EstadisticaUsuario estadistica,
-    int victoriasConsecutivas
+    PartidaJugador jugador,
+    boolean gano,
+    ProgresoUsuario progreso
   ) {
     return switch (tipoLogro) {
-      case EN_RACHA -> estadistica.getMejorRachaRespuestas() >= RACHA_EN_RACHA;
-      case FUEGO_PURO -> estadistica.getMejorRachaRespuestas() >= FUEGO_PURO;
-      case CAMPEON_DEBUTANTE -> estadistica.getPartidasGanadas() >= 1;
-      case ERUDITO -> estadistica.getPreguntasAcertadas() >= RESPUESTAS_ERUDITO;
-      case IMPARABLE -> victoriasConsecutivas >= VICTORIAS_IMPARABLE;
+      case EN_RACHA -> jugador.getMejorRachaPartida() >= RACHA_EN_RACHA;
+      case FUEGO_PURO -> jugador.getMejorRachaPartida() >= FUEGO_PURO;
+      case CAMPEON_DEBUTANTE -> gano;
+      case ERUDITO -> progreso.getAciertosTotales() >= RESPUESTAS_ERUDITO;
+      case IMPARABLE -> progreso.getVictoriasConsecutivas() >= VICTORIAS_IMPARABLE;
     };
+  }
+
+  private ProgresoUsuario actualizarProgreso(Usuario usuario, int aciertos, boolean gano) {
+    ProgresoUsuario progreso = repositorioLogro.obtenerProgreso(usuario.getId());
+
+    if (progreso == null) {
+      progreso = new ProgresoUsuario(usuario);
+    }
+
+    progreso.registrarPartida(aciertos, gano);
+    repositorioLogro.guardarProgreso(progreso);
+
+    return progreso;
   }
 }

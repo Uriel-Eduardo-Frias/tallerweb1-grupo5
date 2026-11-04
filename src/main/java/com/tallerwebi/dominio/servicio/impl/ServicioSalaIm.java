@@ -15,7 +15,9 @@ import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import com.tallerwebi.dominio.repositorio.RepositorioUsuario;
 import com.tallerwebi.dominio.servicio.ServicioSala;
 import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import org.springframework.stereotype.Service;
 
 @Service("servicioSalaImpl")
@@ -291,13 +293,41 @@ public class ServicioSalaIm implements ServicioSala {
       throw new IllegalStateException("La sala ya no está en espera");
     }
 
-    for (SalaJugador salaJugador : sala.getJugadores()) {
-      if (salaJugador.getUsuario().getId().equals(usuarioId)) {
-        salaJugador.setListo(true);
-        return sala;
-      }
+    SalaJugador jugador = buscarParticipacionPorUsuario(sala, usuarioId);
+
+    if (jugador != null) {
+      jugador.setListo(true);
+      return sala;
     }
 
     throw new IllegalStateException("El usuario no está en la sala");
+  }
+
+  @Override
+  public List<Sala> listarSalasPublicas() {
+    return repositorioSala.listarSalasPublicasEnEspera();
+  }
+
+  @Override
+  public List<Sala> listarSalasDestacadas(int cantidad) {
+    List<Sala> disponibles = new ArrayList<>();
+
+    for (Sala sala : repositorioSala.listarSalasPublicasEnEspera()) {
+      if (sala.getJugadores().size() < sala.getMaxJugadores()) {
+        disponibles.add(sala);
+      }
+    }
+
+    List<Sala> destacadas = new ArrayList<>();
+    Random random = new Random();
+
+    int limite = Math.min(cantidad, disponibles.size());
+
+    for (int i = 0; i < limite; i++) {
+      int indiceAleatorio = random.nextInt(disponibles.size());
+      destacadas.add(disponibles.remove(indiceAleatorio));
+    }
+
+    return destacadas;
   }
 }

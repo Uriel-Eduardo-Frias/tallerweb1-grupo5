@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.servicio.ServicioEstadistica;
+import com.tallerwebi.dominio.servicio.ServicioSala;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,12 +21,13 @@ public class ControladorHomeTest {
   private HttpServletRequest requestMock;
   private HttpSession sessionMock;
   private ServicioEstadistica servicioEstadisticaMock;
+  private ServicioSala servicioSalaMock;
 
   @BeforeEach
   public void init() {
     this.servicioEstadisticaMock = mock(ServicioEstadistica.class);
-    this.controladorHome = new ControladorHome(this.servicioEstadisticaMock);
-
+    this.servicioSalaMock = mock(ServicioSala.class); // <-- Agregar esta línea
+    this.controladorHome = new ControladorHome(this.servicioEstadisticaMock, this.servicioSalaMock);
     this.requestMock = mock(HttpServletRequest.class);
     this.sessionMock = mock(HttpSession.class);
     when(this.requestMock.getSession()).thenReturn(this.sessionMock);

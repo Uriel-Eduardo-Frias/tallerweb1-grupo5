@@ -10,6 +10,7 @@ import static org.mockito.Mockito.*;
 import com.tallerwebi.dominio.enumeration.TipoLogro;
 import com.tallerwebi.dominio.modelo.Logro;
 import com.tallerwebi.dominio.modelo.PartidaJugador;
+import com.tallerwebi.dominio.modelo.ProgresoUsuario;
 import com.tallerwebi.dominio.modelo.Usuario;
 import com.tallerwebi.dominio.modelo.UsuarioLogro;
 import com.tallerwebi.dominio.repositorio.RepositorioLogro;
@@ -47,15 +48,10 @@ public class ServicioLogroTest {
     givenQueElUsuarioNoTieneLogrosPrevios(USUARIO_ID);
   }
 
-  // ---------- evaluarLogrosDelUsuario: casos borde ----------
-
   @Test
-  public void queEvaluarLogrosDelUsuarioDevuelvaListaVaciaSiElUsuarioEsNulo() {
-    // preparacion
-    givenUnUsuarioNulo();
-
+  public void queEvaluarLogrosDelJugadorDevuelvaListaVaciaSiElJugadorEsNulo() {
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(null);
 
     // validacion
     thenLaListaDeNuevosLogrosEstaVacia();
@@ -63,12 +59,12 @@ public class ServicioLogroTest {
   }
 
   @Test
-  public void queEvaluarLogrosDelUsuarioDevuelvaListaVaciaSiElUsuarioNoTieneId() {
+  public void queEvaluarLogrosDelJugadorDevuelvaListaVaciaSiElJugadorNoTieneUsuario() {
     // preparacion
-    givenUnUsuarioSinId();
+    PartidaJugador jugador = givenUnJugadorDe(null, 1, 5, 5);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenLaListaDeNuevosLogrosEstaVacia();
@@ -76,28 +72,26 @@ public class ServicioLogroTest {
   }
 
   @Test
-  public void queEvaluarLogrosDelUsuarioSinPartidasFinalizadasNoDesbloqueeNada() {
+  public void queEvaluarLogrosDelJugadorDevuelvaListaVaciaSiElUsuarioNoTieneId() {
     // preparacion
-    givenQueElUsuarioNoTienePartidasFinalizadas(USUARIO_ID);
+    Usuario usuarioSinId = givenUnUsuarioMockeado(null);
+    PartidaJugador jugador = givenUnJugadorDe(usuarioSinId, 1, 5, 5);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenLaListaDeNuevosLogrosEstaVacia();
-    thenSeBuscanLasPartidasFinalizadasDelUsuario(USUARIO_ID);
-    thenNoSeGuardaNingunLogro();
+    thenNoSeInteractuaConLosRepositorios();
   }
-
-  // ---------- En Racha / Fuego Puro / Campeón Debutante ----------
 
   @Test
   public void queGanarConRachaDeCincoDesbloqueeEnRachaFuegoPuroYCampeonDebutante() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(1, 5, 5));
+    PartidaJugador jugador = givenUnJugador(1, 5, 5);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenSeDesbloqueanLosLogros(
@@ -111,10 +105,10 @@ public class ServicioLogroTest {
   @Test
   public void queLosLogrosSeGuardenAsociadosAlUsuario() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(1, 3, 3));
+    PartidaJugador jugador = givenUnJugador(1, 3, 3);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenLosLogrosSeGuardanAsociadosAlUsuario(2, this.usuario); // En racha y Campeon debutante
@@ -123,10 +117,10 @@ public class ServicioLogroTest {
   @Test
   public void queUnaRachaDeTresSinGanarSoloDesbloqueeEnRacha() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(2, 3, 3));
+    PartidaJugador jugador = givenUnJugador(2, 3, 3);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenSeDesbloqueanLosLogros(TipoLogro.EN_RACHA);
@@ -135,22 +129,22 @@ public class ServicioLogroTest {
   @Test
   public void queUnaRachaDeCuatroNoAlcanceParaFuegoPuro() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(2, 4, 4));
+    PartidaJugador jugador = givenUnJugador(2, 4, 4);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenSeDesbloqueanLosLogros(TipoLogro.EN_RACHA);
   }
 
   @Test
-  public void queUnaRachaDeDosYUnaDerrotaNoDesbloqueeNada() {
+  public void queUnaRachaDeDosYNoGanarNoDesbloqueeNada() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(2, 2, 2));
+    PartidaJugador jugador = givenUnJugador(2, 2, 2);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenLaListaDeNuevosLogrosEstaVacia();
@@ -158,132 +152,144 @@ public class ServicioLogroTest {
   }
 
   @Test
-  public void queCampeonDebutanteSeDesbloqueeConLaPrimeraVictoriaAunqueNoHayaRacha() {
+  public void queCampeonDebutanteSeDesbloqueeConLaVictoriaAunqueNoHayaRacha() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(1, 1, 1));
+    PartidaJugador jugador = givenUnJugador(1, 1, 1);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenSeDesbloqueanLosLogros(TipoLogro.CAMPEON_DEBUTANTE);
   }
 
-  // ---------- Erudito ----------
-
   @Test
-  public void queEruditoSeDesbloqueeAlAcumularCincuentaAciertosEnElHistorial() {
+  public void queEruditoSeDesbloqueeCuandoLosAciertosAcumuladosLleganACincuenta() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(
-      USUARIO_ID,
-      givenUnaPartidaFinalizada(2, 25, 1),
-      givenUnaPartidaFinalizada(2, 25, 1)
-    );
+    givenProgresoPrevio(45, 0);
+    PartidaJugador jugador = givenUnJugador(2, 5, 1);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenSeDesbloqueanLosLogros(TipoLogro.ERUDITO);
   }
 
   @Test
-  public void queEruditoNoSeDesbloqueeConCuarentaYNueveAciertos() {
+  public void queEruditoNoSeDesbloqueeConCuarentaYNueveAciertosAcumulados() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(
-      USUARIO_ID,
-      givenUnaPartidaFinalizada(2, 25, 1),
-      givenUnaPartidaFinalizada(2, 24, 1)
-    );
+    givenProgresoPrevio(44, 0);
+    PartidaJugador jugador = givenUnJugador(2, 5, 1);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenLaListaDeNuevosLogrosEstaVacia();
   }
 
-  // ---------- Imparable ----------
-
   @Test
-  public void queImparableSeDesbloqueeConTresVictoriasConsecutivas() {
+  public void queEruditoNoSeDesbloqueeSoloConLosAciertosDeLaPartidaActual() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(
-      USUARIO_ID,
-      givenUnaPartidaFinalizada(1, 0, 0),
-      givenUnaPartidaFinalizada(1, 0, 0),
-      givenUnaPartidaFinalizada(1, 0, 0)
-    );
+    PartidaJugador jugador = givenUnJugador(2, 5, 1);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
-    thenSeDesbloqueanLosLogros(TipoLogro.CAMPEON_DEBUTANTE, TipoLogro.IMPARABLE);
+    thenLaListaDeNuevosLogrosEstaVacia();
+  }
+
+  @Test
+  public void queImparableSeDesbloqueeAlGanarPorTerceraVezConsecutiva() {
+    // preparacion
+    givenProgresoPrevio(0, 2);
+    givenQueElUsuarioYaTieneLosLogros(USUARIO_ID, TipoLogro.CAMPEON_DEBUTANTE);
+    PartidaJugador jugador = givenUnJugador(1, 0, 0);
+
+    // ejecucion
+    whenSeEvaluanLosLogrosDelJugador(jugador);
+
+    // validacion
+    thenSeDesbloqueanLosLogros(TipoLogro.IMPARABLE);
   }
 
   @Test
   public void queImparableNoSeDesbloqueeConSoloDosVictoriasConsecutivas() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(
-      USUARIO_ID,
-      givenUnaPartidaFinalizada(1, 0, 0),
-      givenUnaPartidaFinalizada(1, 0, 0)
-    );
+    givenProgresoPrevio(0, 1);
+    givenQueElUsuarioYaTieneLosLogros(USUARIO_ID, TipoLogro.CAMPEON_DEBUTANTE);
+    PartidaJugador jugador = givenUnJugador(1, 0, 0);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
-    thenSeDesbloqueanLosLogros(TipoLogro.CAMPEON_DEBUTANTE);
+    thenLaListaDeNuevosLogrosEstaVacia();
   }
 
   @Test
-  public void queImparableCuenteLasVictoriasDesdeLaPartidaMasRecienteYSeCorteConUnaDerrota() {
-    // preparacion - La lista viene de la más reciente a la más vieja: 1, 1, derrota, 1
-    givenQueElUsuarioTienePartidasFinalizadas(
-      USUARIO_ID,
-      givenUnaPartidaFinalizada(1, 0, 0),
-      givenUnaPartidaFinalizada(1, 0, 0),
-      givenUnaPartidaFinalizada(2, 0, 0),
-      givenUnaPartidaFinalizada(1, 0, 0)
-    );
-
-    // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
-
-    // validacion
-    thenSeDesbloqueanLosLogros(TipoLogro.CAMPEON_DEBUTANTE);
-  }
-
-  @Test
-  public void queImparableSeCorteSiUnaPartidaNoTienePosicionFinal() {
+  public void quePerderReinicieLasVictoriasConsecutivasYNoDesbloqueeImparable() {
     // preparacion
-    givenQueElUsuarioTienePartidasFinalizadas(
-      USUARIO_ID,
-      givenUnaPartidaFinalizada(1, 0, 0),
-      givenUnaPartidaFinalizada(null, 0, 0),
-      givenUnaPartidaFinalizada(1, 0, 0),
-      givenUnaPartidaFinalizada(1, 0, 0)
-    );
+    ProgresoUsuario progreso = givenProgresoPrevio(0, 2);
+    PartidaJugador jugador = givenUnJugador(2, 0, 0);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
-    thenSeDesbloqueanLosLogros(TipoLogro.CAMPEON_DEBUTANTE);
+    thenLaListaDeNuevosLogrosEstaVacia();
+    thenElProgresoAcumuladoTiene(progreso, 0, 0); // Las victorias consecutivas vuelven a 0
   }
 
-  // ---------- Logros ya desbloqueados ----------
+  @Test
+  public void queCreeElProgresoSiElUsuarioTodaviaNoTeniaYRegistreLaPartida() {
+    // preparacion
+    PartidaJugador jugador = givenUnJugador(1, 5, 2);
+
+    // ejecucion
+    whenSeEvaluanLosLogrosDelJugador(jugador);
+
+    // validacion
+    thenSeGuardaElProgresoCon(5, 1, this.usuario);
+  }
+
+  @Test
+  public void queAcumuleLaPartidaSobreElProgresoExistente() {
+    // preparacion
+    ProgresoUsuario progreso = givenProgresoPrevio(10, 1);
+    PartidaJugador jugador = givenUnJugador(1, 5, 2);
+
+    // ejecucion
+    whenSeEvaluanLosLogrosDelJugador(jugador);
+
+    // validacion
+    thenElProgresoAcumuladoTiene(progreso, 15, 2);
+    thenSeGuardaElProgreso(progreso);
+  }
+
+  @Test
+  public void queUnaPartidaSinPosicionFinalCuenteComoNoGanada() {
+    // preparacion
+    ProgresoUsuario progreso = givenProgresoPrevio(0, 2);
+    PartidaJugador jugador = givenUnJugador(null, 0, 0);
+
+    // ejecucion
+    whenSeEvaluanLosLogrosDelJugador(jugador);
+
+    // validacion
+    thenElProgresoAcumuladoTiene(progreso, 0, 0); // Las victorias consecutivas vuelven a 0
+  }
 
   @Test
   public void queNoVuelvaAOtorgarUnLogroQueElUsuarioYaTiene() {
     // preparacion
-    givenQueElUsuarioYaTieneElLogro(USUARIO_ID, TipoLogro.EN_RACHA);
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(1, 5, 5));
+    givenQueElUsuarioYaTieneLosLogros(USUARIO_ID, TipoLogro.EN_RACHA);
+    PartidaJugador jugador = givenUnJugador(1, 5, 5);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenSeDesbloqueanLosLogros(TipoLogro.FUEGO_PURO, TipoLogro.CAMPEON_DEBUTANTE);
@@ -291,20 +297,20 @@ public class ServicioLogroTest {
   }
 
   @Test
-  public void queSiElUsuarioYaTieneTodosLosLogrosNoGuardeNada() {
+  public void queSiElUsuarioYaTieneTodosLosLogrosNoCalculeNiAcumuleNada() {
     // preparacion
     givenQueElUsuarioYaTieneTodosLosLogros(USUARIO_ID);
-    givenQueElUsuarioTienePartidasFinalizadas(USUARIO_ID, givenUnaPartidaFinalizada(1, 5, 5));
+    PartidaJugador jugador = givenUnJugador(1, 5, 5);
 
     // ejecucion
-    whenSeEvaluanLosLogrosDelUsuario();
+    whenSeEvaluanLosLogrosDelJugador(jugador);
 
     // validacion
     thenLaListaDeNuevosLogrosEstaVacia();
     thenNoSeGuardaNingunLogro();
+    verify(this.repositorioLogroMock, never()).obtenerProgreso(any());
+    verify(this.repositorioLogroMock, never()).guardarProgreso(any());
   }
-
-  // ---------- evaluarLogroDePartida ----------
 
   @Test
   public void queEvaluarLogroDePartidaValueATodosLosJugadoresDeLaPartida() {
@@ -313,18 +319,30 @@ public class ServicioLogroTest {
     Usuario beto = givenUnUsuarioMockeado(20L);
 
     givenQueElUsuarioNoTieneLogrosPrevios(20L);
-    givenQueLaPartidaTieneJugadores(PARTIDA_ID, givenJugadorDe(ana), givenJugadorDe(beto));
-
-    givenQueElUsuarioTienePartidasFinalizadas(10L, givenUnaPartidaFinalizada(1, 5, 5)); // ana: 3 logros
-    givenQueElUsuarioTienePartidasFinalizadas(20L, givenUnaPartidaFinalizada(2, 1, 1)); // beto: ninguno
+    givenQueLaPartidaTieneJugadores(
+      PARTIDA_ID,
+      givenUnJugadorDe(ana, 1, 5, 5),
+      givenUnJugadorDe(beto, 2, 1, 1)
+    );
 
     // ejecucion
     whenSeEvaluanLosLogrosDeLaPartida(PARTIDA_ID);
 
     // validacion
-    thenSeBuscanLasPartidasFinalizadasDelUsuario(10L);
-    thenSeBuscanLasPartidasFinalizadasDelUsuario(20L);
     thenLosLogrosSeGuardanAsociadosAlUsuario(3, ana);
+    verify(this.repositorioLogroMock, times(2)).guardarProgreso(any(ProgresoUsuario.class));
+  }
+
+  @Test
+  public void queEvaluarLogroDePartidaNoConsulteElHistorialDePartidasDeLosUsuarios() {
+    // preparacion
+    givenQueLaPartidaTieneJugadores(PARTIDA_ID, givenUnJugador(1, 5, 5));
+
+    // ejecucion
+    whenSeEvaluanLosLogrosDeLaPartida(PARTIDA_ID);
+
+    // validacion
+    verify(this.repositorioPartidaJugadorMock, never()).listarPartidasFinalizadasDelUsuario(any());
   }
 
   @Test
@@ -336,17 +354,13 @@ public class ServicioLogroTest {
     whenSeEvaluanLosLogrosDeLaPartida(PARTIDA_ID);
 
     // validacion
-    thenNoSeGuardaNingunLogro();
-    verify(this.repositorioPartidaJugadorMock, never()).listarPartidasFinalizadasDelUsuario(any());
+    thenNoSeInteractuaConLosRepositoriosDeGuardado();
   }
 
   // ---------- obtenerLogrosDisponibles ----------
 
   @Test
   public void queObtenerLogrosDisponiblesDevuelvaTodoElCatalogoBloqueadoSiNoHayLogrosObtenidos() {
-    // preparacion
-    // el init() ya definió que el usuario no tiene logros previos
-
     // ejecucion
     whenSeObtienenLosLogrosDisponibles();
 
@@ -373,9 +387,9 @@ public class ServicioLogroTest {
   }
 
   @Test
-  public void queObtenerLogrosDisponiblesConUsuarioNuloDevuelvaTodoBloqueadoSinConsultarRepositorio() {
+  public void queObtenerLogrosDisponiblesConUsuarioNuloDevuelvaTodoBloqueadoSinConsultarElRepositorio() {
     // preparacion
-    givenUnUsuarioNulo();
+    this.usuario = null;
 
     // ejecucion
     this.logrosDisponibles = this.servicio.obtenerLogrosDisponibles(null);
@@ -387,59 +401,48 @@ public class ServicioLogroTest {
 
   // given
 
-  private void givenUnUsuarioNulo() {
-    this.usuario = null;
-  }
-
-  private void givenUnUsuarioSinId() {
-    this.usuario = givenUnUsuarioMockeado(null);
-  }
-
   private Usuario givenUnUsuarioMockeado(Long id) {
     Usuario u = mock(Usuario.class);
     when(u.getId()).thenReturn(id);
     return u;
   }
 
-  private PartidaJugador givenUnaPartidaFinalizada(
+  private PartidaJugador givenUnJugador(Integer posicionFinal, int aciertos, int mejorRacha) {
+    return givenUnJugadorDe(this.usuario, posicionFinal, aciertos, mejorRacha);
+  }
+
+  private PartidaJugador givenUnJugadorDe(
+    Usuario u,
     Integer posicionFinal,
     int aciertos,
     int mejorRacha
   ) {
     PartidaJugador pj = mock(PartidaJugador.class);
+    when(pj.getUsuario()).thenReturn(u);
     when(pj.getPosicionFinal()).thenReturn(posicionFinal);
     when(pj.getAciertos()).thenReturn(aciertos);
-    when(pj.getErrores()).thenReturn(0);
     when(pj.getMejorRachaPartida()).thenReturn(mejorRacha);
     return pj;
   }
 
-  private PartidaJugador givenJugadorDe(Usuario u) {
-    PartidaJugador pj = mock(PartidaJugador.class);
-    when(pj.getUsuario()).thenReturn(u);
-    return pj;
-  }
-
-  private void givenQueElUsuarioNoTienePartidasFinalizadas(Long usuarioId) {
-    when(this.repositorioPartidaJugadorMock.listarPartidasFinalizadasDelUsuario(usuarioId))
-      .thenReturn(new ArrayList<>());
-  }
-
-  private void givenQueElUsuarioTienePartidasFinalizadas(
-    Long usuarioId,
-    PartidaJugador... partidas
-  ) {
-    when(this.repositorioPartidaJugadorMock.listarPartidasFinalizadasDelUsuario(usuarioId))
-      .thenReturn(new ArrayList<>(Arrays.asList(partidas)));
+  private ProgresoUsuario givenProgresoPrevio(int aciertosTotales, int victoriasConsecutivas) {
+    ProgresoUsuario progreso = new ProgresoUsuario(this.usuario);
+    progreso.setAciertosTotales(aciertosTotales);
+    progreso.setVictoriasConsecutivas(victoriasConsecutivas);
+    when(this.repositorioLogroMock.obtenerProgreso(USUARIO_ID)).thenReturn(progreso);
+    return progreso;
   }
 
   private void givenQueElUsuarioNoTieneLogrosPrevios(Long usuarioId) {
     when(this.repositorioLogroMock.obtenerLogroPorUsuario(usuarioId)).thenReturn(new ArrayList<>());
   }
 
-  private void givenQueElUsuarioYaTieneElLogro(Long usuarioId, TipoLogro tipo) {
-    UsuarioLogro yaTiene = new UsuarioLogro(this.usuario, tipo);
-    when(this.repositorioLogroMock.obtenerLogroPorUsuario(usuarioId)).thenReturn(List.of(yaTiene));
+  private void givenQueElUsuarioYaTieneLosLogros(Long usuarioId, TipoLogro... tipos) {
+    List<UsuarioLogro> obtenidos = new ArrayList<>();
+    for (TipoLogro tipo : tipos) {
+      obtenidos.add(new UsuarioLogro(this.usuario, tipo));
+    }
+    when(this.repositorioLogroMock.obtenerLogroPorUsuario(usuarioId)).thenReturn(obtenidos);
   }
 
   private void givenQueElUsuarioTieneElLogroConFecha(
@@ -453,11 +456,7 @@ public class ServicioLogroTest {
   }
 
   private void givenQueElUsuarioYaTieneTodosLosLogros(Long usuarioId) {
-    List<UsuarioLogro> todos = new ArrayList<>();
-    for (TipoLogro tipo : TipoLogro.values()) {
-      todos.add(new UsuarioLogro(this.usuario, tipo));
-    }
-    when(this.repositorioLogroMock.obtenerLogroPorUsuario(usuarioId)).thenReturn(todos);
+    givenQueElUsuarioYaTieneLosLogros(usuarioId, TipoLogro.values());
   }
 
   private void givenQueLaPartidaTieneJugadores(Long partidaId, PartidaJugador... jugadores) {
@@ -472,8 +471,8 @@ public class ServicioLogroTest {
 
   // when
 
-  private void whenSeEvaluanLosLogrosDelUsuario() {
-    this.nuevosLogros = this.servicio.evaluarLogrosDelUsuario(this.usuario);
+  private void whenSeEvaluanLosLogrosDelJugador(PartidaJugador jugador) {
+    this.nuevosLogros = this.servicio.evaluarLogrosDelJugador(jugador);
   }
 
   private void whenSeEvaluanLosLogrosDeLaPartida(Long partidaId) {
@@ -494,8 +493,8 @@ public class ServicioLogroTest {
     verifyNoInteractions(this.repositorioLogroMock, this.repositorioPartidaJugadorMock);
   }
 
-  private void thenSeBuscanLasPartidasFinalizadasDelUsuario(Long usuarioId) {
-    verify(this.repositorioPartidaJugadorMock).listarPartidasFinalizadasDelUsuario(usuarioId);
+  private void thenNoSeInteractuaConLosRepositoriosDeGuardado() {
+    verifyNoInteractions(this.repositorioLogroMock);
   }
 
   private void thenNoSeGuardaNingunLogro() {
@@ -527,6 +526,32 @@ public class ServicioLogroTest {
     for (UsuarioLogro guardado : captor.getAllValues()) {
       assertThat(guardado.getUsuario(), sameInstance(usuarioEsperado));
     }
+  }
+
+  private void thenSeGuardaElProgresoCon(
+    int aciertosTotales,
+    int victoriasConsecutivas,
+    Usuario usuarioEsperado
+  ) {
+    ArgumentCaptor<ProgresoUsuario> captor = ArgumentCaptor.forClass(ProgresoUsuario.class);
+    verify(this.repositorioLogroMock).guardarProgreso(captor.capture());
+    ProgresoUsuario guardado = captor.getValue();
+    assertThat(guardado.getUsuario(), sameInstance(usuarioEsperado));
+    assertThat(guardado.getAciertosTotales(), equalTo(aciertosTotales));
+    assertThat(guardado.getVictoriasConsecutivas(), equalTo(victoriasConsecutivas));
+  }
+
+  private void thenElProgresoAcumuladoTiene(
+    ProgresoUsuario progreso,
+    int aciertosEsperados,
+    int victoriasEsperadas
+  ) {
+    assertThat(progreso.getAciertosTotales(), equalTo(aciertosEsperados));
+    assertThat(progreso.getVictoriasConsecutivas(), equalTo(victoriasEsperadas));
+  }
+
+  private void thenSeGuardaElProgreso(ProgresoUsuario progreso) {
+    verify(this.repositorioLogroMock).guardarProgreso(progreso);
   }
 
   private void thenSeDevuelveTodoElCatalogoBloqueado() {

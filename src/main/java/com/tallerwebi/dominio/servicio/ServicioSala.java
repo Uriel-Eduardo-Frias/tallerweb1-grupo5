@@ -20,4 +20,6 @@ public interface ServicioSala {
   Sala buscarPorCodigo(String codigo);
   List<Sala> listarSalas();
   Sala marcarListo(String codigo, Long usuarioId);
+  List<Sala> listarSalasPublicas();
+  List<Sala> listarSalasDestacadas(int cantidad);
 }

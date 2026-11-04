@@ -50,12 +50,11 @@
                 <tbody>
                 <tr th:each="s : ${salasPublicas}">
                     <td><strong th:text="${s.nombre}">Nombre Sala</strong></td>
-                    <td th:text="${s.hostUsername}">Host</td>
+                    <td th:text="${s.host.username}">Host</td>
                     <td><span th:text="${#lists.size(s.jugadores)} + '/' + ${s.maxJugadores}">1/4</span></td>
-                    <td><span class="badge badge-success" th:text="${s.estadoSala}">EN_ESPERA</span></td>
+                    <td><span class="badge badge-success">En espera</span></td>
                     <td>
-                        <form th:action="@{/salas/unirse}" method="POST" style="display: inline;">
-                            <input type="hidden" name="codigoInvitacion" th:value="${s.codigoInvitacion}">
+                        <form th:action="@{/salas/{codigo}/unirse(codigo=${s.codigo})}" method="POST" style="display: inline;">
                             <button type="submit" class="btn btn-primary-sm">Unirse</button>
                         </form>
                     </td>
@@ -82,7 +81,11 @@
                 <tr th:each="jugador, iter : ${topRanking}">
                     <td th:text="${iter.count}">1</td>
                     <td><strong th:text="${jugador.username}">Jugador</strong></td>
-                    <td><span class="badge badge-purple" th:text="${jugador.partidasGanadas} + ' 🏆'">5 🏆</span></td>
+                    <td>
+                        <span class="badge badge-purple">
+                            <span th:text="${jugador.partidasGanadas}">5</span> &#127942;
+                        </span>
+                    </td>
                     <td th:text="${jugador.promedioAciertos} + '%'">85.5%</td>
                 </tr>
                 </tbody>
