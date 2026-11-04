@@ -73,6 +73,51 @@ public class ControladorComodin {
     return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
   }
 
+  @PostMapping("/bloqueo")
+  @ResponseBody
+  public ResponseEntity<Map<String, Boolean>> bloqueo(
+    @PathVariable("id") Long partidaId,
+    HttpSession session
+  ) {
+    Long usuarioId = obtenerUsuarioId(session);
+    if (usuarioId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    servicioComodin.aplicarBloqueo(partidaId, usuarioId);
+    return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
+  }
+
+  @PostMapping("/borroso")
+  @ResponseBody
+  public ResponseEntity<Map<String, Boolean>> borroso(
+    @PathVariable("id") Long partidaId,
+    HttpSession session
+  ) {
+    Long usuarioId = obtenerUsuarioId(session);
+    if (usuarioId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    servicioComodin.aplicarBorroso(partidaId, usuarioId);
+    return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
+  }
+
+  @PostMapping("/mezclar")
+  @ResponseBody
+  public ResponseEntity<Map<String, Boolean>> mezclar(
+    @PathVariable("id") Long partidaId,
+    HttpSession session
+  ) {
+    Long usuarioId = obtenerUsuarioId(session);
+    if (usuarioId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    servicioComodin.aplicarMezclar(partidaId, usuarioId);
+    return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
+  }
+
   private Long obtenerUsuarioId(HttpSession session) {
     return (Long) session.getAttribute(ID_USUARIO);
   }

@@ -422,3 +422,14 @@ INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
 INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
     (4, 'DOBLE_CHANCE', 'Doble Chance', 'Te da un segundo intento si fallas tu respuesta')
     ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
+    (5, 'BLOQUEO', 'Bloqueo 10s', 'Bloquea al oponente durante 10 segundos')
+    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
+    (6, 'BORROSO', 'Borroso 5s', 'Hace borrosa la pantalla del oponente durante 5 segundos')
+    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO comodines (id, codigo, nombre, descripcion) VALUES
+    (7, 'MEZCLAR', 'Mezclar', 'Desordena y mezcla las opciones del oponente')
+    ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);

@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.servicio.impl;
 
+import com.tallerwebi.dominio.excepcion.JugadorBloqueadoException;
 import com.tallerwebi.dominio.excepcion.PrimerIntentoFallidoDobleChanceException;
 import com.tallerwebi.dominio.excepcion.RespuestaDuplicadaException;
 import com.tallerwebi.dominio.modelo.Opcion;
@@ -13,6 +14,7 @@ import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioRespuestaJugador;
 import com.tallerwebi.dominio.servicio.ServicioPartida;
 import com.tallerwebi.dominio.servicio.ServicioRespuestaJugador;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,13 +41,23 @@ public class ServicioRespuestaJugadorImpl implements ServicioRespuestaJugador {
   }
 
   @Override
-  @Transactional(noRollbackFor = PrimerIntentoFallidoDobleChanceException.class)
+  @Transactional(
+    noRollbackFor = {
+      PrimerIntentoFallidoDobleChanceException.class, JugadorBloqueadoException.class,
+    }
+  )
   public boolean registrarRespuesta(Long partidaId, Long usuarioId, Long opcionId) {
     Partida partida = obtenerPartidaValida(partidaId);
     PartidaRonda ronda = obtenerRondaActual(partida);
     Pregunta pregunta = ronda.getPregunta();
     Opcion opcion = obtenerOpcionValida(opcionId, pregunta);
     PartidaJugador jugador = obtenerJugadorValido(partidaId, usuarioId);
+
+    if (jugador.estaBloqueado()) {
+      long segundosRestantes =
+        Duration.between(LocalDateTime.now(), jugador.getBloqueadoHasta()).toSeconds() + 1;
+      throw new JugadorBloqueadoException(segundosRestantes);
+    }
 
     validarQueNoHayaRespondido(ronda.getId(), jugador.getId());
 

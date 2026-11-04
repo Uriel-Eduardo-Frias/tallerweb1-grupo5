@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio.modelo;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "partidas_jugadores")
@@ -27,10 +28,13 @@ public class PartidaJugador {
   @Column(name = "estado_jugador_partida", length = 30)
   private String estadoJugadorPartida = "JUGANDO";
 
-  // Ronda en la que el jugador habilitó su segundo intento. Se persiste para
-  // que el comodín siga funcionando entre solicitudes HTTP independientes.
+  // Ronda en la que el jugador habilitó su segundo intento.
   @Column(name = "doble_chance_ronda_id")
   private Long dobleChanceRondaId;
+
+  // Fecha y hora hasta la que el jugador está bloqueado (10 segundos)
+  @Column(name = "bloqueado_hasta")
+  private LocalDateTime bloqueadoHasta;
 
   public PartidaJugador() {}
 
@@ -90,6 +94,18 @@ public class PartidaJugador {
 
   public void setDobleChanceRondaId(Long dobleChanceRondaId) {
     this.dobleChanceRondaId = dobleChanceRondaId;
+  }
+
+  public LocalDateTime getBloqueadoHasta() {
+    return bloqueadoHasta;
+  }
+
+  public void setBloqueadoHasta(LocalDateTime bloqueadoHasta) {
+    this.bloqueadoHasta = bloqueadoHasta;
+  }
+
+  public boolean estaBloqueado() {
+    return bloqueadoHasta != null && LocalDateTime.now().isBefore(bloqueadoHasta);
   }
 
   // Delegados: mantienen la API anterior para no romper código existente

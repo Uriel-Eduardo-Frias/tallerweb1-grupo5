@@ -1,17 +1,13 @@
-package com.tallerwebi.dominio;
+package com.tallerwebi.presentacion.dto;
 
 import com.tallerwebi.dominio.enumeration.ModoJuego;
 
 public class CrearSalaDTO {
 
   private String nombre;
-
   private int maxJugadores = 4;
-
   private boolean esPrivada = false;
-
   private ModoJuego modoJuego = ModoJuego.TURNO_TODOS;
-
   private int totalRondas = 5;
 
   public CrearSalaDTO() {}
