@@ -31,171 +31,171 @@ import org.junit.jupiter.api.Test;
 
 class ServicioComodinTest {
 
-    private static final Long PARTIDA_ID = 1L;
-    private static final Long USUARIO_ID = 100L;
-    private static final Long JUGADOR_ID = 10L;
+  private static final Long PARTIDA_ID = 1L;
+  private static final Long USUARIO_ID = 100L;
+  private static final Long JUGADOR_ID = 10L;
 
-    private RepositorioComodin repositorioComodin;
-    private RepositorioPartida repositorioPartida;
-    private RepositorioPartidaJugador repositorioPartidaJugador;
-    private ServicioEstadistica servicioEstadistica;
-    private ServicioComodin servicioComodin;
+  private RepositorioComodin repositorioComodin;
+  private RepositorioPartida repositorioPartida;
+  private RepositorioPartidaJugador repositorioPartidaJugador;
+  private ServicioEstadistica servicioEstadistica;
+  private ServicioComodin servicioComodin;
 
-    private PartidaJugador jugador;
-    private Partida partida;
+  private PartidaJugador jugador;
+  private Partida partida;
 
-    @BeforeEach
-    void init() {
-        repositorioComodin = mock(RepositorioComodin.class);
-        repositorioPartida = mock(RepositorioPartida.class);
-        repositorioPartidaJugador = mock(RepositorioPartidaJugador.class);
-        servicioEstadistica = mock(ServicioEstadistica.class);
+  @BeforeEach
+  void init() {
+    repositorioComodin = mock(RepositorioComodin.class);
+    repositorioPartida = mock(RepositorioPartida.class);
+    repositorioPartidaJugador = mock(RepositorioPartidaJugador.class);
+    servicioEstadistica = mock(ServicioEstadistica.class);
 
-        servicioComodin =
-                new ServicioComodinImpl(
-                        repositorioComodin,
-                        repositorioPartida,
-                        repositorioPartidaJugador,
-                        servicioEstadistica
-                );
+    servicioComodin =
+      new ServicioComodinImpl(
+        repositorioComodin,
+        repositorioPartida,
+        repositorioPartidaJugador,
+        servicioEstadistica
+      );
 
-        inicializarEscenarioBase();
+    inicializarEscenarioBase();
+  }
+
+  @Test
+  void cincuentaCincuentaDeberiaDescartarDosIncorrectasYConsumirStock() {
+    PartidaJugadorComodin comodinJugador = givenTengoUnComodinDisponible(
+      TipoComodin.CINCUENTA_CINCUENTA,
+      1
+    );
+    Long idOpcionCorrecta = 1L;
+    givenTengoUnaPreguntaConCuatroOpcionesEnLaRonda(idOpcionCorrecta);
+
+    Comodin5050DTO resultado = whenAplicoCincuentaCincuenta(PARTIDA_ID, USUARIO_ID);
+
+    thenSeDescartanOpcionesIncorrectas(resultado, 2, idOpcionCorrecta);
+    thenSePenalizanSegundos(resultado, 5);
+    thenElComodinFueConsumido(comodinJugador);
+  }
+
+  @Test
+  void tiempoExtraDeberiaRetornarDiezSegundos() {
+    PartidaJugadorComodin comodinJugador = givenTengoUnComodinDisponible(
+      TipoComodin.TIEMPO_EXTRA,
+      1
+    );
+
+    int segundos = whenAplicoTiempoExtra(PARTIDA_ID, USUARIO_ID);
+
+    thenObtengoSegundosExtra(segundos, 10);
+    thenElComodinFueConsumido(comodinJugador);
+  }
+
+  @Test
+  void comodinSinStockDeberiaLanzarExcepcion() {
+    givenTengoUnComodinSinStock(TipoComodin.TIEMPO_EXTRA);
+
+    Throwable excepcion = whenAplicoTiempoExtraCapturandoExcepcion(PARTIDA_ID, USUARIO_ID);
+
+    thenSeLanzaExcepcion(excepcion, IllegalStateException.class);
+  }
+
+  private PartidaJugadorComodin givenTengoUnComodinDisponible(TipoComodin tipo, int stock) {
+    Comodin comodin = new Comodin(tipo, tipo.getEtiqueta(), tipo.getDescripcion(), "icon");
+    PartidaJugadorComodin pjc = new PartidaJugadorComodin(jugador, comodin, stock);
+    when(repositorioComodin.buscarPorJugadorYTipo(JUGADOR_ID, tipo)).thenReturn(pjc);
+    return pjc;
+  }
+
+  private void givenTengoUnComodinSinStock(TipoComodin tipo) {
+    givenTengoUnComodinDisponible(tipo, 0);
+  }
+
+  private void givenTengoUnaPreguntaConCuatroOpcionesEnLaRonda(Long idCorrecta) {
+    Pregunta pregunta = new Pregunta();
+    pregunta.setOpciones(
+      List.of(
+        crearOpcion(1L, idCorrecta.equals(1L)),
+        crearOpcion(2L, idCorrecta.equals(2L)),
+        crearOpcion(3L, idCorrecta.equals(3L)),
+        crearOpcion(4L, idCorrecta.equals(4L))
+      )
+    );
+    partida.obtenerRondaActual().setPregunta(pregunta);
+  }
+
+  private Opcion crearOpcion(Long id, boolean esCorrecta) {
+    Opcion opcion = new Opcion();
+    opcion.setId(id);
+    opcion.setEsCorrecta(esCorrecta);
+    return opcion;
+  }
+
+  private Comodin5050DTO whenAplicoCincuentaCincuenta(Long partidaId, Long usuarioId) {
+    return servicioComodin.aplicarCincuentaCincuenta(partidaId, usuarioId);
+  }
+
+  private int whenAplicoTiempoExtra(Long partidaId, Long usuarioId) {
+    return servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
+  }
+
+  private Throwable whenAplicoTiempoExtraCapturandoExcepcion(Long partidaId, Long usuarioId) {
+    try {
+      servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
+      return null;
+    } catch (Throwable excepcion) {
+      return excepcion;
     }
+  }
 
-    @Test
-    void cincuentaCincuentaDeberiaDescartarDosIncorrectasYConsumirStock() {
-        PartidaJugadorComodin comodinJugador = givenTengoUnComodinDisponible(
-                TipoComodin.CINCUENTA_CINCUENTA,
-                1
-        );
-        Long idOpcionCorrecta = 1L;
-        givenTengoUnaPreguntaConCuatroOpcionesEnLaRonda(idOpcionCorrecta);
+  private void thenSeDescartanOpcionesIncorrectas(
+    Comodin5050DTO resultado,
+    int cantidadEsperada,
+    Long idCorrecta
+  ) {
+    assertThat(resultado.getOpcionesDescartadas().size(), equalTo(cantidadEsperada));
+    assertThat(resultado.getOpcionesDescartadas().contains(idCorrecta), is(false));
+  }
 
-        Comodin5050DTO resultado = whenAplicoCincuentaCincuenta(PARTIDA_ID, USUARIO_ID);
+  private void thenSePenalizanSegundos(Comodin5050DTO resultado, int penalizacionEsperada) {
+    assertThat(resultado.getPenalizacionSegundos(), equalTo(penalizacionEsperada));
+  }
 
-        thenSeDescartanOpcionesIncorrectas(resultado, 2, idOpcionCorrecta);
-        thenSePenalizanSegundos(resultado, 5);
-        thenElComodinFueConsumido(comodinJugador);
-    }
+  private void thenElComodinFueConsumido(PartidaJugadorComodin comodinJugador) {
+    assertThat(comodinJugador.getCantidadDisponible(), equalTo(0));
+    verify(repositorioComodin).actualizar(comodinJugador);
+  }
 
-    @Test
-    void tiempoExtraDeberiaRetornarDiezSegundos() {
-        PartidaJugadorComodin comodinJugador = givenTengoUnComodinDisponible(
-                TipoComodin.TIEMPO_EXTRA,
-                1
-        );
+  private void thenObtengoSegundosExtra(int segundosObtenidos, int segundosEsperados) {
+    assertThat(segundosObtenidos, equalTo(segundosEsperados));
+  }
 
-        int segundos = whenAplicoTiempoExtra(PARTIDA_ID, USUARIO_ID);
+  private void thenSeLanzaExcepcion(Throwable excepcion, Class<? extends Throwable> tipoEsperado) {
+    assertThat(excepcion, is(notNullValue()));
+    assertThat(excepcion, instanceOf(tipoEsperado));
+  }
 
-        thenObtengoSegundosExtra(segundos, 10);
-        thenElComodinFueConsumido(comodinJugador);
-    }
+  private void inicializarEscenarioBase() {
+    Usuario usuario = new Usuario();
+    usuario.setId(USUARIO_ID);
 
-    @Test
-    void comodinSinStockDeberiaLanzarExcepcion() {
-        givenTengoUnComodinSinStock(TipoComodin.TIEMPO_EXTRA);
+    jugador = new PartidaJugador();
+    jugador.setId(JUGADOR_ID);
+    jugador.setUsuario(usuario);
 
-        Throwable excepcion = whenAplicoTiempoExtraCapturandoExcepcion(PARTIDA_ID, USUARIO_ID);
+    partida = new Partida();
+    partida.setId(PARTIDA_ID);
+    partida.setRondaActual(1);
+    jugador.setPartida(partida);
 
-        thenSeLanzaExcepcion(excepcion, IllegalStateException.class);
-    }
+    PartidaRonda ronda = new PartidaRonda(partida, 1);
+    ronda.setId(50L);
+    partida.getRondas().add(ronda);
 
-    private PartidaJugadorComodin givenTengoUnComodinDisponible(TipoComodin tipo, int stock) {
-        Comodin comodin = new Comodin(tipo, tipo.getEtiqueta(), tipo.getDescripcion(), "icon");
-        PartidaJugadorComodin pjc = new PartidaJugadorComodin(jugador, comodin, stock);
-        when(repositorioComodin.buscarPorJugadorYTipo(JUGADOR_ID, tipo)).thenReturn(pjc);
-        return pjc;
-    }
+    when(servicioEstadistica.calcularNivelUsuario(USUARIO_ID)).thenReturn(3);
 
-    private void givenTengoUnComodinSinStock(TipoComodin tipo) {
-        givenTengoUnComodinDisponible(tipo, 0);
-    }
-
-    private void givenTengoUnaPreguntaConCuatroOpcionesEnLaRonda(Long idCorrecta) {
-        Pregunta pregunta = new Pregunta();
-        pregunta.setOpciones(
-                List.of(
-                        crearOpcion(1L, idCorrecta.equals(1L)),
-                        crearOpcion(2L, idCorrecta.equals(2L)),
-                        crearOpcion(3L, idCorrecta.equals(3L)),
-                        crearOpcion(4L, idCorrecta.equals(4L))
-                )
-        );
-        partida.obtenerRondaActual().setPregunta(pregunta);
-    }
-
-    private Opcion crearOpcion(Long id, boolean esCorrecta) {
-        Opcion opcion = new Opcion();
-        opcion.setId(id);
-        opcion.setEsCorrecta(esCorrecta);
-        return opcion;
-    }
-
-    private Comodin5050DTO whenAplicoCincuentaCincuenta(Long partidaId, Long usuarioId) {
-        return servicioComodin.aplicarCincuentaCincuenta(partidaId, usuarioId);
-    }
-
-    private int whenAplicoTiempoExtra(Long partidaId, Long usuarioId) {
-        return servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
-    }
-
-    private Throwable whenAplicoTiempoExtraCapturandoExcepcion(Long partidaId, Long usuarioId) {
-        try {
-            servicioComodin.aplicarTiempoExtra(partidaId, usuarioId);
-            return null;
-        } catch (Throwable excepcion) {
-            return excepcion;
-        }
-    }
-
-    private void thenSeDescartanOpcionesIncorrectas(
-            Comodin5050DTO resultado,
-            int cantidadEsperada,
-            Long idCorrecta
-    ) {
-        assertThat(resultado.getOpcionesDescartadas().size(), equalTo(cantidadEsperada));
-        assertThat(resultado.getOpcionesDescartadas().contains(idCorrecta), is(false));
-    }
-
-    private void thenSePenalizanSegundos(Comodin5050DTO resultado, int penalizacionEsperada) {
-        assertThat(resultado.getPenalizacionSegundos(), equalTo(penalizacionEsperada));
-    }
-
-    private void thenElComodinFueConsumido(PartidaJugadorComodin comodinJugador) {
-        assertThat(comodinJugador.getCantidadDisponible(), equalTo(0));
-        verify(repositorioComodin).actualizar(comodinJugador);
-    }
-
-    private void thenObtengoSegundosExtra(int segundosObtenidos, int segundosEsperados) {
-        assertThat(segundosObtenidos, equalTo(segundosEsperados));
-    }
-
-    private void thenSeLanzaExcepcion(Throwable excepcion, Class<? extends Throwable> tipoEsperado) {
-        assertThat(excepcion, is(notNullValue()));
-        assertThat(excepcion, instanceOf(tipoEsperado));
-    }
-
-    private void inicializarEscenarioBase() {
-        Usuario usuario = new Usuario();
-        usuario.setId(USUARIO_ID);
-
-        jugador = new PartidaJugador();
-        jugador.setId(JUGADOR_ID);
-        jugador.setUsuario(usuario);
-
-        partida = new Partida();
-        partida.setId(PARTIDA_ID);
-        partida.setRondaActual(1);
-        jugador.setPartida(partida);
-
-        PartidaRonda ronda = new PartidaRonda(partida, 1);
-        ronda.setId(50L);
-        partida.getRondas().add(ronda);
-
-        when(servicioEstadistica.calcularNivelUsuario(USUARIO_ID)).thenReturn(3);
-
-        when(repositorioPartidaJugador.obtenerPorPartidaYUsuario(PARTIDA_ID, USUARIO_ID))
-                .thenReturn(jugador);
-        when(repositorioPartida.obtenerPorIdConRondas(PARTIDA_ID)).thenReturn(partida);
-    }
+    when(repositorioPartidaJugador.obtenerPorPartidaYUsuario(PARTIDA_ID, USUARIO_ID))
+      .thenReturn(jugador);
+    when(repositorioPartida.obtenerPorIdConRondas(PARTIDA_ID)).thenReturn(partida);
+  }
 }
