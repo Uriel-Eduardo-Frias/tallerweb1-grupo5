@@ -46,11 +46,11 @@ public class ServicioComodinImpl implements ServicioComodin {
 
   @Autowired
   public ServicioComodinImpl(
-          RepositorioComodin repositorioComodin,
-          RepositorioPartida repositorioPartida,
-          RepositorioPartidaJugador repositorioPartidaJugador,
-          ServicioEstadistica servicioEstadistica,
-          NotificadorSala notificadorSala
+    RepositorioComodin repositorioComodin,
+    RepositorioPartida repositorioPartida,
+    RepositorioPartidaJugador repositorioPartidaJugador,
+    ServicioEstadistica servicioEstadistica,
+    NotificadorSala notificadorSala
   ) {
     this.repositorioComodin = repositorioComodin;
     this.repositorioPartida = repositorioPartida;
@@ -60,17 +60,17 @@ public class ServicioComodinImpl implements ServicioComodin {
   }
 
   public ServicioComodinImpl(
-          RepositorioComodin repositorioComodin,
-          RepositorioPartida repositorioPartida,
-          RepositorioPartidaJugador repositorioPartidaJugador,
-          ServicioEstadistica servicioEstadistica
+    RepositorioComodin repositorioComodin,
+    RepositorioPartida repositorioPartida,
+    RepositorioPartidaJugador repositorioPartidaJugador,
+    ServicioEstadistica servicioEstadistica
   ) {
     this(
-            repositorioComodin,
-            repositorioPartida,
-            repositorioPartidaJugador,
-            servicioEstadistica,
-            null
+      repositorioComodin,
+      repositorioPartida,
+      repositorioPartidaJugador,
+      servicioEstadistica,
+      null
     );
   }
 
@@ -92,7 +92,6 @@ public class ServicioComodinImpl implements ServicioComodin {
       obtenerOCrearComodinDeJugador(jugador, tipo);
     }
   }
-
 
   private List<TipoComodin> obtenerComodinesPermitidos(PartidaJugador jugador) {
     ModoJuego modo = obtenerModo(jugador);
@@ -142,8 +141,6 @@ public class ServicioComodinImpl implements ServicioComodin {
     return obtenerNivelJugador(jugador.getUsuario().getId());
   }
 
-
-
   @Override
   public List<PartidaJugadorComodin> obtenerComodinesDeJugador(Long partidaId, Long usuarioId) {
     PartidaJugador jugador = obtenerJugador(partidaId, usuarioId);
@@ -159,15 +156,15 @@ public class ServicioComodinImpl implements ServicioComodin {
         return false;
       }
       PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
-              jugador.getId(),
-              tipo
+        jugador.getId(),
+        tipo
       );
       if (comodinJugador == null) {
         comodinJugador = obtenerOCrearComodinDeJugador(jugador, tipo);
       }
       return (
-              comodinJugador != null &&
-                      comodinJugador.getCantidadDisponible() > CANTIDAD_MINIMA_DISPONIBLE
+        comodinJugador != null &&
+        comodinJugador.getCantidadDisponible() > CANTIDAD_MINIMA_DISPONIBLE
       );
     } catch (Exception excepcion) {
       return false;
@@ -225,10 +222,10 @@ public class ServicioComodinImpl implements ServicioComodin {
 
     if (notificadorSala != null) {
       notificadorSala.notificarComodinOponente(
-              partida.getSala().getCodigo(),
-              partidaId,
-              TipoComodin.BLOQUEO.name(),
-              oponente.getUsuario().getUsername()
+        partida.getSala().getCodigo(),
+        partidaId,
+        TipoComodin.BLOQUEO.name(),
+        oponente.getUsuario().getUsername()
       );
     }
   }
@@ -242,10 +239,10 @@ public class ServicioComodinImpl implements ServicioComodin {
 
     if (notificadorSala != null) {
       notificadorSala.notificarComodinOponente(
-              partida.getSala().getCodigo(),
-              partidaId,
-              TipoComodin.BORROSO.name(),
-              oponente.getUsuario().getUsername()
+        partida.getSala().getCodigo(),
+        partidaId,
+        TipoComodin.BORROSO.name(),
+        oponente.getUsuario().getUsername()
       );
     }
   }
@@ -259,30 +256,30 @@ public class ServicioComodinImpl implements ServicioComodin {
 
     if (notificadorSala != null) {
       notificadorSala.notificarComodinOponente(
-              partida.getSala().getCodigo(),
-              partidaId,
-              TipoComodin.MEZCLAR.name(),
-              oponente.getUsuario().getUsername()
+        partida.getSala().getCodigo(),
+        partidaId,
+        TipoComodin.MEZCLAR.name(),
+        oponente.getUsuario().getUsername()
       );
     }
   }
 
   private PartidaJugadorComodin consumirComodinValido(
-          Long partidaId,
-          Long usuarioId,
-          TipoComodin tipo
+    Long partidaId,
+    Long usuarioId,
+    TipoComodin tipo
   ) {
     PartidaJugador jugador = obtenerJugador(partidaId, usuarioId);
 
     if (!esComodinPermitidoParaJugador(jugador, tipo)) {
       throw new IllegalStateException(
-              "El jugador no posee el nivel o el modo necesario para usar el comodín " + tipo
+        "El jugador no posee el nivel o el modo necesario para usar el comodín " + tipo
       );
     }
 
     PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
-            jugador.getId(),
-            tipo
+      jugador.getId(),
+      tipo
     );
 
     if (comodinJugador == null) {
@@ -300,12 +297,12 @@ public class ServicioComodinImpl implements ServicioComodin {
   }
 
   private PartidaJugadorComodin obtenerOCrearComodinDeJugador(
-          PartidaJugador jugador,
-          TipoComodin tipo
+    PartidaJugador jugador,
+    TipoComodin tipo
   ) {
     PartidaJugadorComodin comodinJugador = repositorioComodin.buscarPorJugadorYTipo(
-            jugador.getId(),
-            tipo
+      jugador.getId(),
+      tipo
     );
 
     if (comodinJugador == null) {
@@ -323,8 +320,8 @@ public class ServicioComodinImpl implements ServicioComodin {
 
   private PartidaJugador obtenerJugador(Long partidaId, Long usuarioId) {
     PartidaJugador jugadorPartida = repositorioPartidaJugador.obtenerPorPartidaYUsuario(
-            partidaId,
-            usuarioId
+      partidaId,
+      usuarioId
     );
     if (jugadorPartida == null) {
       throw new IllegalArgumentException("El jugador no participa en la partida.");
