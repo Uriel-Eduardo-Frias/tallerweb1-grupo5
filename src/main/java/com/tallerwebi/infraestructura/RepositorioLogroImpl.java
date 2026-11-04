@@ -1,5 +1,6 @@
 package com.tallerwebi.infraestructura;
 
+import com.tallerwebi.dominio.modelo.ProgresoUsuario;
 import com.tallerwebi.dominio.modelo.UsuarioLogro;
 import com.tallerwebi.dominio.repositorio.RepositorioLogro;
 import java.util.List;
@@ -35,5 +36,25 @@ public class RepositorioLogroImpl implements RepositorioLogro {
       .createQuery(hql, UsuarioLogro.class)
       .setParameter("usuarioId", usuarioId)
       .getResultList();
+  }
+
+  @Override
+  public ProgresoUsuario obtenerProgreso(Long usuarioId) {
+    String hql =
+      """
+      SELECT p FROM ProgresoUsuario p
+      WHERE p.usuario.id = :usuarioId
+      """;
+
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, ProgresoUsuario.class)
+      .setParameter("usuarioId", usuarioId)
+      .uniqueResult();
+  }
+
+  @Override
+  public void guardarProgreso(ProgresoUsuario progreso) {
+    sessionFactory.getCurrentSession().persist(progreso);
   }
 }
