@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -116,6 +117,14 @@ public class ControladorComodin {
 
     servicioComodin.aplicarMezclar(partidaId, usuarioId);
     return ResponseEntity.ok(Map.of(CLAVE_ACTIVADO, Boolean.TRUE));
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  @ResponseBody
+  public ResponseEntity<Map<String, String>> manejarIllegalStateException(
+    IllegalStateException excepcion
+  ) {
+    return ResponseEntity.badRequest().body(Map.of("error", excepcion.getMessage()));
   }
 
   private Long obtenerUsuarioId(HttpSession session) {
