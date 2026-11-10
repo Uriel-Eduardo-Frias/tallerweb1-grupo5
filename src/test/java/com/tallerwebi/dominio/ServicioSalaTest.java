@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -47,7 +48,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionCuandoLaSalaAlcanzaSuCapacidadMaxima() {
+  public void deberiaLanzarExcepcionCuandoLaSalaAlcanzaSuCapacidadMaxima() {
     // given
     Sala sala = givenUnaSalaLlena();
 
@@ -61,7 +62,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionSiElUsuarioNoPerteneceALaSala() {
+  public void deberiaLanzarExcepcionSiElUsuarioNoPerteneceALaSala() {
     // given
     Sala sala = givenUnaSalaConUnHost();
     Usuario usuarioAjeno = usuario(2L, "Pedro");
@@ -78,7 +79,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaReasignarElAnfitrionCuandoElAnfitrionSale() {
+  public void deberiaReasignarElAnfitrionCuandoElAnfitrionSale() {
     // given
     Sala sala = givenUnaSalaConTresJugadores();
     Usuario nuevoHost = sala.getJugadores().get(1).getUsuario();
@@ -94,7 +95,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaDejarLaSalaSinHostCuandoSaleElUltimoIntegrante() {
+  public void deberiaDejarLaSalaSinHostCuandoSaleElUltimoIntegrante() {
     // given
     Sala sala = givenUnaSalaConUnHost();
 
@@ -108,7 +109,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaEncontrarUnaSalaPorSuCodigo() {
+  public void deberiaEncontrarUnaSalaPorSuCodigo() {
     // given
     Sala sala = givenUnaSalaPersistida();
 
@@ -120,7 +121,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionSiLaSalaNoExiste() {
+  public void deberiaLanzarExcepcionSiLaSalaNoExiste() {
     // given
     when(repositorioSala.obtenerPorCodigoConJugadores("TRV-XXXX")).thenReturn(null);
 
@@ -132,7 +133,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaCrearYGuardarUnaSalaConSuHostPersistido() {
+  public void deberiaCrearYGuardarUnaSalaConSuHostPersistido() {
     // given
     Usuario host = usuario(1L, "Juan");
     givenUsuarioPersistido(host);
@@ -157,7 +158,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionSiElCodigoDeInvitacionEsNulo() {
+  public void deberiaLanzarExcepcionSiElCodigoDeInvitacionEsNulo() {
     // when
     Throwable excepcion = whenUnirseCapturandoExcepcion(null, 2L);
 
@@ -167,7 +168,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionSiLaSalaNoExisteAlUnirse() {
+  public void deberiaLanzarExcepcionSiLaSalaNoExisteAlUnirse() {
     // given
     when(repositorioSala.obtenerPorCodigoConJugadores("NO-EXISTE")).thenReturn(null);
 
@@ -180,7 +181,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionSiElUsuarioNoEstaPersistidoAlUnirse() {
+  public void deberiaLanzarExcepcionSiElUsuarioNoEstaPersistidoAlUnirse() {
     // given
     Sala sala = givenUnaSalaConUnHost();
     sala.setMaxJugadores(4);
@@ -196,7 +197,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaReconectarAlJugadorQueYaPerteneceALaSala() {
+  public void deberiaReconectarAlJugadorQueYaPerteneceALaSala() {
     // given
     Usuario host = usuario(1L, "Juan");
     Usuario ana = usuario(2L, "Ana");
@@ -218,7 +219,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionSiSolicitanteNoEsHostAlCambiarHost() {
+  public void deberiaLanzarExcepcionSiSolicitanteNoEsHostAlCambiarHost() {
     // given
     Sala sala = givenUnaSalaConTresJugadores();
     Usuario solicitante = sala.getJugadores().get(1).getUsuario();
@@ -235,7 +236,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionSiElNuevoHostNoPerteneceALaSala() {
+  public void deberiaLanzarExcepcionSiElNuevoHostNoPerteneceALaSala() {
     // given
     Sala sala = givenUnaSalaConUnHost();
     Usuario host = sala.getHost();
@@ -252,7 +253,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaCambiarElHostYActualizarLasParticipaciones() {
+  public void deberiaCambiarElHostYActualizarLasParticipaciones() {
     // given
     Sala sala = givenUnaSalaConTresJugadores();
     Usuario hostAnterior = sala.getHost();
@@ -414,7 +415,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaListarSalasPublicasEnEspera() {
+  public void deberiaListarSalasPublicasEnEspera() {
     // given
     List<Sala> salasEsperadas = new ArrayList<>();
     when(repositorioSala.listarSalasPublicasEnEspera()).thenReturn(salasEsperadas);
@@ -430,35 +431,37 @@ class ServicioSalaTest {
   @Test
   void deberiaListarSalasDestacadasYFiltrarLasQueEstanLlenas() {
     // given
-    List<Sala> salas = givenSalasParaDestacadas(); // Contiene 1 sala llena y 2 disponibles
-    when(repositorioSala.listarSalasPublicasEnEspera()).thenReturn(salas);
+    List<Sala> salas = givenSalasParaDestacadas();
+    List<Sala> salasFiltradas = salas.subList(0, 2);
+    when(repositorioSala.listarSalasPublicasConLugar(5)).thenReturn(salasFiltradas);
 
     // when
     List<Sala> resultado = servicioSala.listarSalasDestacadas(5);
 
     // then
-    assertThat(resultado, hasSize(2));
+    assertThat(resultado.size(), is(2));
 
     for (Sala sala : resultado) {
-      assertThat(sala.getJugadores().size() < sala.getMaxJugadores(), is(true));
+      assertTrue(sala.getJugadores().size() < sala.getMaxJugadores());
     }
   }
 
   @Test
   void deberiaListarSalasDestacadasRespetandoElLimiteSolicitado() {
     // given
-    List<Sala> salas = givenSalasParaDestacadas(); // Contiene 2 disponibles
-    when(repositorioSala.listarSalasPublicasEnEspera()).thenReturn(salas);
+    List<Sala> salas = givenSalasParaDestacadas();
+    List<Sala> salasConLimite = salas.subList(0, 1);
+    when(repositorioSala.listarSalasPublicasConLugar(1)).thenReturn(salasConLimite);
 
     // when
-    List<Sala> resultado = servicioSala.listarSalasDestacadas(1); // Pedimos solo 1
+    List<Sala> resultado = servicioSala.listarSalasDestacadas(1);
 
     // then
-    assertThat(resultado, hasSize(1));
+    assertThat(resultado.size(), equalTo(1));
   }
 
   @Test
-  void deberiaLanzarExcepcionAlUnirseSiLaSalaNoEstaEnEspera() {
+  public void deberiaLanzarExcepcionAlUnirseSiLaSalaNoEstaEnEspera() {
     // given
     Sala sala = givenUnaSalaConUnHost();
     sala.setEstado(EstadoSala.EN_CURSO);
@@ -472,7 +475,7 @@ class ServicioSalaTest {
   }
 
   @Test
-  void deberiaLanzarExcepcionAlMarcarListoSiLaSalaNoEstaEnEspera() {
+  public void deberiaLanzarExcepcionAlMarcarListoSiLaSalaNoEstaEnEspera() {
     // given
     Sala sala = givenUnaSalaConUnHost();
     sala.setEstado(com.tallerwebi.dominio.enumeration.EstadoSala.FINALIZADA);
@@ -496,12 +499,15 @@ class ServicioSalaTest {
 
     Sala sala1 = nuevaSalaConHost(host1);
     sala1.setMaxJugadores(4);
+    sala1.setEstado(EstadoSala.EN_ESPERA);
 
     Sala sala2 = nuevaSalaConHost(host2);
     sala2.setMaxJugadores(2);
+    sala2.setEstado(EstadoSala.EN_ESPERA);
 
     Sala sala3 = nuevaSalaConHost(host3);
     sala3.setMaxJugadores(1);
+    sala3.setEstado(EstadoSala.EN_ESPERA);
 
     lista.add(sala1);
     lista.add(sala2);

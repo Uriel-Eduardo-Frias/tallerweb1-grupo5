@@ -61,6 +61,10 @@
                 </tr>
                 </tbody>
             </table>
+
+            <div th:unless="${#lists.isEmpty(salasPublicas)}" style="text-align: right; margin-top: 1rem;">
+                <a th:href="@{/salas}" class="btn btn-outline-sm">Ver más <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
         </div>
 
         <div class="card">

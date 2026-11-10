@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class ServicioSalaIm implements ServicioSala {
 
+  private static final int CANTIDAD_SALAS_HOME = 4;
   private final RepositorioSala repositorioSala;
   private final RepositorioUsuario repositorioUsuario;
 
@@ -310,24 +311,6 @@ public class ServicioSalaIm implements ServicioSala {
 
   @Override
   public List<Sala> listarSalasDestacadas(int cantidad) {
-    List<Sala> disponibles = new ArrayList<>();
-
-    for (Sala sala : repositorioSala.listarSalasPublicasEnEspera()) {
-      if (sala.getJugadores().size() < sala.getMaxJugadores()) {
-        disponibles.add(sala);
-      }
-    }
-
-    List<Sala> destacadas = new ArrayList<>();
-    Random random = new Random();
-
-    int limite = Math.min(cantidad, disponibles.size());
-
-    for (int i = 0; i < limite; i++) {
-      int indiceAleatorio = random.nextInt(disponibles.size());
-      destacadas.add(disponibles.remove(indiceAleatorio));
-    }
-
-    return destacadas;
+    return repositorioSala.listarSalasPublicasConLugar(cantidad);
   }
 }

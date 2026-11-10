@@ -14,7 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorHome {
 
   private static final int TAMANIO_TOP = 5;
-  private static final int CANTIDAD_SALAS_HOME = 4;
+  private static final int TAMANIO_SALAS = 4;
   private ServicioEstadistica servicioEstadistica;
   private ServicioSala servicioSala;
 
@@ -35,7 +35,7 @@ public class ControladorHome {
   public ModelAndView irAlHome() {
     Map<String, Object> modelo = new ModelMap();
     modelo.put("topRanking", servicioEstadistica.obtenerLeaderBoard(TAMANIO_TOP));
-    modelo.put("salasPublicas", servicioSala.listarSalasDestacadas(CANTIDAD_SALAS_HOME));
+    modelo.put("salasPublicas", servicioSala.listarSalasDestacadas(TAMANIO_SALAS));
     return new ModelAndView("home", modelo);
   }
 }

@@ -9,4 +9,5 @@ public interface RepositorioSala {
   List<Sala> listarSalas();
   Sala obtenerPorCodigoConJugadores(String codigo);
   List<Sala> listarSalasPublicasEnEspera();
+  List<Sala> listarSalasPublicasConLugar(int cantidad);
 }
