@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ranking del desafío diario</title>
+    <link rel="stylesheet"
+          th:href="@{/resources/core/css/desafio-diario.css}">
+
+    <style>
+        :root {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1f2937;
+            background: #f3f6fb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 32px 16px;
+        }
+
+        header,
+        main {
+            width: min(100%, 800px);
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            color: #243b6b;
+        }
+
+        main {
+            padding: 24px;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgb(31 41 55 / 9%);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5eaf1;
+            text-align: left;
+        }
+
+        th {
+            color: #334b7a;
+            background: #eef3fb;
+        }
+
+        tbody tr:hover {
+            background: #f8faff;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        nav a,
+        button {
+            display: inline-block;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 8px;
+            color: #fff;
+            background: #3157a4;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        nav a:hover,
+        button:hover {
+            background: #243f7a;
+        }
+
+        [role="alert"] {
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #842029;
+            background: #f8d7da;
+        }
+
+        label {
+            display: block;
+            margin: 12px 0;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 10px;
+            }
+
+            main {
+                padding: 16px;
+                overflow-x: auto;
+            }
+
+            th,
+            td {
+                padding: 10px 8px;
+            }
+        }
+
+
+        form {
+            margin-top: 24px;
+        }
+
+        input[type="radio"] {
+            margin-right: 10px;
+            accent-color: #3157a4;
+        }
+
+        form label {
+            padding: 12px 14px;
+            border: 1px solid #e5eaf1;
+            border-radius: 8px;
+            background: #f8faff;
+            cursor: pointer;
+        }
+
+        form label:hover {
+            border-color: #9aafd9;
+            background: #eef3fb;
+        }
+
+        article {
+            margin: 16px 0;
+            padding: 16px;
+            border: 1px solid #e5eaf1;
+            border-radius: 10px;
+        }
+
+        article h3 {
+            margin-top: 0;
+            color: #334b7a;
+        }
+
+        section {
+            margin-bottom: 24px;
+        }
+
+        input[type="hidden"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Ranking del desafío diario</h1>
+    <p>
+        Fecha:
+        <span th:text="${desafio.fecha}">2026-11-06</span>
+    </p>
+    <p>Se muestra la mejor partida de cada jugador.</p>
+</header>
+
+<main>
+    <p class="ranking-sin-resultados"
+       th:if="${ranking == null || ranking.isEmpty()}">
+        Todavía no hay resultados. ¡Sé la primera persona en completar el desafío!
+    </p>
+
+    <table class="ranking-tabla"
+           th:if="${ranking != null && !ranking.isEmpty()}">
+        <thead>
+        <tr>
+            <th scope="col">Posición</th>
+            <th scope="col">Jugador</th>
+            <th scope="col">Puntaje</th>
+            <th scope="col">Terminó</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="intento, estado : ${ranking}">
+            <td class="ranking-posicion" th:text="${estado.count}">1</td>
+            <td th:text="${intento.usuario.username}">Nombre de usuario</td>
+            <td class="ranking-puntaje">
+                <span th:text="${intento.puntaje}">5</span>
+                /
+                <span th:text="${desafio.preguntas.size()}">5</span>
+            </td>
+            <td th:text="${#temporals.format(intento.fechaFin, 'HH:mm:ss')}">
+                12:30:00
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <nav>
+        <a th:href="@{/desafio-diario}">Jugar de nuevo hoy</a>
+        <a th:href="@{/desafio-diario/historial}">Ver mi historial</a>
+    </nav>
+</main>
+</body>
+</html>
