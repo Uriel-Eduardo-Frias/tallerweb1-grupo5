@@ -4,7 +4,10 @@ import com.tallerwebi.dominio.enumeration.EstadoSala;
 import com.tallerwebi.dominio.modelo.Sala;
 import com.tallerwebi.dominio.repositorio.RepositorioSala;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -129,7 +132,7 @@ public class RepositorioSalaImpl implements RepositorioSala {
       .setParameter("codigos", codigos)
       .getResultList();
 
-    java.util.Map<String, Sala> mapaSalas = new java.util.HashMap<>();
+    Map<String, Sala> mapaSalas = new HashMap<>();
     for (Sala sala : salasDesordenadas) {
       mapaSalas.put(sala.getCodigo(), sala);
     }
