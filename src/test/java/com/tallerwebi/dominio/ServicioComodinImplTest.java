@@ -425,6 +425,67 @@ class ServicioComodinImplTest {
     verify(repositorioPartidaJugador).guardar(oponente);
   }
 
+  // --- TESTS NUEVA REGLA: MÁXIMO 1 COMODÍN POR RONDA ---
+
+  @Test
+  void jugadorNoPuedeUsarSegundoComodinEnLaMismaRonda() {
+    comodinConStock(TipoComodin.TIEMPO_EXTRA, 1);
+
+    Partida partida = mock(Partida.class);
+    PartidaRonda ronda = mock(PartidaRonda.class);
+    when(ronda.getId()).thenReturn(100L);
+    when(partida.obtenerRondaActual()).thenReturn(ronda);
+    when(repositorioPartida.obtenerPorIdConRondas(PARTIDA_ID)).thenReturn(partida);
+
+    when(jugador.yaUsoComodinEnRonda(100L)).thenReturn(true);
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> servicio.aplicarTiempoExtra(PARTIDA_ID, USUARIO_ID)
+    );
+  }
+
+  @Test
+  void jugadorPuedeUsarComodinEnNuevaRonda() {
+    PartidaJugadorComodin pjc = comodinConStock(TipoComodin.TIEMPO_EXTRA, 1);
+
+    Partida partida = mock(Partida.class);
+    PartidaRonda ronda = mock(PartidaRonda.class);
+    when(ronda.getId()).thenReturn(101L);
+    when(partida.obtenerRondaActual()).thenReturn(ronda);
+    when(repositorioPartida.obtenerPorIdConRondas(PARTIDA_ID)).thenReturn(partida);
+
+    when(jugador.yaUsoComodinEnRonda(101L)).thenReturn(false);
+
+    int segundos = servicio.aplicarTiempoExtra(PARTIDA_ID, USUARIO_ID);
+
+    assertEquals(10, segundos);
+    verify(pjc).setCantidadDisponible(0);
+    verify(jugador).setComodinUsadoRondaId(101L);
+    verify(repositorioPartidaJugador).guardar(jugador);
+  }
+
+  @Test
+  void tieneComodinDisponibleDevuelveFalseSiYaUsoUnoEnLaRonda() {
+    comodinConStock(TipoComodin.TIEMPO_EXTRA, 1);
+
+    Partida partida = mock(Partida.class);
+    PartidaRonda ronda = mock(PartidaRonda.class);
+    when(ronda.getId()).thenReturn(100L);
+    when(partida.obtenerRondaActual()).thenReturn(ronda);
+    when(repositorioPartida.obtenerPorIdConRondas(PARTIDA_ID)).thenReturn(partida);
+
+    when(jugador.yaUsoComodinEnRonda(100L)).thenReturn(true);
+
+    boolean disponible = servicio.tieneComodinDisponible(
+      PARTIDA_ID,
+      USUARIO_ID,
+      TipoComodin.TIEMPO_EXTRA
+    );
+
+    assertFalse(disponible);
+  }
+
   private Opcion opcion(Long id, Boolean esCorrecta) {
     Opcion opcionMock = mock(Opcion.class);
     when(opcionMock.getId()).thenReturn(id);

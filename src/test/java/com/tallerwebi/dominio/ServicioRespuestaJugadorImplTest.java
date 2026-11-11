@@ -1,20 +1,33 @@
 package com.tallerwebi.dominio;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.excepcion.JugadorBloqueadoException;
 import com.tallerwebi.dominio.excepcion.PrimerIntentoFallidoDobleChanceException;
 import com.tallerwebi.dominio.excepcion.RespuestaDuplicadaException;
-import com.tallerwebi.dominio.modelo.*;
+import com.tallerwebi.dominio.modelo.Opcion;
+import com.tallerwebi.dominio.modelo.Partida;
+import com.tallerwebi.dominio.modelo.PartidaJugador;
+import com.tallerwebi.dominio.modelo.PartidaRonda;
+import com.tallerwebi.dominio.modelo.Pregunta;
+import com.tallerwebi.dominio.modelo.RespuestaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioOpcion;
 import com.tallerwebi.dominio.repositorio.RepositorioPartidaJugador;
 import com.tallerwebi.dominio.repositorio.RepositorioRespuestaJugador;
 import com.tallerwebi.dominio.servicio.ServicioPartida;
 import com.tallerwebi.dominio.servicio.impl.ServicioRespuestaJugadorImpl;
 import java.time.LocalDateTime;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ServicioRespuestaJugadorImplTest {
 
@@ -30,7 +43,7 @@ public class ServicioRespuestaJugadorImplTest {
   private Opcion opcion;
   private PartidaJugador jugador;
 
-  @Before
+  @BeforeEach
   public void preparar() {
     servicioPartida = mock(ServicioPartida.class);
     repositorioOpcion = mock(RepositorioOpcion.class);

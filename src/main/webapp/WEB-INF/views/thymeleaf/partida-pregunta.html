@@ -41,13 +41,12 @@
         <!-- SECCIÓN DE COMODINES -->
         <div class="card bg-white p-3 mb-4 border" th:if="${!yaRespondio}">
             <p class="text-muted small mb-2 fw-bold text-center">
-                COMODINES DE LA PARTIDA
+                COMODINES DE LA PARTIDA (MÁXIMO 1 POR RONDA)
                 <span th:if="${nivelJugador != null}">(NIVEL <span th:text="${nivelJugador}">1</span>)</span>
             </p>
 
             <!-- 1. Comodines para MODO TRADICIONAL (TURNO_TODOS) -->
             <div th:if="${partida.modoJuego.name() == 'TURNO_TODOS'}" class="d-flex justify-content-center gap-3 flex-wrap">
-                <!-- 50/50: Se desbloquea en Nivel 3 -->
                 <button type="button"
                         id="btn5050"
                         th:disabled="${!puede5050}"
@@ -56,10 +55,9 @@
                         onclick="usar5050()">
                     50/50 (-5s)
                     <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge bg-secondary ms-1">Bloqueado (Nvl 3)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puede5050}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puede5050}" class="badge bg-dark ms-1">No disp.</span>
                 </button>
 
-                <!-- +10s: Disponible desde Nivel 1 -->
                 <button type="button"
                         id="btnTiempoExtra"
                         th:disabled="${!puedeTiempo}"
@@ -67,10 +65,9 @@
                         class="btn btn-sm fw-bold px-3 py-2"
                         onclick="usarTiempoExtra()">
                     +10s
-                    <span th:if="${!puedeTiempo}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${!puedeTiempo}" class="badge bg-dark ms-1">No disp.</span>
                 </button>
 
-                <!-- Doble Chance: Se desbloquea en Nivel 2 -->
                 <button type="button"
                         id="btnDobleChance"
                         th:disabled="${!puedeDobleChance}"
@@ -79,13 +76,12 @@
                         onclick="usarDobleChance()">
                     2x Chance
                     <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge bg-secondary ms-1">Bloqueado (Nvl 2)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeDobleChance}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeDobleChance}" class="badge bg-dark ms-1">No disp.</span>
                 </button>
             </div>
 
-            <!-- 2. Comodines para MODO RÁPIDO (PRIMERO_GANA) CON NIVELES -->
+            <!-- 2. Comodines para MODO RÁPIDO (PRIMERO_GANA) -->
             <div th:if="${partida.modoJuego.name() == 'PRIMERO_GANA'}" class="d-flex justify-content-center gap-3 flex-wrap">
-                <!-- Borroso: Disponible desde Nivel 1 -->
                 <button type="button"
                         id="btnBorroso"
                         th:disabled="${!puedeBorroso}"
@@ -93,10 +89,9 @@
                         class="btn btn-sm fw-bold px-3 py-2"
                         onclick="usarBorroso()">
                     💨 Borroso (5s)
-                    <span th:if="${!puedeBorroso}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${!puedeBorroso}" class="badge bg-dark ms-1">No disp.</span>
                 </button>
 
-                <!-- Mezclar: Se desbloquea en Nivel 2 -->
                 <button type="button"
                         id="btnMezclar"
                         th:disabled="${!puedeMezclar}"
@@ -105,10 +100,9 @@
                         onclick="usarMezclar()">
                     🔀 Mezclar
                     <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge bg-secondary ms-1">Bloqueado (Nvl 2)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeMezclar}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeMezclar}" class="badge bg-dark ms-1">No disp.</span>
                 </button>
 
-                <!-- Bloqueo: Se desbloquea en Nivel 3 -->
                 <button type="button"
                         id="btnBloqueo"
                         th:disabled="${!puedeBloqueo}"
@@ -117,7 +111,7 @@
                         onclick="usarBloqueo()">
                     🧊 Bloqueo (10s)
                     <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge bg-secondary ms-1">Bloqueado (Nvl 3)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puedeBloqueo}" class="badge bg-dark ms-1">Usado</span>
+                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puedeBloqueo}" class="badge bg-dark ms-1">No disp.</span>
                 </button>
             </div>
 
@@ -225,89 +219,136 @@
         }
     }
 
-    function desactivarBotonComodin(btnId) {
-        const btn = document.getElementById(btnId);
-        if (!btn) return;
-        btn.disabled = true;
-        btn.classList.remove("btn-outline-warning", "btn-outline-info", "btn-outline-primary", "btn-outline-dark");
-        btn.classList.add("btn-secondary", "opacity-50", "pe-none");
-        btn.innerHTML += ' <span class="badge bg-dark ms-1">Usado</span>';
+    function desactivarTodosLosComodines(comodinUsadoId) {
+        const ids = ["btn5050", "btnTiempoExtra", "btnDobleChance", "btnBorroso", "btnMezclar", "btnBloqueo"];
+        ids.forEach(id => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.disabled = true;
+            btn.classList.remove("btn-outline-warning", "btn-outline-info", "btn-outline-primary", "btn-outline-dark");
+            btn.classList.add("btn-secondary", "opacity-50", "pe-none");
+            if (id === comodinUsadoId) {
+                if (!btn.innerHTML.includes("Usado")) {
+                    btn.innerHTML += ' <span class="badge bg-dark ms-1">Usado</span>';
+                }
+            } else {
+                if (!btn.innerHTML.includes("Bloqueado")) {
+                    btn.innerHTML += ' <span class="badge bg-secondary ms-1">Bloqueado (1/ronda)</span>';
+                }
+            }
+        });
     }
 
     // --- COMODINES MODO TRADICIONAL ---
     function usar5050() {
         const url = /*[[@{/partida/{id}/comodin/50-50(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
-            .then(res => res.ok ? res.json() : null)
+            .then(async res => {
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.error || "No se pudo aplicar el comodín.");
+                }
+                return res.json();
+            })
             .then(data => {
-                if (!data) return;
                 data.opcionesDescartadas.forEach(id => {
                     const btnOpcion = document.getElementById("opcion-" + id);
                     if (btnOpcion) btnOpcion.style.display = "none";
                 });
                 tiempoRestante = Math.max(2, tiempoRestante - data.penalizacionSegundos);
                 actualizarCronometroVisual();
-                desactivarBotonComodin("btn5050");
+                desactivarTodosLosComodines("btn5050");
                 mostrarMensajeComodin("50/50 aplicado: 2 opciones descartadas (-" + data.penalizacionSegundos + "s)");
-            });
+            })
+            .catch(err => mostrarMensajeComodin(err.message));
     }
 
     function usarTiempoExtra() {
         const url = /*[[@{/partida/{id}/comodin/tiempo-extra(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
-            .then(res => res.ok ? res.json() : null)
+            .then(async res => {
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.error || "No se pudo aplicar el comodín.");
+                }
+                return res.json();
+            })
             .then(data => {
-                if (!data) return;
                 tiempoRestante += data.segundosExtra;
                 actualizarCronometroVisual();
-                desactivarBotonComodin("btnTiempoExtra");
+                desactivarTodosLosComodines("btnTiempoExtra");
                 mostrarMensajeComodin("¡+10 segundos agregados al cronómetro!");
-            });
+            })
+            .catch(err => mostrarMensajeComodin(err.message));
     }
 
     function usarDobleChance() {
         const url = /*[[@{/partida/{id}/comodin/doble-chance(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (!data) return;
-                desactivarBotonComodin("btnDobleChance");
+            .then(async res => {
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.error || "No se pudo aplicar el comodín.");
+                }
+                return res.json();
+            })
+            .then(() => {
+                desactivarTodosLosComodines("btnDobleChance");
                 mostrarMensajeComodin("Doble Chance activa: tendrás un intento extra si fallas");
-            });
+            })
+            .catch(err => mostrarMensajeComodin(err.message));
     }
 
     // --- COMODINES MODO RÁPIDO ---
     function usarBloqueo() {
         const url = /*[[@{/partida/{id}/comodin/bloqueo(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (!data) return;
-                desactivarBotonComodin("btnBloqueo");
+            .then(async res => {
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.error || "No se pudo aplicar el comodín.");
+                }
+                return res.json();
+            })
+            .then(() => {
+                desactivarTodosLosComodines("btnBloqueo");
                 mostrarMensajeComodin("¡Has congelado al oponente por 10 segundos!");
-            });
+            })
+            .catch(err => mostrarMensajeComodin(err.message));
     }
 
     function usarBorroso() {
         const url = /*[[@{/partida/{id}/comodin/borroso(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (!data) return;
-                desactivarBotonComodin("btnBorroso");
+            .then(async res => {
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.error || "No se pudo aplicar el comodín.");
+                }
+                return res.json();
+            })
+            .then(() => {
+                desactivarTodosLosComodines("btnBorroso");
                 mostrarMensajeComodin("¡Has nublado la pantalla del rival por 5 segundos!");
-            });
+            })
+            .catch(err => mostrarMensajeComodin(err.message));
     }
 
     function usarMezclar() {
         const url = /*[[@{/partida/{id}/comodin/mezclar(id=${partida.id})}]]*/ "";
         fetch(url, { method: "POST" })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (!data) return;
-                desactivarBotonComodin("btnMezclar");
+            .then(async res => {
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.error || "No se pudo aplicar el comodín.");
+                }
+                return res.json();
+            })
+            .then(() => {
+                desactivarTodosLosComodines("btnMezclar");
                 mostrarMensajeComodin("¡Has mezclado las opciones del rival!");
-            });
+            })
+            .catch(err => mostrarMensajeComodin(err.message));
     }
 
     // --- EFECTOS RECIBIDOS DEL OPONENTE ---

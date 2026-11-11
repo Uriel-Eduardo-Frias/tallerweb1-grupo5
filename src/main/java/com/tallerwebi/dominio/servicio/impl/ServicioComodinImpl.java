@@ -162,10 +162,16 @@ public class ServicioComodinImpl implements ServicioComodin {
       if (comodinJugador == null) {
         comodinJugador = obtenerOCrearComodinDeJugador(jugador, tipo);
       }
-      return (
-        comodinJugador != null &&
-        comodinJugador.getCantidadDisponible() > CANTIDAD_MINIMA_DISPONIBLE
-      );
+      if (
+        comodinJugador == null ||
+        comodinJugador.getCantidadDisponible() <= CANTIDAD_MINIMA_DISPONIBLE
+      ) {
+        return false;
+      }
+      if (yaUsoComodinEnRondaActual(jugador, partidaId)) {
+        return false;
+      }
+      return true;
     } catch (Exception excepcion) {
       return false;
     }
@@ -203,11 +209,10 @@ public class ServicioComodinImpl implements ServicioComodin {
     consumirComodinValido(partidaId, usuarioId, TipoComodin.DOBLE_CHANCE);
 
     Partida partida = repositorioPartida.obtenerPorIdConRondas(partidaId);
-    PartidaJugador jugador = obtenerJugador(partidaId, usuarioId);
-    PartidaRonda ronda = partida.obtenerRondaActual();
-
-    jugador.setDobleChanceRondaId(ronda.getId());
-    repositorioPartidaJugador.guardar(jugador);
+    if (partida != null && partida.obtenerRondaActual() != null) {
+      PartidaJugador jugador = obtenerJugador(partidaId, usuarioId);
+      jugador.setDobleChanceRondaId(partida.obtenerRondaActual().getId());
+    }
   }
 
   @Override
@@ -264,6 +269,27 @@ public class ServicioComodinImpl implements ServicioComodin {
     }
   }
 
+  private boolean yaUsoComodinEnRondaActual(PartidaJugador jugador, Long partidaId) {
+    Partida partida = repositorioPartida.obtenerPorIdConRondas(partidaId);
+    if (partida == null) {
+      return false;
+    }
+    PartidaRonda rondaActual = partida.obtenerRondaActual();
+    return rondaActual != null && jugador.yaUsoComodinEnRonda(rondaActual.getId());
+  }
+
+  private void registrarComodinUsadoEnRonda(PartidaJugador jugador, Long partidaId) {
+    Partida partida = repositorioPartida.obtenerPorIdConRondas(partidaId);
+    if (partida == null) {
+      return;
+    }
+    PartidaRonda rondaActual = partida.obtenerRondaActual();
+    if (rondaActual != null) {
+      jugador.setComodinUsadoRondaId(rondaActual.getId());
+      repositorioPartidaJugador.guardar(jugador);
+    }
+  }
+
   private PartidaJugadorComodin consumirComodinValido(
     Long partidaId,
     Long usuarioId,
@@ -290,9 +316,16 @@ public class ServicioComodinImpl implements ServicioComodin {
       throw new IllegalStateException("El comodín " + tipo + " ya fue utilizado en esta partida.");
     }
 
+    if (yaUsoComodinEnRondaActual(jugador, partidaId)) {
+      throw new IllegalStateException("Solo puedes utilizar 1 comodín por ronda.");
+    }
+
     comodinJugador.setCantidadDisponible(comodinJugador.getCantidadDisponible() - 1);
     comodinJugador.setVecesUsado(comodinJugador.getVecesUsado() + 1);
     repositorioComodin.actualizar(comodinJugador);
+
+    registrarComodinUsadoEnRonda(jugador, partidaId);
+
     return comodinJugador;
   }
 

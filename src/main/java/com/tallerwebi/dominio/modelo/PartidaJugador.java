@@ -1,6 +1,15 @@
 package com.tallerwebi.dominio.modelo;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,6 +44,10 @@ public class PartidaJugador {
   // Fecha y hora hasta la que el jugador está bloqueado (10 segundos)
   @Column(name = "bloqueado_hasta")
   private LocalDateTime bloqueadoHasta;
+
+  // Ronda en la que el jugador ya utilizó un comodín
+  @Column(name = "comodin_usado_ronda_id")
+  private Long comodinUsadoRondaId;
 
   public PartidaJugador() {}
 
@@ -108,7 +121,17 @@ public class PartidaJugador {
     return bloqueadoHasta != null && LocalDateTime.now().isBefore(bloqueadoHasta);
   }
 
-  // Delegados: mantienen la API anterior para no romper código existente
+  public Long getComodinUsadoRondaId() {
+    return comodinUsadoRondaId;
+  }
+
+  public void setComodinUsadoRondaId(Long comodinUsadoRondaId) {
+    this.comodinUsadoRondaId = comodinUsadoRondaId;
+  }
+
+  public boolean yaUsoComodinEnRonda(Long rondaId) {
+    return rondaId != null && rondaId.equals(this.comodinUsadoRondaId);
+  }
 
   public int getPuntajeAcumulado() {
     return estadisticas.getPuntajeAcumulado();
