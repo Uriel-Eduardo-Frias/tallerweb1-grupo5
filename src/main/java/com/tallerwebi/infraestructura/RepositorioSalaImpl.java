@@ -91,8 +91,6 @@ public class RepositorioSalaImpl implements RepositorioSala {
       return List.of();
     }
 
-    // Las que menos jugadores necesitan para completarse van primero.
-    // Si hay empate, desempata al azar para que roten.
     String hqlCodigos =
       """
       SELECT s.codigo
