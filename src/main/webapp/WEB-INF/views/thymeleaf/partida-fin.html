@@ -1,111 +1,112 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Resultado final - TRIVIA</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light p-4">
+<head th:replace="~{header :: head('Resultado Final')}"></head>
+<body>
 
-<!-- NUEVO: pantalla final. Todo sale de ${resultado} (ResultadoPartida), leído desde la base. -->
-<div class="container text-center" style="max-width: 720px;">
-    <div class="card p-4 shadow-sm">
+<header th:replace="~{header :: navbar}"></header>
 
-        <h1 class="mb-3">TRIVIA</h1>
-        <h2 class="mb-4">Resultado final</h2>
+<main class="main-content" style="display: flex; flex-direction: column; gap: 2rem;">
 
-        <!-- Ganador o empate -->
-        <div class="alert alert-success mb-4">
-            <div th:if="${!resultado.hayEmpate}">
-                <h3 class="mb-1">🏆 ¡Ganó <strong th:text="${resultado.nombresGanadores}">Jugador</strong>!</h3>
-            </div>
-            <div th:if="${resultado.hayEmpate}">
-                <h3 class="mb-1">🤝 ¡Empate!</h3>
-                <p class="mb-0">
-                    Comparten el primer puesto:
-                    <strong th:text="${resultado.nombresGanadores}">Jugadores</strong>
-                </p>
+    <!-- TARJETA DE PODIO Y ACCIONES -->
+    <div class="card" style="text-align: center;">
+
+        <!-- Mensaje de ganador / empate -->
+        <div th:if="${!resultado.hayEmpate}" style="margin-bottom: 0.5rem;">
+            <span class="badge badge-success">
+                <i class="fa-solid fa-trophy"></i> ¡Ganó <strong th:text="${resultado.nombresGanadores}">Jugador</strong>!
+            </span>
+        </div>
+        <div th:if="${resultado.hayEmpate}" style="margin-bottom: 0.5rem;">
+            <span class="badge badge-warning">
+                <i class="fa-solid fa-handshake"></i> ¡Empate en el primer puesto: <strong th:text="${resultado.nombresGanadores}">Jugadores</strong>!
+            </span>
+        </div>
+
+        <!-- PODIO (Top 3 desde resultado.jugadores) -->
+        <div class="podium-container" style="margin: 2rem 0 1.5rem 0;">
+            <div th:each="jugador : ${resultado.jugadores}"
+                 th:if="${jugador.posicion <= 3}"
+                 class="podium-place"
+                 th:classappend="${jugador.posicion == 1} ? 'podium-first' : (${jugador.posicion == 2} ? 'podium-second' : 'podium-third')">
+
+                <div class="podium-avatar">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <div class="podium-name" th:text="${jugador.nombre}">Jugador</div>
+                <div class="podium-pts">
+                    <span th:text="${jugador.puntaje}">0</span> pts
+                </div>
+                <div class="podium-pillar" th:text="${jugador.posicion}">1</div>
             </div>
         </div>
 
-        <!-- Ranking -->
-        <div class="table-responsive mb-4">
-            <table class="table table-striped align-middle">
+        <!-- BOTONERA DE ACCIONES -->
+        <div class="final-actions" style="flex-direction: column; gap: 0.8rem;">
+            <div id="zonaRevancha" aria-live="polite"></div>
+            <a th:href="@{/salas}" class="btn btn-outline">Volver a las Salas</a>
+        </div>
+
+        <!-- Datos resumidos de la partida -->
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 1.5rem;">
+            Rondas jugadas: <strong th:text="${resultado.rondasJugadas}">5</strong> / <strong th:text="${resultado.totalRondas}">5</strong>
+            · Duración: <strong th:text="${resultado.duracion}">0 min 0 s</strong>
+        </p>
+    </div>
+
+    <!-- TARJETA DE DESGLOSE DE RENDIMIENTO -->
+    <div class="card">
+        <h2 class="card-title">Desglose de Rendimiento de la Partida</h2>
+
+        <div style="overflow-x: auto;">
+            <table class="styled-table">
                 <thead>
                 <tr>
-                    <th>#</th>
-                    <th class="text-start">Jugador</th>
+                    <th>Puesto</th>
+                    <th>Jugador</th>
                     <th>Puntaje</th>
                     <th>Aciertos</th>
                     <th>Errores</th>
-                    <th>Mejor racha</th>
+                    <th>Racha en Partida</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="jugador : ${resultado.jugadores}"
-                    th:classappend="${jugador.esUsuarioActual} ? 'table-primary fw-bold'">
-                    <td>
-                        <span th:if="${jugador.posicion == 1}">🥇</span>
-                        <span th:if="${jugador.posicion == 2}">🥈</span>
-                        <span th:if="${jugador.posicion == 3}">🥉</span>
-                        <span th:if="${jugador.posicion > 3}" th:text="${jugador.posicion}">4</span>
+                    th:style="${jugador.esUsuarioActual} ? 'background: #F5F3FF;' : ''">
+                    <td style="font-weight: 800;">
+                        #<span th:text="${jugador.posicion}">1</span>
                     </td>
-                    <td class="text-start">
+                    <td style="font-weight: 600;">
+                        <i class="fa-solid fa-circle-user" style="color: var(--primary); margin-right: 0.4rem;"></i>
                         <span th:text="${jugador.nombre}">Jugador</span>
-                        <span th:if="${jugador.esUsuarioActual}" class="badge bg-primary ms-1">Vos</span>
+                        <span th:if="${jugador.esUsuarioActual}" class="badge badge-purple" style="margin-left: 0.4rem;">Vos</span>
                     </td>
-                    <td th:text="${jugador.puntaje}">0</td>
-                    <td th:text="${jugador.aciertos}">0</td>
-                    <td th:text="${jugador.errores}">0</td>
-                    <td th:text="${jugador.mejorRacha}">0</td>
+                    <td>
+                        <span class="badge badge-purple">
+                            <span th:text="${jugador.puntaje}">0</span> pts
+                        </span>
+                    </td>
+                    <td style="color: var(--success); font-weight: 700;" th:text="${jugador.aciertos}">0</td>
+                    <td style="color: var(--danger); font-weight: 700;" th:text="${jugador.errores}">0</td>
+                    <td>
+                        <span class="badge badge-warning">
+                            <span th:text="${jugador.mejorRacha}">0</span> <i class="fa-solid fa-fire"></i>
+                        </span>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Mis estadísticas -->
-        <div th:if="${resultado.miResultado != null}" class="mb-4">
-            <h4 class="mb-3">Tu partida</h4>
-            <p class="mb-1">
-                Terminaste en el puesto
-                <strong th:text="${resultado.miResultado.posicion}">1</strong>
-                con <strong th:text="${resultado.miResultado.puntaje}">0</strong> puntos.
-            </p>
-            <p class="text-muted mb-0">
-                <span th:text="${resultado.miResultado.aciertos}">0</span> aciertos,
-                <span th:text="${resultado.miResultado.errores}">0</span> errores,
-                mejor racha de
-                <span th:text="${resultado.miResultado.mejorRacha}">0</span>.
-            </p>
-        </div>
-
-        <!-- Datos de la partida -->
-        <p class="text-muted small">
-            Rondas jugadas:
-            <span th:text="${resultado.rondasJugadas}">5</span>
-            /
-            <span th:text="${resultado.totalRondas}">5</span>
-            · Duración:
-            <span th:text="${resultado.duracion}">0 min 0 s</span>
-        </p>
-
-        <!-- NUEVO: revancha. Lo completa el script de abajo según el estado (host / jugador / ya creada). -->
-        <div id="zonaRevancha" class="mt-2 mb-2" aria-live="polite"></div>
-
-        <a th:href="@{/salas}" class="btn btn-primary mt-2">Volver a las salas</a>
     </div>
-</div>
 
-<!-- NUEVO: revancha rápida -->
+</main>
+
+<!-- REVANCHA RÁPIDA -->
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
 <script th:inline="javascript">
     (function () {
         const urlBasePartida = /*[[@{/partida}]]*/ "/partida";
         const urlWs = /*[[@{/ws}]]*/ "/ws";
 
-        // Esta vista no recibe el id de la partida en el modelo: se toma de la URL (/partida/{id}/fin).
         const coincidencia = window.location.pathname.match(/\/partida\/(\d+)\/fin/);
         const zonaRevancha = document.getElementById("zonaRevancha");
 
@@ -120,11 +121,10 @@
             const formulario = document.createElement("form");
             formulario.action = accion;
             formulario.method = "POST";
-            formulario.className = "d-inline";
 
             const boton = document.createElement("button");
             boton.type = "submit";
-            boton.className = "btn btn-success";
+            boton.className = "btn btn-primary";
             boton.textContent = texto;
 
             formulario.appendChild(boton);
@@ -132,8 +132,9 @@
         }
 
         function crearMensajeEspera() {
-            const mensaje = document.createElement("p");
-            mensaje.className = "text-muted small mb-0";
+            const mensaje = document.createElement("span");
+            mensaje.style.color = "var(--text-muted)";
+            mensaje.style.fontSize = "0.9rem";
             mensaje.textContent = "Esperando a que el anfitrión inicie la revancha...";
             return mensaje;
         }
@@ -144,7 +145,7 @@
             if (estado.salaRevanchaCodigo) {
                 zonaRevancha.appendChild(crearFormulario(urlRevancha + "/unirse", "Ir a la revancha"));
             } else if (estado.esHost) {
-                zonaRevancha.appendChild(crearFormulario(urlRevancha, "🔄 Jugar de nuevo"));
+                zonaRevancha.appendChild(crearFormulario(urlRevancha, "Jugar de nuevo"));
             } else {
                 zonaRevancha.appendChild(crearMensajeEspera());
             }

@@ -514,3 +514,240 @@ body {
 }
 
 .logro-fecha { color: var(--text-muted); font-size: 0.75rem; }
+
+/* =========================================================
+   13. ADAPTACIÓN DE VISTAS DE PARTIDA (PREGUNTA, VOTACIÓN, RESULTADOS)
+========================================================= */
+.game-single-column {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.game-top-bar {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.game-top-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.timer-readout {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-weight: 800;
+    font-size: 1.6rem;
+    color: var(--danger);
+}
+
+.timer-readout small {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.powerup-btn.used-or-locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: #F1F2F6;
+}
+
+/* Grilla de votación con íconos y colores por categoría */
+.voting-card-wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2.5rem 2rem;
+}
+
+.voting-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .voting-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.category-card-vote {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 175px;
+    padding: 1.5rem 1.2rem;
+    background: #FFF;
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-card-vote:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+}
+
+.category-card-vote i {
+    font-size: 2.3rem;
+    margin-bottom: 0.3rem;
+}
+
+.category-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.category-desc {
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+.cat-arte { border-color: #F1C40F; }
+.cat-arte i { color: #F1C40F; }
+
+.cat-ciencia { border-color: #2ECC71; }
+.cat-ciencia i { color: #2ECC71; }
+
+.cat-deportes { border-color: #E74C3C; }
+.cat-deportes i { color: #E74C3C; }
+
+.cat-entretenimiento { border-color: #9B59B6; }
+.cat-entretenimiento i { color: #9B59B6; }
+
+.cat-geografia { border-color: #3498DB; }
+.cat-geografia i { color: #3498DB; }
+
+.cat-historia { border-color: #E67E22; }
+.cat-historia i { color: #E67E22; }
+
+.cat-default { border-color: var(--primary); }
+.cat-default i { color: var(--primary); }
+
+/* Tarjeta unificada de resultado de ronda */
+.result-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.evaluation-card {
+    background: #FFF;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.evaluation-card.is-correct {
+    background: #F4FBF8;
+    border-color: var(--success);
+}
+
+.evaluation-card.is-incorrect {
+    background: #FFF6F6;
+    border-color: var(--danger);
+}
+
+.result-title-correct {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--success);
+    margin-bottom: 0.4rem;
+}
+
+.result-title-incorrect {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--danger);
+    margin-bottom: 0.4rem;
+}
+
+/* Podio y acciones finales */
+.podium-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #F1EFFF;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    border: 3px solid var(--border-color);
+    margin-bottom: 0.5rem;
+}
+
+.podium-first .podium-avatar { border-color: #F1C40F; }
+.podium-second .podium-avatar { border-color: #BDC3C7; }
+.podium-third .podium-avatar { border-color: #E67E22; }
+
+.podium-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+.podium-pts {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--primary);
+    margin-bottom: 0.6rem;
+}
+
+.final-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.connection-status {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 1.2rem;
+}
+
+.alert-box {
+    padding: 0.9rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1.2rem;
+}
+
+.alert-box-info { background: #EBF3FC; color: var(--info); }
+.alert-box-warning { background: #FEF6E4; color: #D48806; }
+.alert-box-danger { background: #FFEAEA; color: var(--danger); }
+.d-none { display: none !important; }

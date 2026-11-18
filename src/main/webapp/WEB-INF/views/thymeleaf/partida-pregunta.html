@@ -1,168 +1,172 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pregunta - TRIVIA</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light p-4">
+<head th:replace="~{header :: head('Pregunta')}"></head>
+<body>
 
-<div class="container" style="max-width: 700px;">
-    <div class="card shadow-sm p-4">
+<header th:replace="~{header :: navbar}"></header>
 
-        <h1 class="text-center mb-3">TRIVIA</h1>
+<main class="main-content">
+    <div class="game-single-column">
 
-        <h5 class="text-center text-secondary mb-3">
-            Ronda <span th:text="${ronda.numero}">1</span>
-            / <span th:text="${partida.totalRondas}">5</span>
-        </h5>
-
-        <div class="mb-3" th:if="${!yaRespondio}">
-            <div class="d-flex justify-content-between mb-1 small fw-bold">
-                <span>Tiempo restante</span>
-                <span><span id="segundosRestantes">15</span>s</span>
+        <!-- BARRA SUPERIOR DE ESTADO -->
+        <div class="game-top-bar">
+            <div class="game-top-badges">
+                <span class="badge badge-purple">
+                    Ronda <span th:text="${ronda.numero}">1</span> / <span th:text="${partida.totalRondas}">5</span>
+                </span>
+                <span class="badge badge-info"
+                      th:text="${partida.modoJuego.name() == 'TURNO_TODOS'} ? 'Turno de Todos' : 'Primero Gana'">
+                    Turno de Todos
+                </span>
+                <span class="round-status" th:text="${yaRespondio} ? 'RESPUESTA ENVIADA' : 'PREGUNTA ACTIVA'">
+                    PREGUNTA ACTIVA
+                </span>
             </div>
-            <div class="progress" style="height: 18px;">
-                <div id="barraTiempo"
-                     class="progress-bar bg-warning progress-bar-striped progress-bar-animated text-dark fw-bold"
-                     style="width: 100%;">
+
+            <div class="timer-readout" th:if="${!yaRespondio}">
+                <span id="segundosRestantes">15</span><small>s</small>
+            </div>
+        </div>
+
+        <!-- TARJETA PRINCIPAL DE PREGUNTA -->
+        <div class="question-card">
+
+            <!-- BARRA DE TIEMPO -->
+            <div class="timer-bar-container" style="margin-bottom: 1.8rem;" th:if="${!yaRespondio}">
+                <div id="barraTiempo" class="timer-bar" style="width: 100%;"></div>
+            </div>
+
+            <!-- CATEGORÍA -->
+            <div th:if="${pregunta.categoria != null}">
+                <span class="category-tag" style="background: var(--info);" th:text="${pregunta.categoria.nombre}">
+                    Categoría
+                </span>
+            </div>
+
+            <!-- ENUNCIADO -->
+            <h2 class="question-text" th:text="${pregunta.descripcion}">Enunciado de la pregunta</h2>
+
+            <!-- ALERTAS DE ESTADO -->
+            <div th:if="${falloPrimerIntentoDobleChance}" class="alert-box alert-box-warning">
+                ⚠️ ¡Respuesta incorrecta! Gracias a tu <strong>Doble Chance</strong> tenés un segundo intento. ¡Elegí otra opción!
+            </div>
+
+            <div th:if="${errorBloqueo}" class="alert-box alert-box-danger" th:text="${errorBloqueo}">
+                🧊 ¡Estás congelado por un comodín!
+            </div>
+
+            <!-- FORMULARIO DE OPCIONES (2x2 con letras A, B, C, D) -->
+            <form id="formRespuesta"
+                  th:if="${!yaRespondio}"
+                  th:action="@{/partida/{id}/responder(id=${partida.id})}"
+                  method="POST"
+                  class="options-grid"
+                  style="transition: filter 0.3s ease;">
+                <button th:each="opcion, iterStat : ${pregunta.opciones}"
+                        type="submit"
+                        name="opcionId"
+                        th:id="'opcion-' + ${opcion.id}"
+                        th:value="${opcion.id}"
+                        th:disabled="${opcionFalladaId != null and opcionFalladaId == opcion.id}"
+                        th:classappend="${opcionFalladaId != null and opcionFalladaId == opcion.id} ? 'incorrect' : ''"
+                        class="option-btn boton-opcion">
+                    <span class="option-letter"
+                          th:text="${#strings.substring('ABCDEFGH', iterStat.index, iterStat.index + 1)}">A</span>
+                    <span th:text="${opcion.texto}" style="flex: 1;">Opción de respuesta</span>
+                </button>
+            </form>
+
+            <form id="formTiempoAgotado"
+                  th:if="${!yaRespondio}"
+                  th:action="@{/partida/{id}/tiempo-agotado(id=${partida.id})}"
+                  method="POST"
+                  style="display: none;">
+            </form>
+
+            <!-- SECCIÓN DE COMODINES -->
+            <div th:if="${!yaRespondio}">
+                <!-- 1. MODO TRADICIONAL (TURNO_TODOS) -->
+                <div th:if="${partida.modoJuego.name() == 'TURNO_TODOS'}" class="powerups-bar" style="flex-wrap: wrap;">
+                    <button type="button"
+                            id="btn5050"
+                            th:disabled="${!puede5050}"
+                            th:classappend="${!puede5050} ? 'used-or-locked' : ''"
+                            class="powerup-btn"
+                            onclick="usar5050()">
+                        50/50 (-5s)
+                        <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge badge-danger">Nvl 3</span>
+                        <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puede5050}" class="badge">No disp.</span>
+                    </button>
+
+                    <button type="button"
+                            id="btnTiempoExtra"
+                            th:disabled="${!puedeTiempo}"
+                            th:classappend="${!puedeTiempo} ? 'used-or-locked' : ''"
+                            class="powerup-btn"
+                            onclick="usarTiempoExtra()">
+                        +10s
+                        <span th:if="${!puedeTiempo}" class="badge">No disp.</span>
+                    </button>
+
+                    <button type="button"
+                            id="btnDobleChance"
+                            th:disabled="${!puedeDobleChance}"
+                            th:classappend="${!puedeDobleChance} ? 'used-or-locked' : ''"
+                            class="powerup-btn"
+                            onclick="usarDobleChance()">
+                        2x Chance
+                        <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge badge-danger">Nvl 2</span>
+                        <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeDobleChance}" class="badge">No disp.</span>
+                    </button>
                 </div>
-            </div>
-        </div>
 
-        <div class="text-end mb-3" th:if="${pregunta.categoria != null}">
-            <span class="badge bg-info text-dark fs-6" th:text="${pregunta.categoria.nombre}">Categoría</span>
-        </div>
+                <!-- 2. MODO RÁPIDO (PRIMERO_GANA) -->
+                <div th:if="${partida.modoJuego.name() == 'PRIMERO_GANA'}" class="powerups-bar" style="flex-wrap: wrap;">
+                    <button type="button"
+                            id="btnBorroso"
+                            th:disabled="${!puedeBorroso}"
+                            th:classappend="${!puedeBorroso} ? 'used-or-locked' : ''"
+                            class="powerup-btn"
+                            onclick="usarBorroso()">
+                        💨 Borroso (5s)
+                        <span th:if="${!puedeBorroso}" class="badge">No disp.</span>
+                    </button>
 
-        <h2 class="mb-4" th:text="${pregunta.descripcion}">Enunciado de la pregunta</h2>
+                    <button type="button"
+                            id="btnMezclar"
+                            th:disabled="${!puedeMezclar}"
+                            th:classappend="${!puedeMezclar} ? 'used-or-locked' : ''"
+                            class="powerup-btn"
+                            onclick="usarMezclar()">
+                        🔀 Mezclar
+                        <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge badge-danger">Nvl 2</span>
+                        <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeMezclar}" class="badge">No disp.</span>
+                    </button>
 
-        <!-- SECCIÓN DE COMODINES -->
-        <div class="card bg-white p-3 mb-4 border" th:if="${!yaRespondio}">
-            <p class="text-muted small mb-2 fw-bold text-center">
-                COMODINES DE LA PARTIDA (MÁXIMO 1 POR RONDA)
-                <span th:if="${nivelJugador != null}">(NIVEL <span th:text="${nivelJugador}">1</span>)</span>
-            </p>
+                    <button type="button"
+                            id="btnBloqueo"
+                            th:disabled="${!puedeBloqueo}"
+                            th:classappend="${!puedeBloqueo} ? 'used-or-locked' : ''"
+                            class="powerup-btn"
+                            onclick="usarBloqueo()">
+                        🧊 Bloqueo (10s)
+                        <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge badge-danger">Nvl 3</span>
+                        <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puedeBloqueo}" class="badge">No disp.</span>
+                    </button>
+                </div>
 
-            <!-- 1. Comodines para MODO TRADICIONAL (TURNO_TODOS) -->
-            <div th:if="${partida.modoJuego.name() == 'TURNO_TODOS'}" class="d-flex justify-content-center gap-3 flex-wrap">
-                <button type="button"
-                        id="btn5050"
-                        th:disabled="${!puede5050}"
-                        th:classappend="${!puede5050} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-warning'"
-                        class="btn btn-sm fw-bold px-3 py-2"
-                        onclick="usar5050()">
-                    50/50 (-5s)
-                    <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge bg-secondary ms-1">Bloqueado (Nvl 3)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puede5050}" class="badge bg-dark ms-1">No disp.</span>
-                </button>
-
-                <button type="button"
-                        id="btnTiempoExtra"
-                        th:disabled="${!puedeTiempo}"
-                        th:classappend="${!puedeTiempo} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-info'"
-                        class="btn btn-sm fw-bold px-3 py-2"
-                        onclick="usarTiempoExtra()">
-                    +10s
-                    <span th:if="${!puedeTiempo}" class="badge bg-dark ms-1">No disp.</span>
-                </button>
-
-                <button type="button"
-                        id="btnDobleChance"
-                        th:disabled="${!puedeDobleChance}"
-                        th:classappend="${!puedeDobleChance} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-primary'"
-                        class="btn btn-sm fw-bold px-3 py-2"
-                        onclick="usarDobleChance()">
-                    2x Chance
-                    <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge bg-secondary ms-1">Bloqueado (Nvl 2)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeDobleChance}" class="badge bg-dark ms-1">No disp.</span>
-                </button>
+                <div id="alertaComodin" class="powerup-notice d-none"></div>
             </div>
 
-            <!-- 2. Comodines para MODO RÁPIDO (PRIMERO_GANA) -->
-            <div th:if="${partida.modoJuego.name() == 'PRIMERO_GANA'}" class="d-flex justify-content-center gap-3 flex-wrap">
-                <button type="button"
-                        id="btnBorroso"
-                        th:disabled="${!puedeBorroso}"
-                        th:classappend="${!puedeBorroso} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-dark'"
-                        class="btn btn-sm fw-bold px-3 py-2"
-                        onclick="usarBorroso()">
-                    💨 Borroso (5s)
-                    <span th:if="${!puedeBorroso}" class="badge bg-dark ms-1">No disp.</span>
-                </button>
-
-                <button type="button"
-                        id="btnMezclar"
-                        th:disabled="${!puedeMezclar}"
-                        th:classappend="${!puedeMezclar} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-warning'"
-                        class="btn btn-sm fw-bold px-3 py-2"
-                        onclick="usarMezclar()">
-                    🔀 Mezclar
-                    <span th:if="${nivelJugador != null and nivelJugador < 2}" class="badge bg-secondary ms-1">Bloqueado (Nvl 2)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 2) and !puedeMezclar}" class="badge bg-dark ms-1">No disp.</span>
-                </button>
-
-                <button type="button"
-                        id="btnBloqueo"
-                        th:disabled="${!puedeBloqueo}"
-                        th:classappend="${!puedeBloqueo} ? 'btn-secondary opacity-50 pe-none' : 'btn-outline-info'"
-                        class="btn btn-sm fw-bold px-3 py-2"
-                        onclick="usarBloqueo()">
-                    🧊 Bloqueo (10s)
-                    <span th:if="${nivelJugador != null and nivelJugador < 3}" class="badge bg-secondary ms-1">Bloqueado (Nvl 3)</span>
-                    <span th:if="${(nivelJugador == null or nivelJugador >= 3) and !puedeBloqueo}" class="badge bg-dark ms-1">No disp.</span>
-                </button>
+            <!-- MENSAJE DE ESPERA SI YA RESPONDIÓ -->
+            <div th:if="${yaRespondio}" class="alert-box alert-box-info" style="margin-top: 1rem;">
+                Respuesta registrada. Esperando a los demás jugadores...
             </div>
 
-            <div id="alertaComodin" class="alert alert-info py-1 px-2 mt-3 mb-0 small text-center d-none"></div>
+            <p id="estadoConexion" class="d-none"></p>
         </div>
-
-        <!-- Alerta si falló el primer intento con Doble Chance -->
-        <div th:if="${falloPrimerIntentoDobleChance}" class="alert alert-warning text-center fw-bold mb-3">
-            ⚠️ ¡Respuesta incorrecta! Pero gracias a tu <strong>Doble Chance</strong> tienes un segundo intento. ¡Elige otra opción!
-        </div>
-
-        <!-- Alerta si intentó contestar congelado -->
-        <div th:if="${errorBloqueo}" class="alert alert-danger text-center fw-bold mb-3" th:text="${errorBloqueo}">
-            🧊 ¡Estás congelado por un comodín!
-        </div>
-
-        <!-- FORMULARIO DE RESPUESTAS -->
-        <form id="formRespuesta"
-              th:if="${!yaRespondio}"
-              th:action="@{/partida/{id}/responder(id=${partida.id})}"
-              method="POST"
-              class="d-grid gap-3"
-              style="transition: filter 0.3s ease;">
-            <button th:each="opcion : ${pregunta.opciones}"
-                    type="submit"
-                    name="opcionId"
-                    th:id="'opcion-' + ${opcion.id}"
-                    th:value="${opcion.id}"
-                    th:disabled="${opcionFalladaId != null and opcionFalladaId == opcion.id}"
-                    th:classappend="${opcionFalladaId != null and opcionFalladaId == opcion.id} ? 'btn-danger opacity-50 pe-none' : 'btn-outline-primary'"
-                    class="btn text-start p-3 fs-5 boton-opcion">
-                <span th:text="${opcion.texto}">Opción de respuesta</span>
-                <span th:if="${opcionFalladaId != null and opcionFalladaId == opcion.id}" class="badge bg-dark float-end">Incorrecta</span>
-            </button>
-        </form>
-
-        <form id="formTiempoAgotado"
-              th:if="${!yaRespondio}"
-              th:action="@{/partida/{id}/tiempo-agotado(id=${partida.id})}"
-              method="POST"
-              style="display: none;">
-        </form>
-
-        <!-- MENSAJE DE ESPERA SI YA RESPONDIÓ -->
-        <div th:if="${yaRespondio}" class="alert alert-info text-center">
-            Respuesta registrada. Esperando a los demás jugadores...
-        </div>
-
-        <p id="estadoConexion" class="text-muted small mt-3">Conectando con la partida...</p>
     </div>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
 <script th:inline="javascript">
@@ -184,12 +188,6 @@
         labelSegundos.textContent = tiempoRestante;
         const porcentaje = Math.min(100, Math.max(0, (tiempoRestante / tiempoMaximoBase) * 100));
         barra.style.width = porcentaje + "%";
-
-        if (tiempoRestante <= 5) {
-            barra.className = "progress-bar bg-danger progress-bar-striped progress-bar-animated text-white fw-bold";
-        } else {
-            barra.className = "progress-bar bg-warning progress-bar-striped progress-bar-animated text-dark fw-bold";
-        }
     }
 
     let intervalReloj = null;
@@ -225,15 +223,14 @@
             const btn = document.getElementById(id);
             if (!btn) return;
             btn.disabled = true;
-            btn.classList.remove("btn-outline-warning", "btn-outline-info", "btn-outline-primary", "btn-outline-dark");
-            btn.classList.add("btn-secondary", "opacity-50", "pe-none");
+            btn.classList.add("used-or-locked");
             if (id === comodinUsadoId) {
                 if (!btn.innerHTML.includes("Usado")) {
-                    btn.innerHTML += ' <span class="badge bg-dark ms-1">Usado</span>';
+                    btn.innerHTML += ' <span class="badge">Usado</span>';
                 }
             } else {
-                if (!btn.innerHTML.includes("Bloqueado")) {
-                    btn.innerHTML += ' <span class="badge bg-secondary ms-1">Bloqueado (1/ronda)</span>';
+                if (!btn.innerHTML.includes("1/ronda")) {
+                    btn.innerHTML += ' <span class="badge">1/ronda</span>';
                 }
             }
         });
@@ -398,7 +395,7 @@
     });
 
     cliente.onConnect = function () {
-        estadoConexion.textContent = "Conectado a la partida.";
+        if (estadoConexion) estadoConexion.textContent = "Conectado a la partida.";
 
         cliente.subscribe("/topic/salas/" + codigoSala, function (mensaje) {
             const evento = JSON.parse(mensaje.body);
@@ -426,11 +423,11 @@
     };
 
     cliente.onStompError = function () {
-        estadoConexion.textContent = "Error de comunicación con la partida.";
+        if (estadoConexion) estadoConexion.textContent = "Error de comunicación con la partida.";
     };
 
     cliente.onWebSocketClose = function () {
-        estadoConexion.textContent = "Conexión interrumpida. Intentando reconectar...";
+        if (estadoConexion) estadoConexion.textContent = "Conexión interrumpida. Intentando reconectar...";
     };
 
     cliente.activate();
