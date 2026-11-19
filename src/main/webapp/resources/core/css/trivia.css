@@ -217,6 +217,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 2rem;
     margin-bottom: 2.5rem;
 }
 
@@ -246,14 +247,23 @@ body {
     padding: 1.5rem;
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    width: 320px;
+    width: 100%;
+    max-width: 350px;
+    flex-shrink: 0;
 }
 
 .join-box h3 { margin-bottom: 0.8rem; font-size: 1.1rem; }
-.join-form { display: flex; gap: 0.5rem; }
+
+.join-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
 
 .join-form input {
     flex: 1;
+    min-width: 0;
+    width: 100%;
     padding: 0.7rem 0.9rem;
     border-radius: 8px;
     border: none;
@@ -262,7 +272,11 @@ body {
     letter-spacing: 1px;
 }
 
-.join-submit { white-space: nowrap; box-shadow: 0 5px 12px rgba(45, 52, 54, 0.2); }
+.join-submit {
+    flex-shrink: 0;
+    white-space: nowrap;
+    box-shadow: 0 5px 12px rgba(45, 52, 54, 0.2);
+}
 
 /* =========================================================
    6. TABLAS Y BADGES
@@ -445,11 +459,34 @@ body {
 .category-card-vote i { font-size: 2.5rem; margin-bottom: 0.8rem; }
 
 /* =========================================================
-   12. LOGROS
+   12. LOGROS Y ENCABEZADOS DE PÁGINA
 ========================================================= */
 .page-header { margin-bottom: 2rem; }
 .page-title { font-size: 2rem; font-weight: 800; }
 .page-subtitle { color: var(--text-muted); }
+
+/* Separación para la vista de Lobbies / Salas */
+.lobbies-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.8rem;
+}
+
+.lobbies-header p {
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+.main-content > div:first-child:not(.card):not(.dashboard-grid):not(.game-container) {
+    margin-bottom: 1.8rem;
+}
+
+.main-content > div:first-child:not(.card) .btn-primary {
+    margin-top: 1rem;
+}
 
 .logros-grid {
     display: grid;

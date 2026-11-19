@@ -14,6 +14,70 @@ VALUES (null, 'admin2@trivia.com', '1234', 'COMUN', TRUE, 'user')
                          activo = VALUES(activo),
                          username = VALUES(username);
 
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'lucas.gomez@trivia.com', '1234', 'COMUN', TRUE, 'lucas_g')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'sofia.martinez@trivia.com', '1234', 'COMUN', TRUE, 'sofi_m')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'mateo.rodriguez@trivia.com', '1234', 'COMUN', TRUE, 'mateo99')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'valentina.lopez@trivia.com', '1234', 'COMUN', TRUE, 'valen_trivia')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'martina.diaz@trivia.com', '1234', 'COMUN', TRUE, 'martu_d')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'tomas.fernandez@trivia.com', '1234', 'COMUN', TRUE, 'tomi_fer')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'camila.perez@trivia.com', '1234', 'COMUN', TRUE, 'cami_p')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
+INSERT INTO Usuario (id, email, password, rol, activo, username)
+VALUES (null, 'nico.sanchez@trivia.com', '1234', 'COMUN', TRUE, 'nico_san')
+    ON DUPLICATE KEY UPDATE
+                         password = VALUES(password),
+                         rol = VALUES(rol),
+                         activo = VALUES(activo),
+                         username = VALUES(username);
+
 INSERT INTO Categoria (id, nombre) VALUES (1, 'Historia') ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
 INSERT INTO Categoria (id, nombre) VALUES (2, 'Ciencia') ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
 INSERT INTO Categoria (id, nombre) VALUES (3, 'Geografía') ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
